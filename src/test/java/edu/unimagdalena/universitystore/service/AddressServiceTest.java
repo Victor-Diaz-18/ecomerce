@@ -102,4 +102,11 @@ class AddressServiceImplTest {
 
         assertEquals("Address not found", exception.getMessage());
     }
+
+    @Test
+    void shouldDeleteAddress() {
+        addressService.delete(1L);
+
+        verify(addressRepository).deleteById(1L);
+    }
 }

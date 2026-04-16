@@ -28,6 +28,10 @@ public class InventoryServiceImpl implements InventoryService {
         Inventory inventory = inventoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Inventory not found"));
 
+        if (newStock < 0) {
+            throw new RuntimeException("New stock cannot be negative");
+        }
+
         inventory.setAvailableStock(newStock);
 
         return inventoryRepository.save(inventory);

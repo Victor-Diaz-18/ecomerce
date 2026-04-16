@@ -31,4 +31,12 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
     }
+
+    @Override
+    public Customer update(Long id, Customer customer) {
+        Customer existing = findById(id);
+        existing.setName(customer.getName());
+        existing.setEmail(customer.getEmail());
+        return customerRepository.save(existing);
+    }
 }

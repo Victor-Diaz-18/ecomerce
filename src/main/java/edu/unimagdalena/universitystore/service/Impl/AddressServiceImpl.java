@@ -11,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class AddressServiceImpl implements AddressService {
+public class AddressServiceImpl implements AddressService{
     private final AddressRepository addressRepository;
     private final CustomerRepository customerRepository;
 
@@ -32,5 +32,10 @@ public class AddressServiceImpl implements AddressService {
     public Address findById(Long id) {
         return addressRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Address not found"));
+    }
+
+    @Override
+    public void delete(Long id) {
+        addressRepository.deleteById(id);
     }
 }

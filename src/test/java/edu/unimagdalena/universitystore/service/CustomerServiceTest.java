@@ -97,4 +97,29 @@ class CustomerServiceImplTest {
 
         assertEquals("Customer not found", exception.getMessage());
     }
+
+    @Test
+    void shouldUpdateCustomer() {
+        Customer existing = Customer.builder()
+                .id(1L)
+                .name("Juan")
+                .email("juan@example.com")
+                .build();
+
+        Customer updated = Customer.builder()
+                .name("Carlos")
+                .email("carlos@example.com")
+                .build();
+
+        when(customerRepository.findById(1L))
+                .thenReturn(Optional.of(existing));
+
+        when(customerRepository.save(any(Customer.class)))
+                .thenAnswer(i -> i.getArgument(0));
+
+        Customer result = customerService.update(1L, updated);
+
+        assertEquals("Carlos", result.getName());
+        assertEquals("carlos@example.com", result.getEmail());
+    }
 }

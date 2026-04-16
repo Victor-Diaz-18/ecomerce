@@ -15,6 +15,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category create(Category category) {
+        if (categoryRepository.findByName(category.getName()).isPresent()) {
+            throw new RuntimeException("Category already exists");
+        }
         return categoryRepository.save(category);
     }
 
