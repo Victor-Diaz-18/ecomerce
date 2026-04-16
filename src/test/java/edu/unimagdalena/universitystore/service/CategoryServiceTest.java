@@ -29,7 +29,11 @@ class CategoryServiceImplTest {
                 .name("Electronics")
                 .build();
 
-        when(categoryRepository.save(category)).thenReturn(category);
+        when(categoryRepository.findByName("Electronics"))
+                .thenReturn(Optional.empty());
+
+        when(categoryRepository.save(category))
+                .thenReturn(category);
 
         Category result = categoryService.create(category);
 
@@ -73,5 +77,20 @@ class CategoryServiceImplTest {
                 () -> categoryService.findById(1L));
 
         assertEquals("Category not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCategoryAlreadyExists() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .build();
+
+        when(categoryRepository.findByName("Electronics"))
+                .thenReturn(Optional.of(category));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> categoryService.create(category));
+
+        assertEquals("Category already exists", exception.getMessage());
     }
 }

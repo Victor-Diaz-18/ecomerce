@@ -27,7 +27,7 @@ class OrderStatusHistoryServiceImplTest {
         OrderStatusHistory history = OrderStatusHistory.builder().build();
 
         when(orderStatusHistoryRepository.save(any(OrderStatusHistory.class)))
-                .thenReturn(history);
+                .thenAnswer(i -> i.getArgument(0));
 
         OrderStatusHistory result = orderStatusHistoryService.create(history);
 

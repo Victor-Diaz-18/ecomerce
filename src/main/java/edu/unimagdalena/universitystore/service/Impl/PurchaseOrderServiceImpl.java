@@ -23,6 +23,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.CREATED);
 
+        if (order.getTotal() == null) {
+            throw new RuntimeException("Total is required");
+        }
+
         return purchaseOrderRepository.save(order);
     }
 
@@ -36,6 +40,19 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         }
 
         order.setStatus(OrderStatus.PAID);
+
+        return purchaseOrderRepository.save(order);
+    }
+
+    @Override
+    public PurchaseOrder cancelOrder(Long orderId) {
+        PurchaseOrder order = findById(orderId);
+
+        if (order.getStatus() == OrderStatus.PAID) {
+            throw new RuntimeException("Paid orders cannot be cancelled");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
 
         return purchaseOrderRepository.save(order);
     }

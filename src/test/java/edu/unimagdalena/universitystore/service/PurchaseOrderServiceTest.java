@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -30,7 +31,9 @@ class PurchaseOrderServiceImplTest {
 
     @Test
     void shouldCreateOrder() {
-        PurchaseOrder order = PurchaseOrder.builder().build();
+        PurchaseOrder order = PurchaseOrder.builder()
+                .total(BigDecimal.valueOf(100000))
+                .build();
 
         when(purchaseOrderRepository.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -39,6 +42,7 @@ class PurchaseOrderServiceImplTest {
 
         assertNotNull(result.getCreatedAt());
         assertEquals(OrderStatus.CREATED, result.getStatus());
+        assertEquals(BigDecimal.valueOf(100000), result.getTotal());
     }
 
     @Test
@@ -119,5 +123,39 @@ class PurchaseOrderServiceImplTest {
                 () -> purchaseOrderService.findById(1L));
 
         assertEquals("Order not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldCancelOrder() {
+        PurchaseOrder order = PurchaseOrder.builder()
+                .id(1L)
+                .status(OrderStatus.CREATED)
+                .build();
+
+        when(purchaseOrderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        when(purchaseOrderRepository.save(any(PurchaseOrder.class)))
+                .thenAnswer(i -> i.getArgument(0));
+
+        PurchaseOrder result = purchaseOrderService.cancelOrder(1L);
+
+        assertEquals(OrderStatus.CANCELLED, result.getStatus());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCancelPaidOrder() {
+        PurchaseOrder order = PurchaseOrder.builder()
+                .id(1L)
+                .status(OrderStatus.PAID)
+                .build();
+
+        when(purchaseOrderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> purchaseOrderService.cancelOrder(1L));
+
+        assertEquals("Paid orders cannot be cancelled", exception.getMessage());
     }
 }

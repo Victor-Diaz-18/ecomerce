@@ -106,4 +106,20 @@ class InventoryServiceImplTest {
 
         assertEquals(1, result.size());
     }
+
+    @Test
+    void shouldThrowExceptionWhenStockNegative() {
+        Inventory inventory = Inventory.builder()
+                .id(1L)
+                .availableStock(10)
+                .build();
+
+        when(inventoryRepository.findById(1L))
+                .thenReturn(Optional.of(inventory));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> inventoryService.updateStock(1L, -5));
+
+        assertEquals("New stock cannot be negative", exception.getMessage());
+    }
 }

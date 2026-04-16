@@ -39,7 +39,6 @@ class ProductServiceImplTest {
                 .sku("SKU001")
                 .name("Mouse")
                 .price(new BigDecimal("50000"))
-                .active(true)
                 .category(category)
                 .build();
 
@@ -49,13 +48,14 @@ class ProductServiceImplTest {
         when(categoryRepository.existsById(1L))
                 .thenReturn(true);
 
-        when(productRepository.save(product))
-                .thenReturn(product);
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(i -> i.getArgument(0));
 
         Product result = productService.create(product);
 
         assertNotNull(result);
         assertEquals("SKU001", result.getSku());
+        assertTrue(result.getActive());
     }
 
     @Test
