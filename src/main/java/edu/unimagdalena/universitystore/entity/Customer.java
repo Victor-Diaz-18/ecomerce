@@ -22,6 +22,7 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CustomerStatus status;
 }
