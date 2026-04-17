@@ -44,4 +44,63 @@ class ProductRepositoryTest {
         assertTrue(found.isPresent());
         assertEquals("Laptop", found.get().getName());
     }
+
+    @Test
+    void shouldFindProductsByCategoryAndActiveTrue() {
+        Category category = categoryRepository.save(
+                Category.builder()
+                        .name("Electronics")
+                        .build()
+        );
+
+        productRepository.save(
+                Product.builder()
+                        .sku("ABC123")
+                        .name("Laptop")
+                        .price(new BigDecimal("2500"))
+                        .active(true)
+                        .category(category)
+                        .build()
+        );
+
+        productRepository.save(
+                Product.builder()
+                        .sku("SKU201")
+                        .name("Keyboard")
+                        .price(new BigDecimal("80"))
+                        .active(false)
+                        .category(category)
+                        .build()
+        );
+
+        var result = productRepository.findByCategoryIdAndActiveTrue(category.getId());
+
+        assertEquals(1, result.size());
+        assertEquals("Laptop", result.get(0).getName());
+    }
+
+    @Test
+    void shouldFindProductsByNameContainingIgnoreCase() {
+        Category category = categoryRepository.save(
+                Category.builder()
+                        .name("Electronics")
+                        .build()
+        );
+
+        productRepository.save(
+                Product.builder()
+                        .sku("SKU300")
+                        .name("Gaming laptop")
+                        .price(new BigDecimal("3500"))
+                        .active(true)
+                        .category(category)
+                        .build()
+        );
+
+        var result = productRepository.findByNameContainingIgnoreCase("laptop");
+
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+        assertEquals("Gaming laptop", result.get(0).getName());
+    }
 }

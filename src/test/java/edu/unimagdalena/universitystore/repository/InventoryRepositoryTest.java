@@ -57,4 +57,36 @@ class InventoryRepositoryTest {
         assertEquals(1, result.size());
         assertEquals(product.getId(), result.get(0).getProduct().getId());
     }
+
+    @Test
+    void shouldFindInventoryByProductId() {
+        Category category = categoryRepository.save(
+                Category.builder()
+                        .name("Electronics")
+                        .build()
+        );
+
+        Product product = productRepository.save(
+                Product.builder()
+                        .sku("SKU001")
+                        .name("Mouse")
+                        .price(new BigDecimal("50"))
+                        .active(true)
+                        .category(category)
+                        .build()
+        );
+
+        Inventory inventory = inventoryRepository.save(
+                Inventory.builder()
+                        .availableStock(10)
+                        .minimumStock(5)
+                        .product(product)
+                        .build()
+        );
+
+        var result = inventoryRepository.findProductById(product.getId());
+
+        assertTrue(result.isPresent());
+        assertEquals(inventory.getId(), result.get().getId());
+    }
 }

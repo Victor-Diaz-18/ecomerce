@@ -33,14 +33,14 @@ class PurchaseOrderRepositoryTest {
         Customer customer = customerRepository.save(
                 Customer.builder()
                         .name("Juan Perez")
-                        .email("juan@example.com")
+                        .email("juan@test.com")
                         .status(CustomerStatus.ACTIVE)
                         .build()
         );
 
         Address address = addressRepository.save(
                 Address.builder()
-                        .street("Calle 10")
+                        .street("Street 10")
                         .city("Santa Marta")
                         .country("Colombia")
                         .customer(customer)
@@ -65,6 +65,43 @@ class PurchaseOrderRepositoryTest {
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
         assertEquals(customer.getId(), result.get(0).getCustomer().getId());
+        assertEquals(OrderStatus.CREATED, result.get(0).getStatus());
+    }
+
+    @Test
+    void shouldSearchOrdersByStatusOnly() {
+        Customer customer = customerRepository.save(
+                Customer.builder()
+                        .name("Juan Perez")
+                        .email("juan@test.com")
+                        .status(CustomerStatus.ACTIVE)
+                        .build()
+        );
+
+        Address address = addressRepository.save(
+                Address.builder()
+                        .street("Street 10")
+                        .city("Santa Marta")
+                        .country("Colombia")
+                        .customer(customer)
+                        .build()
+        );
+
+        purchaseOrderRepository.save(
+                PurchaseOrder.builder()
+                        .createdAt(LocalDateTime.now())
+                        .total(new BigDecimal("150000"))
+                        .status(OrderStatus.CREATED)
+                        .customer(customer)
+                        .address(address)
+                        .build()
+        );
+
+        List<PurchaseOrder> result =
+                purchaseOrderRepository.searchOrders(null, OrderStatus.CREATED);
+
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
         assertEquals(OrderStatus.CREATED, result.get(0).getStatus());
     }
 }
