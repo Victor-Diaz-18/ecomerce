@@ -19,31 +19,31 @@ class CategoryRepositoryTest {
     @Test
     void shouldSaveCategory() {
         Category category = new Category();
-        category.setName("Electrónica");
+        category.setName("Electronics");
 
         Category savedCategory = categoryRepository.save(category);
 
         assertThat(savedCategory.getId()).isNotNull();
-        assertThat(savedCategory.getName()).isEqualTo("Electrónica");
+        assertThat(savedCategory.getName()).isEqualTo("Electronics");
     }
 
     @Test
     void shouldFindCategoryById() {
         Category category = new Category();
-        category.setName("Libros");
+        category.setName("Books");
 
         Category savedCategory = categoryRepository.save(category);
 
         Optional<Category> result = categoryRepository.findById(savedCategory.getId());
 
         assertThat(result).isPresent();
-        assertThat(result.get().getName()).isEqualTo("Libros");
+        assertThat(result.get().getName()).isEqualTo("Books");
     }
 
     @Test
     void shouldDeleteCategory() {
         Category category = new Category();
-        category.setName("Ropa");
+        category.setName("Clothes");
 
         Category savedCategory = categoryRepository.save(category);
 
@@ -51,5 +51,18 @@ class CategoryRepositoryTest {
 
         Optional<Category> result = categoryRepository.findById(savedCategory.getId());
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldFindCategoryByName() {
+        Category category = new Category();
+        category.setName("Electronics");
+
+        categoryRepository.save(category);
+
+        Optional<Category> result = categoryRepository.findByName("Electronics");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isEqualTo("Electronics");
     }
 }
