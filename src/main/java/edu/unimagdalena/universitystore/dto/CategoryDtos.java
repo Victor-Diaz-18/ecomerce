@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 public class CategoryDtos {
-
     public record CreateCategoryRequest(
             @NotBlank String name
     ) implements Serializable {}

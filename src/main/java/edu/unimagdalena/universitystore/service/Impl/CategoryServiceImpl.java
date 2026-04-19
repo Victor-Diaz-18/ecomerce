@@ -1,11 +1,12 @@
 package edu.unimagdalena.universitystore.service.Impl;
 
 import edu.unimagdalena.universitystore.entity.Category;
+import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.CategoryRepository;
 import edu.unimagdalena.universitystore.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category create(Category category) {
+        if (categoryRepository.findByName(category.getName()).isPresent()) {
+            throw new ConflictException("Category already exists");
+        }
         return categoryRepository.save(category);
     }
 

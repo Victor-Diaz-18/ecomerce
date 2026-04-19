@@ -2,6 +2,9 @@ package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.entity.Category;
 import edu.unimagdalena.universitystore.entity.Product;
+import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.CategoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.service.Impl.ProductServiceImpl;
@@ -39,7 +42,6 @@ class ProductServiceImplTest {
                 .sku("SKU001")
                 .name("Mouse")
                 .price(new BigDecimal("50000"))
-                .active(true)
                 .category(category)
                 .build();
 
@@ -49,13 +51,14 @@ class ProductServiceImplTest {
         when(categoryRepository.existsById(1L))
                 .thenReturn(true);
 
-        when(productRepository.save(product))
-                .thenReturn(product);
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(i -> i.getArgument(0));
 
         Product result = productService.create(product);
 
         assertNotNull(result);
         assertEquals("SKU001", result.getSku());
+        assertTrue(result.getActive());
     }
 
     @Test
@@ -67,7 +70,7 @@ class ProductServiceImplTest {
         when(productRepository.findBySku("SKU001"))
                 .thenReturn(Optional.of(product));
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ConflictException exception = assertThrows(ConflictException.class,
                 () -> productService.create(product));
 
         assertEquals("SKU already exists", exception.getMessage());
@@ -88,7 +91,7 @@ class ProductServiceImplTest {
         when(productRepository.findBySku("SKU001"))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ValidationException exception = assertThrows(ValidationException.class,
                 () -> productService.create(product));
 
         assertEquals("Price must be greater than zero", exception.getMessage());
@@ -112,7 +115,7 @@ class ProductServiceImplTest {
         when(categoryRepository.existsById(1L))
                 .thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> productService.create(product));
 
         assertEquals("Category not found", exception.getMessage());
@@ -148,7 +151,7 @@ class ProductServiceImplTest {
         when(productRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> productService.findById(1L));
 
         assertEquals("Product not found", exception.getMessage());
@@ -162,5 +165,36 @@ class ProductServiceImplTest {
         List<Product> result = productService.findByCategory(1L);
 
         assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldUpdateProduct() {
+        Category category = Category.builder().id(1L).build();
+
+        Product product = Product.builder()
+                .id(1L)
+                .sku("SKU001")
+                .name("Mouse")
+                .price(new BigDecimal("50000"))
+                .category(category)
+                .build();
+        Product updated = Product.builder()
+                .sku("SKU002")
+                .name("Keyboard")
+                .price(new BigDecimal("80000"))
+                .build();
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(i -> i.getArgument(0));
+
+        Product result = productService.update(1L, updated);
+
+        assertEquals("Keyboard", result.getName());
+        assertEquals("SKU002", result.getSku());
+        assertEquals(new BigDecimal("80000"), result.getPrice());
+        assertEquals(1L, result.getId());
     }
 }

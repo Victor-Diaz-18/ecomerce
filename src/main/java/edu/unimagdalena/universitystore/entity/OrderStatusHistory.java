@@ -19,11 +19,13 @@ public class OrderStatusHistory {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderStatus status;
 
+    @Column(nullable = false)
     private LocalDateTime changedAt;
 
     @ManyToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", nullable = false)
     private PurchaseOrder order;
 }

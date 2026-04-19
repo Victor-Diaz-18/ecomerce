@@ -3,6 +3,9 @@ package edu.unimagdalena.universitystore.service.Impl;
 import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
+import edu.unimagdalena.universitystore.exception.BusinessException;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.InventoryRepository;
 import edu.unimagdalena.universitystore.repository.PurchaseOrderRepository;
 import edu.unimagdalena.universitystore.service.PurchaseOrderService;
@@ -23,19 +26,36 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.CREATED);
 
+        if (order.getTotal() == null) {
+            throw new ValidationException("Total is required");
+        }
+
         return purchaseOrderRepository.save(order);
     }
 
     @Override
     public PurchaseOrder payOrder(Long orderId) {
         PurchaseOrder order = purchaseOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         if (order.getStatus() != OrderStatus.CREATED) {
-            throw new RuntimeException("Only CREATED orders can be paid");
+            throw new BusinessException("Only CREATED orders can be paid");
         }
 
         order.setStatus(OrderStatus.PAID);
+
+        return purchaseOrderRepository.save(order);
+    }
+
+    @Override
+    public PurchaseOrder cancelOrder(Long orderId) {
+        PurchaseOrder order = findById(orderId);
+
+        if (order.getStatus() == OrderStatus.PAID) {
+            throw new BusinessException("Paid orders cannot be cancelled");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
 
         return purchaseOrderRepository.save(order);
     }
@@ -48,6 +68,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     public PurchaseOrder findById(Long id) {
         return purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
 }

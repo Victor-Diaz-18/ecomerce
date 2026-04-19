@@ -17,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class ProductController {
-
     private final ProductService service;
     private final ProductMapper mapper;
 

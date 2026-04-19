@@ -1,14 +1,14 @@
 package edu.unimagdalena.universitystore.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
 public class InventoryDtos {
-
     public record UpdateInventoryRequest(
-            @NotNull Integer availableStock,
-            @NotNull Integer minimumStock
+            @NotNull @Min(0) Integer availableStock,
+            @NotNull @Min(0) Integer minimumStock
     ) implements Serializable {}
 
     public record InventoryResponse(

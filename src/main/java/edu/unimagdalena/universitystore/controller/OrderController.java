@@ -17,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class OrderController {
-
     private final PurchaseOrderService service;
     private final OrderMapper mapper;
 
@@ -60,6 +59,15 @@ public class OrderController {
 
         return ResponseEntity.ok(
                 mapper.toResponse(paid)
+        );
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<OrderResponse> cancel(@PathVariable Long id) {
+        var cancelled =  service.cancelOrder(id);
+
+        return ResponseEntity.ok(
+                mapper.toResponse(cancelled)
         );
     }
 }

@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.service.Impl;
 
 import edu.unimagdalena.universitystore.entity.Inventory;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.InventoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.service.InventoryService;
@@ -18,7 +20,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public Inventory create(Inventory inventory) {
         if (!productRepository.existsById(inventory.getProduct().getId())) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
         return inventoryRepository.save(inventory);
     }
@@ -26,22 +28,17 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public Inventory updateStock(Long id, Integer newStock) {
         Inventory inventory = inventoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+
+        if (newStock < 0) {
+            throw new ValidationException("New stock cannot be negative");
+        }
 
         inventory.setAvailableStock(newStock);
 
         return inventoryRepository.save(inventory);
     }
-    @Override
-    public Inventory updateStock(Long id, Integer availableStock, Integer minimumStock) {
-        Inventory inventory = inventoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory not found"));
 
-        inventory.setAvailableStock(availableStock);
-        inventory.setMinimumStock(minimumStock);
-
-        return inventoryRepository.save(inventory);
-    }
     @Override
     public List<Inventory> findLowStockProducts() {
         return inventoryRepository.findLowStockProducts();

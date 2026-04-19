@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class ProductDtos {
-
     public record CreateProductRequest(
             @NotBlank String name,
             @NotBlank String sku,

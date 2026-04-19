@@ -7,15 +7,14 @@ import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 public class CustomerDtos {
-
     public record CreateCustomerRequest(
             @NotBlank String name,
-            @Email String email
+            @NotBlank @Email String email
     ) implements Serializable {}
 
     public record UpdateCustomerRequest(
             @NotBlank String name,
-            @Email String email
+            @NotBlank @Email String email
     ) implements Serializable {}
 
     public record CustomerResponse(
