@@ -2,6 +2,7 @@ package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.Impl.AddressServiceImpl;
@@ -35,7 +36,7 @@ class AddressServiceImplTest {
                 .build();
 
         Address address = Address.builder()
-                .street("Calle 10")
+                .street("Street 10")
                 .city("Santa Marta")
                 .country("Colombia")
                 .customer(customer)
@@ -47,7 +48,7 @@ class AddressServiceImplTest {
         Address result = addressService.create(address);
 
         assertNotNull(result);
-        assertEquals("Calle 10", result.getStreet());
+        assertEquals("Street 10", result.getStreet());
         verify(addressRepository).save(address);
     }
 
@@ -63,7 +64,7 @@ class AddressServiceImplTest {
 
         when(customerRepository.existsById(1L)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> addressService.create(address));
 
         assertEquals("Customer not found", exception.getMessage());
@@ -97,7 +98,7 @@ class AddressServiceImplTest {
         when(addressRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> addressService.findById(1L));
 
         assertEquals("Address not found", exception.getMessage());

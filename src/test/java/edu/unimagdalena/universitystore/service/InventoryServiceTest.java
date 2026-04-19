@@ -2,6 +2,8 @@ package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.Product;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.InventoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.service.Impl.InventoryServiceImpl;
@@ -62,7 +64,7 @@ class InventoryServiceImplTest {
 
         when(productRepository.existsById(1L)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> inventoryService.create(inventory));
 
         assertEquals("Product not found", exception.getMessage());
@@ -91,7 +93,7 @@ class InventoryServiceImplTest {
         when(inventoryRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> inventoryService.updateStock(1L, 20));
 
         assertEquals("Inventory not found", exception.getMessage());
@@ -105,5 +107,21 @@ class InventoryServiceImplTest {
         List<Inventory> result = inventoryService.findLowStockProducts();
 
         assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenStockNegative() {
+        Inventory inventory = Inventory.builder()
+                .id(1L)
+                .availableStock(10)
+                .build();
+
+        when(inventoryRepository.findById(1L))
+                .thenReturn(Optional.of(inventory));
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> inventoryService.updateStock(1L, -5));
+
+        assertEquals("New stock cannot be negative", exception.getMessage());
     }
 }

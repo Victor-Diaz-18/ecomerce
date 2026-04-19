@@ -2,6 +2,8 @@ package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
+import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.Impl.CustomerServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,7 @@ class CustomerServiceImplTest {
     void shouldCreateCustomer() {
         Customer customer = Customer.builder()
                 .name("Juan Perez")
-                .email("juan@example.com")
+                .email("juan@test.com")
                 .status(CustomerStatus.ACTIVE)
                 .build();
 
@@ -41,7 +43,7 @@ class CustomerServiceImplTest {
         Customer result = customerService.create(customer);
 
         assertNotNull(result);
-        assertEquals("juan@example.com", result.getEmail());
+        assertEquals("juan@test.com", result.getEmail());
         verify(customerRepository).save(customer);
     }
 
@@ -55,7 +57,7 @@ class CustomerServiceImplTest {
         when(customerRepository.findByEmail(customer.getEmail()))
                 .thenReturn(Optional.of(customer));
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ConflictException exception = assertThrows(ConflictException.class,
                 () -> customerService.create(customer));
 
         assertEquals("Email already exists", exception.getMessage());
@@ -75,7 +77,7 @@ class CustomerServiceImplTest {
     void shouldFindCustomerById() {
         Customer customer = Customer.builder()
                 .id(1L)
-                .name("Maria")
+                .name("Juan Perez")
                 .build();
 
         when(customerRepository.findById(1L))
@@ -84,7 +86,7 @@ class CustomerServiceImplTest {
         Customer result = customerService.findById(1L);
 
         assertEquals(1L, result.getId());
-        assertEquals("Maria", result.getName());
+        assertEquals("Juan Perez", result.getName());
     }
 
     @Test
@@ -92,9 +94,38 @@ class CustomerServiceImplTest {
         when(customerRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> customerService.findById(1L));
 
         assertEquals("Customer not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldUpdateCustomer() {
+        Customer customer = Customer.builder()
+                .id(1L)
+                .name("Juan Perez")
+                .email("juan@test.com")
+                .status(CustomerStatus.ACTIVE)
+                .build();
+
+        Customer updated = Customer.builder()
+                .name("Pedro Alvarez")
+                .email("pedro@test.com")
+                .build();
+
+        when(customerRepository.findById(1L))
+                .thenReturn(Optional.of(customer));
+
+        when(customerRepository.findByEmail("pedro@test.com"))
+                .thenReturn(Optional.empty());
+
+        when(customerRepository.save(any(Customer.class)))
+                .thenAnswer(i -> i.getArgument(0));
+
+        Customer result = customerService.update(1L, updated);
+
+        assertEquals("Pedro Alvarez", result.getName());
+        assertEquals("pedro@test.com", result.getEmail());
     }
 }

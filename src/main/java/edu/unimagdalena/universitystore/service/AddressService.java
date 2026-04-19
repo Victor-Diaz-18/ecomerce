@@ -8,4 +8,5 @@ public interface AddressService {
     Address create(Address address);
     List<Address> findByCustomer(Long customerId);
     Address findById(Long id);
+    void delete(Long id);
 }

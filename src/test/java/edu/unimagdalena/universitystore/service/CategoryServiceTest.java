@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.entity.Category;
+import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.CategoryRepository;
 import edu.unimagdalena.universitystore.service.Impl.CategoryServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,9 @@ class CategoryServiceImplTest {
         Category category = Category.builder()
                 .name("Electronics")
                 .build();
+
+        when(categoryRepository.findByName("Electronics"))
+                .thenReturn(Optional.empty());
 
         when(categoryRepository.save(category)).thenReturn(category);
 
@@ -69,9 +74,24 @@ class CategoryServiceImplTest {
         when(categoryRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.findById(1L));
 
         assertEquals("Category not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCategoryAlreadyExists() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .build();
+
+        when(categoryRepository.findByName("Electronics"))
+                .thenReturn(Optional.of(category));
+
+        ConflictException exception = assertThrows(ConflictException.class,
+                () -> categoryService.create(category));
+
+        assertEquals("Category already exists", exception.getMessage());
     }
 }

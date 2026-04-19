@@ -31,7 +31,7 @@ class OrderItemServiceImplTest {
                 .build();
 
         when(orderItemRepository.save(any(OrderItem.class)))
-                .thenReturn(orderItem);
+                .thenAnswer(i -> i.getArgument(0));
 
         OrderItem result = orderItemService.create(orderItem);
 

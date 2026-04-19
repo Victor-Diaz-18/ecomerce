@@ -17,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class CategoryController {
-
     private final CategoryService service;
     private final CategoryMapper mapper;
 

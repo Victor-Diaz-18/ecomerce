@@ -16,7 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class InventoryController {
-
     private final InventoryService service;
     private final InventoryMapper mapper;
 
@@ -27,8 +26,7 @@ public class InventoryController {
 
         var updated = service.updateStock(
                 id,
-                req.availableStock(),
-                req.minimumStock()
+                req.availableStock()
         );
 
         return ResponseEntity.ok(

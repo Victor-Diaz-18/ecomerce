@@ -7,6 +7,7 @@ import java.util.List;
 public interface PurchaseOrderService {
     PurchaseOrder create(PurchaseOrder order);
     PurchaseOrder payOrder(Long orderId);
+    PurchaseOrder cancelOrder(Long orderId);
     List<PurchaseOrder> findAll();
     PurchaseOrder findById(Long id);
 }

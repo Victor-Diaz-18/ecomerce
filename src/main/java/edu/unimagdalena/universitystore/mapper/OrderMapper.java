@@ -3,14 +3,12 @@ package edu.unimagdalena.universitystore.mapper;
 import edu.unimagdalena.universitystore.dto.OrderDtos;
 import edu.unimagdalena.universitystore.entity.OrderItem;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
-
     @Mapping(target = "customer.id", source = "customerId")
     @Mapping(target = "address.id", source = "addressId")
     @Mapping(target = "id", ignore = true)

@@ -8,6 +8,4 @@ public interface InventoryService {
     Inventory create(Inventory inventory);
     Inventory updateStock(Long id, Integer newStock);
     List<Inventory> findLowStockProducts();
-    Inventory updateStock(Long id, Integer availableStock, Integer minimumStock);
-
 }

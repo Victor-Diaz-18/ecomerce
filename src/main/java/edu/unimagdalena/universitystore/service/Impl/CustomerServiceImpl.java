@@ -1,12 +1,13 @@
 package edu.unimagdalena.universitystore.service.Impl;
 
 import edu.unimagdalena.universitystore.entity.Customer;
+import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import edu.unimagdalena.universitystore.exception.ConflictException;
-import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+
 import java.util.List;
 
 @Service
@@ -21,16 +22,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
         return customerRepository.save(customer);
     }
-    @Override
-    public Customer update(Long id, Customer customer) {
-        Customer existing = customerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
-        existing.setName(customer.getName());
-        existing.setEmail(customer.getEmail());
-
-        return customerRepository.save(existing);
-    }
     @Override
     public List<Customer> findAll() {
         return customerRepository.findAll();
@@ -40,6 +32,13 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer findById(Long id) {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+    }
 
+    @Override
+    public Customer update(Long id, Customer customer) {
+        Customer existing = findById(id);
+        existing.setName(customer.getName());
+        existing.setEmail(customer.getEmail());
+        return customerRepository.save(existing);
     }
 }
