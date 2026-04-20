@@ -5,6 +5,8 @@ import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.mapper.InventoryMapper;
 import edu.unimagdalena.universitystore.service.InventoryService;
+import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
+import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(InventoryController.class)
+@Import(GlobalExceptionHandler.class)
 class InventoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
