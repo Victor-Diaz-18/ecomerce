@@ -5,6 +5,8 @@ import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.mapper.AddressMapper;
 import edu.unimagdalena.universitystore.service.AddressService;
+import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
+import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -18,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AddressController.class)
+@Import(GlobalExceptionHandler.class)
 class AddressControllerTest {
     @Autowired
     private MockMvc mockMvc;
