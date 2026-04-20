@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Import;
 
 import java.util.List;
@@ -27,14 +27,13 @@ class CustomerControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @MockitoBean
     private CustomerService service;
 
     @MockitoBean
     private CustomerMapper mapper;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void shouldCreateCustomer() throws Exception {

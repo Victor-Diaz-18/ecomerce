@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -25,14 +25,13 @@ class AddressControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @MockitoBean
     private AddressService service;
 
     @MockitoBean
     private AddressMapper mapper;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void shouldCreateAddress() throws Exception {

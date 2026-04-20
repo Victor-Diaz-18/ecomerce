@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.*;
 import java.util.List;
@@ -29,14 +29,13 @@ class ProductControllerTest {
     @Autowired
     protected MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @MockitoBean
     private ProductService service;
 
     @MockitoBean
     private ProductMapper mapper;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void shouldCreateProduct() throws Exception {
@@ -156,8 +155,8 @@ class ProductControllerTest {
         ProductDtos.ProductResponse response =
                 new ProductDtos.ProductResponse(
                         1L,
-                        "SKU002",
                         "Keyboard",
+                        "SKU002",
                         new BigDecimal("80000"),
                         true,
                         1L

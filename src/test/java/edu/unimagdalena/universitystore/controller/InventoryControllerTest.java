@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -27,14 +27,13 @@ class InventoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @MockitoBean
     private InventoryService service;
 
     @MockitoBean
     private InventoryMapper mapper;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void shouldCreateInventory() throws Exception {
@@ -53,10 +52,11 @@ class InventoryControllerTest {
                         1L
                 );
 
-        InventoryDtos.UpdateInventoryRequest request =
-                new InventoryDtos.UpdateInventoryRequest(
+        InventoryDtos.CreateInventoryRequest request =
+                new InventoryDtos.CreateInventoryRequest(
                         10,
-                        5
+                        5,
+                        1L
                 );
 
         when(mapper.toEntity(request)).thenReturn(inventory);
