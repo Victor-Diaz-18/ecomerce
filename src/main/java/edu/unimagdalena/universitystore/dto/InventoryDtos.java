@@ -6,6 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public class InventoryDtos {
+    public record CreateInventoryRequest(
+            @NotNull @Min(0) Integer availableStock,
+            @NotNull @Min(0) Integer minimumStock,
+            @NotNull Long productId
+    )implements  Serializable {}
+
     public record UpdateInventoryRequest(
             @NotNull @Min(0) Integer availableStock,
             @NotNull @Min(0) Integer minimumStock

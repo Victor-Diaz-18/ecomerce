@@ -13,6 +13,7 @@ public interface ProductMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "sku", ignore = true)
     Product toEntity(ProductDtos.UpdateProductRequest request);
 
     @Mapping(target = "categoryId", source = "category.id")

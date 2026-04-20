@@ -6,7 +6,7 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface InventoryMapper {
-    Inventory toEntity(InventoryDtos.UpdateInventoryRequest request);
+    Inventory toEntity(InventoryDtos.CreateInventoryRequest request);
 
     @Mapping(target = "productId", source = "product.id")
     InventoryDtos.InventoryResponse toResponse(Inventory inventory);

@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,14 +31,13 @@ class OrderControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @MockitoBean
     private PurchaseOrderService service;
 
     @MockitoBean
     private OrderMapper mapper;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void shouldCreateOrder() throws Exception {
@@ -46,7 +45,10 @@ class OrderControllerTest {
                 new OrderDtos.CreateOrderRequest(
                         1L,
                         1L,
-                        List.of()
+                        List.of(new OrderDtos.CreateOrderItemRequest(
+                                1L,
+                                2
+                        ))
                 );
 
         PurchaseOrder order = PurchaseOrder.builder()

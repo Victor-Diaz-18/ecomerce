@@ -12,12 +12,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/inventory")
+@RequestMapping("/api/v1/inventories")
 @RequiredArgsConstructor
 @Validated
 public class InventoryController {
     private final InventoryService service;
     private final InventoryMapper mapper;
+
+    @PostMapping
+    public ResponseEntity<InventoryResponse> create(
+            @Valid @RequestBody CreateInventoryRequest req) {
+        var created = service.create(mapper.toEntity(req));
+
+        return ResponseEntity.status(201)
+                .body(mapper.toResponse(created));
+    }
 
     @PatchMapping("/{id}")
     public ResponseEntity<InventoryResponse> updateStock(

@@ -1,21 +1,18 @@
 package edu.unimagdalena.universitystore;
 
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-@TestConfiguration
+@TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
-
 	@Bean
+	@ServiceConnection
 	PostgreSQLContainer<?> postgresContainer() {
-		PostgreSQLContainer<?> container =
-				new PostgreSQLContainer<>("postgres:16")
-						.withDatabaseName("testdb")
-						.withUsername("postgres")
-						.withPassword("postgres");
-
-		container.start();
-		return container;
+		return new PostgreSQLContainer<>("postgres:16")
+				.withDatabaseName("university_store")
+				.withUsername("postgres")
+				.withPassword("1234");
 	}
 }
