@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: edu.unimagdalena.universitystore.controller.AddressControllerTest
--------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.763 s -- in edu.unimagdalena.universitystore.controller.AddressControllerTest
