@@ -117,9 +117,6 @@ class CustomerServiceImplTest {
         when(customerRepository.findById(1L))
                 .thenReturn(Optional.of(customer));
 
-        when(customerRepository.findByEmail("pedro@test.com"))
-                .thenReturn(Optional.empty());
-
         when(customerRepository.save(any(Customer.class)))
                 .thenAnswer(i -> i.getArgument(0));
 

@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: edu.unimagdalena.universitystore.controller.CustomerControllerTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.001 s -- in edu.unimagdalena.universitystore.controller.CustomerControllerTest

@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: edu.unimagdalena.universitystore.service.ProductServiceImplTest
--------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.075 s -- in edu.unimagdalena.universitystore.service.ProductServiceImplTest
