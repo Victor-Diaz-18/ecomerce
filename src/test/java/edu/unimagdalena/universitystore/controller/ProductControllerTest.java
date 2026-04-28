@@ -5,12 +5,18 @@ import edu.unimagdalena.universitystore.entity.Category;
 import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.mapper.ProductMapper;
+import edu.unimagdalena.universitystore.security.config.*;
+import edu.unimagdalena.universitystore.security.error.*;
+import edu.unimagdalena.universitystore.security.jwt.*;
+import edu.unimagdalena.universitystore.security.service.*;
 import edu.unimagdalena.universitystore.service.ProductService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
+@AutoConfigureMockMvc()
 @Import(GlobalExceptionHandler.class)
 class ProductControllerTest {
     @Autowired
@@ -37,7 +44,23 @@ class ProductControllerTest {
     @MockitoBean
     private ProductMapper mapper;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private Http401EntryPoint authEntryPoint;
+
+    @MockitoBean
+    private Http403AccessDenied accessDenied;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private JpaUserDetailsService jpaUserDetailsService;
+
     @Test
+    @WithMockUser(roles = "ADMIN")
     void shouldCreateProduct() throws Exception {
         ProductDtos.CreateProductRequest request =
                 new ProductDtos.CreateProductRequest(
@@ -78,6 +101,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void shouldFindAllProducts() throws Exception {
         Product product = Product.builder()
                 .id(1L)
@@ -107,6 +131,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void shouldFindProductById() throws Exception {
         Product product = Product.builder()
                 .id(1L)
@@ -136,6 +161,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void shouldUpdateProduct() throws Exception {
         ProductDtos.UpdateProductRequest request =
                 new ProductDtos.UpdateProductRequest(
@@ -174,6 +200,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void shouldFindProductsByCategory() throws Exception {
         Product product = Product.builder()
                 .id(1L)
@@ -203,6 +230,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void shouldReturnNotFoundWhenProductDoesNotExist() throws Exception {
         when(service.findById(99L))
                 .thenThrow(new ResourceNotFoundException("Product not found"));

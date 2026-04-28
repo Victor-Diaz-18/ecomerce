@@ -3,7 +3,6 @@ package edu.unimagdalena.universitystore.entity;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.catalina.User;
 
 @Entity
 @Table(name = "customers")

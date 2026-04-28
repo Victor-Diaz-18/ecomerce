@@ -6,6 +6,7 @@ import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import edu.unimagdalena.universitystore.mapper.OrderMapper;
+import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.PurchaseOrderService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
 import org.springframework.context.annotation.Import;
@@ -26,7 +27,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(OrderController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({
+        GlobalExceptionHandler.class,
+        SecurityConfig.class
+})
 class OrderControllerTest {
     @Autowired
     private MockMvc mockMvc;

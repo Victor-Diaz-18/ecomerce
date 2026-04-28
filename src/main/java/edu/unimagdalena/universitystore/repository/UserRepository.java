@@ -19,4 +19,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
         LEFT JOIN u.customer c WHERE c.email = :email
     """)
     boolean existsByCustomerEmail(@Param("email") String email);
+
 }
