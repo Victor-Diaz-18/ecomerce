@@ -4,6 +4,7 @@ import edu.unimagdalena.universitystore.dto.CategoryDtos;
 import edu.unimagdalena.universitystore.entity.Category;
 import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.mapper.CategoryMapper;
+import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.CategoryService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
 import org.springframework.context.annotation.Import;
@@ -20,7 +21,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CategoryController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({
+        GlobalExceptionHandler.class,
+        SecurityConfig.class
+})
 class CategoryControllerTest {
     @Autowired
     private MockMvc mockMvc;

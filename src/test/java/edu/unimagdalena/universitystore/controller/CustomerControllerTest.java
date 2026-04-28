@@ -4,6 +4,7 @@ import edu.unimagdalena.universitystore.dto.CustomerDtos;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import edu.unimagdalena.universitystore.mapper.CustomerMapper;
+import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.CustomerService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CustomerController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({
+        GlobalExceptionHandler.class,
+        SecurityConfig.class
+})
 class CustomerControllerTest {
     @Autowired
     private MockMvc mockMvc;

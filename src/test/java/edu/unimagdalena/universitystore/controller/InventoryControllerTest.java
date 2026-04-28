@@ -4,6 +4,7 @@ import edu.unimagdalena.universitystore.dto.InventoryDtos;
 import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.mapper.InventoryMapper;
+import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.InventoryService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
 import org.springframework.context.annotation.Import;
@@ -22,7 +23,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(InventoryController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({
+        GlobalExceptionHandler.class,
+        SecurityConfig.class
+})
 class InventoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
