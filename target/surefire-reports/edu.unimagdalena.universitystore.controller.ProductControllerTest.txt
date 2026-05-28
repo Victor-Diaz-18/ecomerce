@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: edu.unimagdalena.universitystore.controller.ProductControllerTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.547 s -- in edu.unimagdalena.universitystore.controller.ProductControllerTest
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.439 s -- in edu.unimagdalena.universitystore.controller.ProductControllerTest

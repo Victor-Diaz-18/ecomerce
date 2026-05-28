@@ -142,7 +142,8 @@ class ProductControllerTest {
                         "Keyboard",
                         "SKU002",
                         new BigDecimal("80000"),
-                        true
+                        true,
+                        null
                 );
 
         Product updated = Product.builder()
