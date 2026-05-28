@@ -8,6 +8,7 @@ import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.repository.InventoryRepository;
 import edu.unimagdalena.universitystore.repository.OrderItemRepository;
+import edu.unimagdalena.universitystore.repository.OrderStatusHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.repository.PurchaseOrderRepository;
 import edu.unimagdalena.universitystore.service.Impl.PurchaseOrderServiceImpl;
@@ -33,6 +34,9 @@ class PurchaseOrderServiceImplTest {
 
     @Mock
     private OrderItemRepository orderItemRepository;
+
+    @Mock
+    private OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     @Mock
     private ProductRepository productRepository;

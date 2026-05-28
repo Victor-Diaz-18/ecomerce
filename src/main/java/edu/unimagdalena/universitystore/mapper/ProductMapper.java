@@ -12,7 +12,7 @@ public interface ProductMapper {
     Product toEntity(ProductDtos.CreateProductRequest request);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "category.id", source = "categoryId")
     Product toEntity(ProductDtos.UpdateProductRequest request);
 
     @Mapping(target = "categoryId", source = "category.id")

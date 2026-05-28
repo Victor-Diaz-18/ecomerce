@@ -60,6 +60,13 @@ public class ProductServiceImpl implements ProductService {
             throw new ConflictException("SKU already exists");
         }
 
+        if (product.getCategory() != null && product.getCategory().getId() != null) {
+            if (!categoryRepository.existsById(product.getCategory().getId())) {
+                throw new ResourceNotFoundException("Category not found");
+            }
+            existing.setCategory(product.getCategory());
+        }
+
         existing.setName(product.getName());
         existing.setSku(product.getSku());
         existing.setPrice(product.getPrice());

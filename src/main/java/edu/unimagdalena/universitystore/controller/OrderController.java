@@ -1,6 +1,7 @@
 package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
+import edu.unimagdalena.universitystore.enums.OrderStatus;
 import edu.unimagdalena.universitystore.mapper.OrderMapper;
 import edu.unimagdalena.universitystore.service.PurchaseOrderService;
 import jakarta.validation.Valid;
@@ -39,6 +40,19 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<OrderResponse>> findAll() {
         var result = service.findAll()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<OrderResponse>> search(
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) String status) {
+        var parsedStatus = status == null ? null : OrderStatus.valueOf(status.toUpperCase());
+        var result = service.search(customerId, parsedStatus)
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
