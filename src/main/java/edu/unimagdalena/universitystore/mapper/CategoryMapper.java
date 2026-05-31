@@ -8,5 +8,8 @@ import org.mapstruct.*;
 public interface CategoryMapper {
     Category toEntity(CategoryDtos.CreateCategoryRequest request);
 
+    @Mapping(target = "id", ignore = true)
+    Category toEntity(CategoryDtos.UpdateCategoryRequest request);
+
     CategoryDtos.CategoryResponse toResponse(Category category);
 }
