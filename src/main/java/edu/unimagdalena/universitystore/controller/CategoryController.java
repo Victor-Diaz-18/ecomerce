@@ -52,4 +52,18 @@ public class CategoryController {
                 mapper.toResponse(service.findById(id))
         );
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CategoryResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateCategoryRequest req) {
+        var updated = service.update(id, mapper.toEntity(req));
+        return ResponseEntity.ok(mapper.toResponse(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

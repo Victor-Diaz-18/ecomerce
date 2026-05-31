@@ -41,11 +41,23 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer update(Long id, Customer customer) {
         Customer existing = findById(id);
+        if (!existing.getEmail().equalsIgnoreCase(customer.getEmail())
+                && customerRepository.findByEmail(customer.getEmail()).isPresent()) {
+            throw new ConflictException("Email already exists");
+        }
         existing.setName(customer.getName());
         existing.setEmail(customer.getEmail());
         if (customer.getStatus() != null) {
             existing.setStatus(customer.getStatus());
         }
         return customerRepository.save(existing);
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!customerRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Customer not found");
+        }
+        customerRepository.deleteById(id);
     }
 }

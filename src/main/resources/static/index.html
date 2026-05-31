@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>University Store Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #182027;
+        --ink-soft: #2a333b;
+        --paper: #f6f3ee;
+        --accent: #0e6d5c;
+        --accent-soft: #cfe6e1;
+        --gold: #d1a95a;
+        --sky: #e6eef5;
+        --card: #ffffff;
+        --shadow: 0 10px 30px rgba(8, 15, 22, 0.08);
+        --border: 1px solid rgba(24, 32, 39, 0.12);
+        --danger: #b5482f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Work Sans", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at top, #f8fafc 0%, var(--paper) 55%, #efe7dd 100%);
+      }
+
+      header {
+        padding: 24px 36px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: var(--border);
+        background: linear-gradient(120deg, rgba(14, 109, 92, 0.08), rgba(209, 169, 90, 0.08));
+      }
+
+      header h1 {
+        margin: 0;
+        font-family: "Libre Baskerville", serif;
+        font-size: 24px;
+        letter-spacing: 0.4px;
+      }
+
+      header p {
+        margin: 6px 0 0;
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: calc(100vh - 84px);
+      }
+
+      nav {
+        padding: 24px;
+        border-right: var(--border);
+        background: #fdfbf8;
+      }
+
+      .nav-title {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #5d6a72;
+        margin-bottom: 12px;
+      }
+
+      .tab {
+        width: 100%;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: transparent;
+        border: var(--border);
+        border-radius: 12px;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 500;
+        transition: 0.2s ease;
+      }
+
+      .tab.active {
+        background: var(--accent);
+        color: white;
+        border-color: transparent;
+        box-shadow: var(--shadow);
+      }
+
+      main {
+        padding: 28px 34px 60px;
+      }
+
+      .panel {
+        display: none;
+        animation: fade 0.25s ease;
+      }
+
+      .panel.active {
+        display: block;
+      }
+
+      @keyframes fade {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: 20px;
+        font-family: "Libre Baskerville", serif;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: 18px;
+        padding: 20px;
+        border: var(--border);
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      label {
+        font-size: 12px;
+        color: #5d6a72;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: var(--border);
+        border-radius: 10px;
+        font-family: inherit;
+        background: #fafafa;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      button.ghost {
+        background: transparent;
+        border: var(--border);
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      button.danger {
+        background: var(--danger);
+        color: white;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        text-align: left;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .notice {
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        font-size: 13px;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--sky);
+        font-size: 11px;
+      }
+
+      dialog {
+        border: none;
+        border-radius: 16px;
+        padding: 0;
+        width: min(640px, 92vw);
+        box-shadow: var(--shadow);
+      }
+
+      dialog::backdrop {
+        background: rgba(5, 15, 20, 0.45);
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .modal-header {
+        padding: 16px 20px;
+        border-bottom: var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        font-family: "Libre Baskerville", serif;
+      }
+
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        nav {
+          border-right: none;
+          border-bottom: var(--border);
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 8px;
+        }
+        .tab { margin: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>University Store Admin</h1>
+        <p>Panel academico para gestionar catalogo, pedidos y clientes.</p>
+      </div>
+      <div class="toolbar">
+        <label for="apiBase">API Base</label>
+        <input id="apiBase" type="text" value="http://localhost:8080" />
+      </div>
+    </header>
+    <div class="layout">
+      <nav>
+        <div class="nav-title">Secciones</div>
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="products">Productos</button>
+        <button class="tab" data-tab="categories">Categorias</button>
+        <button class="tab" data-tab="customers">Clientes</button>
+        <button class="tab" data-tab="inventory">Inventario</button>
+        <button class="tab" data-tab="orders">Ordenes</button>
+      </nav>
+
+      <main>
+        <section class="panel active" id="dashboard">
+          <div class="section-header">
+            <h2>Resumen universitario</h2>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <h3>Catalogo activo</h3>
+              <p>Gestiona productos y categorias disponibles para la comunidad.</p>
+            </div>
+            <div class="card">
+              <h3>Pedidos y estados</h3>
+              <p>Supervisa ordenes, pagos y cancelaciones en tiempo real.</p>
+            </div>
+            <div class="card">
+              <h3>Inventario</h3>
+              <p>Controla stock minimo para evitar faltantes en campus.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="products">
+          <div class="section-header">
+            <h2>Productos</h2>
+            <div class="toolbar">
+              <button class="primary" onclick="openProductModal()">Nuevo producto</button>
+              <button class="ghost" onclick="loadProducts()">Actualizar</button>
+            </div>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>SKU</th>
+                  <th>Precio</th>
+                  <th>Categoria</th>
+                  <th>Activo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="productsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="categories">
+          <div class="section-header">
+            <h2>Categorias</h2>
+            <div class="toolbar">
+              <button class="primary" onclick="openCategoryModal()">Nueva categoria</button>
+              <button class="ghost" onclick="loadCategories()">Actualizar</button>
+            </div>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="categoriesTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="customers">
+          <div class="section-header">
+            <h2>Clientes</h2>
+            <div class="toolbar">
+              <button class="primary" onclick="openCustomerModal()">Nuevo cliente</button>
+              <button class="ghost" onclick="loadCustomers()">Actualizar</button>
+            </div>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Estado</th>
+                  <th>Direcciones</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="customersTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="inventory">
+          <div class="section-header">
+            <h2>Inventario</h2>
+            <div class="toolbar">
+              <button class="primary" onclick="openInventoryModal()">Nuevo inventario</button>
+              <button class="ghost" onclick="loadInventory()">Actualizar</button>
+            </div>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Disponible</th>
+                  <th>Minimo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="orders">
+          <div class="section-header">
+            <h2>Ordenes</h2>
+            <div class="toolbar">
+              <button class="primary" onclick="openOrderModal()">Nueva orden</button>
+              <button class="ghost" onclick="loadOrders()">Actualizar</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="toolbar" style="margin-bottom: 12px;">
+              <select id="orderSearchCustomer"></select>
+              <select id="orderSearchStatus">
+                <option value="">Estado</option>
+                <option value="CREATED">CREATED</option>
+                <option value="PAID">PAID</option>
+                <option value="SHIPPED">SHIPPED</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+              <button class="ghost" onclick="searchOrders()">Buscar</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Cliente</th>
+                  <th>Direccion</th>
+                  <th>Estado</th>
+                  <th>Total</th>
+                  <th>Items</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="productModal">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Nuevo producto</h3>
+        <button class="ghost" onclick="closeModal('productModal')">Cerrar</button>
+      </div>
+      <div class="modal-body grid">
+        <div>
+          <label>Nombre</label>
+          <input id="productName" />
+        </div>
+        <div>
+          <label>SKU</label>
+          <input id="productSku" />
+        </div>
+        <div>
+          <label>Precio</label>
+          <input id="productPrice" type="number" step="0.01" />
+        </div>
+        <div>
+          <label>Categoria</label>
+          <select id="productCategory"></select>
+        </div>
+        <div>
+          <label>Activo</label>
+          <select id="productActive">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <input id="productId" type="hidden" />
+        <div class="toolbar">
+          <button class="primary" onclick="saveProduct()">Guardar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="categoryModal">
+      <div class="modal-header">
+        <h3 id="categoryModalTitle">Nueva categoria</h3>
+        <button class="ghost" onclick="closeModal('categoryModal')">Cerrar</button>
+      </div>
+      <div class="modal-body grid">
+        <div>
+          <label>Nombre</label>
+          <input id="categoryName" />
+        </div>
+        <input id="categoryId" type="hidden" />
+        <div class="toolbar">
+          <button class="primary" onclick="saveCategory()">Guardar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="customerModal">
+      <div class="modal-header">
+        <h3 id="customerModalTitle">Nuevo cliente</h3>
+        <button class="ghost" onclick="closeModal('customerModal')">Cerrar</button>
+      </div>
+      <div class="modal-body grid">
+        <div>
+          <label>Nombre</label>
+          <input id="customerName" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="customerEmail" />
+        </div>
+        <div>
+          <label>Estado</label>
+          <select id="customerStatus">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        </div>
+        <div>
+          <label>Direcciones (solo nuevos)</label>
+          <textarea id="customerAddresses" rows="3" placeholder="Calle 30 #3-90, Santa Marta, Colombia"></textarea>
+        </div>
+        <div>
+          <label>Direcciones guardadas</label>
+          <div class="card" style="margin: 0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Direccion</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="customerAddressesTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <label>Nueva direccion</label>
+          <input id="newAddressLine" placeholder="Calle 30 #3-90, Santa Marta, Colombia" />
+        </div>
+        <div class="toolbar">
+          <button class="ghost" onclick="addCustomerAddress()">Agregar direccion</button>
+        </div>
+        <input id="customerId" type="hidden" />
+        <div class="toolbar">
+          <button class="primary" onclick="saveCustomer()">Guardar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="inventoryModal">
+      <div class="modal-header">
+        <h3 id="inventoryModalTitle">Nuevo inventario</h3>
+        <button class="ghost" onclick="closeModal('inventoryModal')">Cerrar</button>
+      </div>
+      <div class="modal-body grid">
+        <div>
+          <label>Producto</label>
+          <select id="inventoryProduct"></select>
+        </div>
+        <div>
+          <label>Stock disponible</label>
+          <input id="inventoryStock" type="number" />
+        </div>
+        <div>
+          <label>Stock minimo</label>
+          <input id="inventoryMin" type="number" />
+        </div>
+        <input id="inventoryId" type="hidden" />
+        <div class="toolbar">
+          <button class="primary" onclick="saveInventory()">Guardar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="orderModal">
+      <div class="modal-header">
+        <h3 id="orderModalTitle">Nueva orden</h3>
+        <button class="ghost" onclick="closeModal('orderModal')">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid">
+          <div>
+            <label>Cliente</label>
+            <select id="orderCustomer"></select>
+          </div>
+          <div>
+            <label>Direccion</label>
+            <select id="orderAddress"></select>
+          </div>
+          <div>
+            <label>Producto</label>
+            <select id="orderProduct"></select>
+          </div>
+          <div>
+            <label>Cantidad</label>
+            <input id="orderQuantity" type="number" min="1" />
+          </div>
+          <div class="toolbar">
+            <button class="ghost" onclick="addOrderItem()">Agregar item</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 14px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="orderItemsTable"></tbody>
+          </table>
+        </div>
+        <div class="toolbar">
+          <button class="primary" onclick="saveOrder()">Crear orden</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      const state = {
+        products: [],
+        categories: [],
+        customers: [],
+        addresses: {},
+        inventories: [],
+        orderItems: [],
+      };
+
+      const tabs = document.querySelectorAll(".tab");
+      const panels = document.querySelectorAll(".panel");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((t) => t.classList.remove("active"));
+          panels.forEach((p) => p.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById(tab.dataset.tab).classList.add("active");
+        });
+      });
+
+      function apiBase() {
+        return document.getElementById("apiBase").value.replace(/\/$/, "");
+      }
+
+      async function request(path, options = {}) {
+        const res = await fetch(`${apiBase()}${path}`, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+        if (!res.ok) {
+          const body = await res.text();
+          alert(`Error ${res.status}: ${body}`);
+          throw new Error(body);
+        }
+        if (res.status === 204) return null;
+        return res.json();
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).close();
+      }
+
+      function openModal(id) {
+        document.getElementById(id).showModal();
+      }
+
+      function clearFields(ids) {
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+      }
+
+      function setSelectOptions(selectId, options, labelKey = "name") {
+        const select = document.getElementById(selectId);
+        select.innerHTML = options
+          .map((item) => `<option value="${item.id}">${item[labelKey]}</option>`)
+          .join("");
+      }
+
+      function setCustomerOptions(selectId) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = `<option value="">Cliente</option>` + state.customers
+          .map((c) => `<option value="${c.id}">${c.name}</option>`)
+          .join("");
+      }
+
+      async function bootstrap() {
+        await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadInventory()]);
+        setCustomerOptions("orderSearchCustomer");
+      }
+
+      async function loadCategories() {
+        state.categories = await request("/api/v1/categories");
+        const tbody = document.getElementById("categoriesTable");
+        tbody.innerHTML = state.categories
+          .map(
+            (c) => `
+              <tr>
+                <td>${c.id}</td>
+                <td>${c.name}</td>
+                <td class="action-row">
+                  <button class="ghost" onclick="editCategory(${c.id})">Editar</button>
+                  <button class="danger" onclick="deleteCategory(${c.id})">Eliminar</button>
+                </td>
+              </tr>`
+          )
+          .join("");
+        setSelectOptions("productCategory", state.categories, "name");
+      }
+
+      function openCategoryModal() {
+        clearFields(["categoryName", "categoryId"]);
+        document.getElementById("categoryModalTitle").textContent = "Nueva categoria";
+        openModal("categoryModal");
+      }
+
+      function editCategory(id) {
+        const category = state.categories.find((c) => c.id === id);
+        document.getElementById("categoryName").value = category.name;
+        document.getElementById("categoryId").value = category.id;
+        document.getElementById("categoryModalTitle").textContent = "Editar categoria";
+        openModal("categoryModal");
+      }
+
+      async function saveCategory() {
+        const id = document.getElementById("categoryId").value;
+        const payload = { name: document.getElementById("categoryName").value.trim() };
+        if (id) {
+          await request(`/api/v1/categories/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+        } else {
+          await request("/api/v1/categories", { method: "POST", body: JSON.stringify(payload) });
+        }
+        closeModal("categoryModal");
+        clearFields(["categoryName", "categoryId"]);
+        loadCategories();
+      }
+
+      async function deleteCategory(id) {
+        await request(`/api/v1/categories/${id}`, { method: "DELETE" });
+        loadCategories();
+      }
+
+      async function loadProducts() {
+        state.products = await request("/api/v1/products");
+        const tbody = document.getElementById("productsTable");
+        tbody.innerHTML = state.products
+          .map(
+            (p) => `
+              <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.sku}</td>
+                <td>${p.price}</td>
+                <td>${categoryName(p.categoryId)}</td>
+                <td>${p.active}</td>
+                <td class="action-row">
+                  <button class="ghost" onclick="editProduct(${p.id})">Editar</button>
+                  <button class="danger" onclick="deleteProduct(${p.id})">Eliminar</button>
+                </td>
+              </tr>`
+          )
+          .join("");
+        setSelectOptions("inventoryProduct", state.products, "name");
+        setSelectOptions("orderProduct", state.products, "name");
+      }
+
+      function categoryName(id) {
+        const category = state.categories.find((c) => c.id === id);
+        return category ? category.name : "-";
+      }
+
+      function productName(id) {
+        const product = state.products.find((p) => p.id === id);
+        return product ? product.name : "-";
+      }
+
+      function openProductModal() {
+        clearFields(["productName", "productSku", "productPrice", "productId"]);
+        document.getElementById("productActive").value = "true";
+        document.getElementById("productModalTitle").textContent = "Nuevo producto";
+        openModal("productModal");
+      }
+
+      function editProduct(id) {
+        const product = state.products.find((p) => p.id === id);
+        document.getElementById("productName").value = product.name;
+        document.getElementById("productSku").value = product.sku;
+        document.getElementById("productPrice").value = product.price;
+        document.getElementById("productActive").value = product.active ? "true" : "false";
+        document.getElementById("productCategory").value = product.categoryId;
+        document.getElementById("productId").value = product.id;
+        document.getElementById("productModalTitle").textContent = "Editar producto";
+        openModal("productModal");
+      }
+
+      async function saveProduct() {
+        const id = document.getElementById("productId").value;
+        const payload = {
+          name: document.getElementById("productName").value.trim(),
+          sku: document.getElementById("productSku").value.trim(),
+          price: Number(document.getElementById("productPrice").value),
+          active: document.getElementById("productActive").value === "true",
+          categoryId: Number(document.getElementById("productCategory").value),
+        };
+        if (id) {
+          await request(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+        } else {
+          await request("/api/v1/products", { method: "POST", body: JSON.stringify(payload) });
+        }
+        closeModal("productModal");
+        clearFields(["productName", "productSku", "productPrice", "productId"]);
+        loadProducts();
+      }
+
+      async function deleteProduct(id) {
+        await request(`/api/v1/products/${id}`, { method: "DELETE" });
+        loadProducts();
+      }
+
+      async function loadCustomers() {
+        state.customers = await request("/api/v1/customers");
+        const tbody = document.getElementById("customersTable");
+        tbody.innerHTML = state.customers
+          .map(
+            (c) => `
+              <tr>
+                <td>${c.id}</td>
+                <td>${c.name}</td>
+                <td>${c.email}</td>
+                <td><span class="status-pill">${c.status}</span></td>
+                <td>
+                  <button class="ghost" onclick="viewAddresses(${c.id})">Ver</button>
+                </td>
+                <td class="action-row">
+                  <button class="ghost" onclick="editCustomer(${c.id})">Editar</button>
+                  <button class="danger" onclick="deleteCustomer(${c.id})">Eliminar</button>
+                </td>
+              </tr>`
+          )
+          .join("");
+        setCustomerOptions("orderSearchCustomer");
+        setCustomerOptions("orderCustomer");
+      }
+
+      function openCustomerModal() {
+        clearFields(["customerName", "customerEmail", "customerId", "customerAddresses"]);
+        document.getElementById("customerStatus").value = "ACTIVE";
+        document.getElementById("customerModalTitle").textContent = "Nuevo cliente";
+        openModal("customerModal");
+      }
+
+      async function editCustomer(id) {
+        const customer = state.customers.find((c) => c.id === id);
+        document.getElementById("customerName").value = customer.name;
+        document.getElementById("customerEmail").value = customer.email;
+        document.getElementById("customerStatus").value = customer.status;
+        document.getElementById("customerId").value = customer.id;
+
+        document.getElementById("customerAddresses").value = "";
+        const addresses = await request(`/api/v1/addresses/customer/${id}`);
+        renderCustomerAddresses(addresses);
+
+        document.getElementById("customerModalTitle").textContent = "Editar cliente";
+        openModal("customerModal");
+      }
+
+      async function saveCustomer() {
+        const id = document.getElementById("customerId").value;
+        const payload = {
+          name: document.getElementById("customerName").value.trim(),
+          email: document.getElementById("customerEmail").value.trim(),
+          status: document.getElementById("customerStatus").value,
+        };
+        let customerId = id;
+        if (id) {
+          await request(`/api/v1/customers/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+        } else {
+          const created = await request("/api/v1/customers", { method: "POST", body: JSON.stringify(payload) });
+          customerId = created.id;
+        }
+
+        if (!id) {
+          await saveCustomerAddresses(customerId);
+        }
+
+        closeModal("customerModal");
+        clearFields(["customerName", "customerEmail", "customerId", "customerAddresses", "newAddressLine"]);
+        loadCustomers();
+      }
+
+      async function saveCustomerAddresses(customerId) {
+        const addressLines = document.getElementById("customerAddresses").value.trim();
+        if (!addressLines) return;
+        const lines = addressLines.split("\n").map((l) => l.trim()).filter(Boolean);
+        for (const line of lines) {
+          await createAddressFromLine(customerId, line);
+        }
+      }
+
+      async function addCustomerAddress() {
+        const customerId = document.getElementById("customerId").value;
+        if (!customerId) {
+          alert("Guarda el cliente primero.");
+          return;
+        }
+        const line = document.getElementById("newAddressLine").value.trim();
+        if (!line) return;
+        await createAddressFromLine(customerId, line);
+        document.getElementById("newAddressLine").value = "";
+        const addresses = await request(`/api/v1/addresses/customer/${customerId}`);
+        renderCustomerAddresses(addresses);
+      }
+
+      async function createAddressFromLine(customerId, line) {
+        const parts = line.split(",").map((part) => part.trim()).filter(Boolean);
+        const [street, city, country] = parts;
+        if (street && city && country) {
+          await request("/api/v1/addresses", {
+            method: "POST",
+            body: JSON.stringify({ street, city, country, customerId: Number(customerId) }),
+          });
+        }
+      }
+
+      function renderCustomerAddresses(addresses) {
+        const tbody = document.getElementById("customerAddressesTable");
+        tbody.innerHTML = addresses
+          .map(
+            (a) => `
+              <tr>
+                <td>${a.street}, ${a.city}, ${a.country}</td>
+                <td><button class="ghost" onclick="deleteAddress(${a.id})">Eliminar</button></td>
+              </tr>`
+          )
+          .join("");
+      }
+
+      async function deleteAddress(id) {
+        await request(`/api/v1/addresses/${id}`, { method: "DELETE" });
+        const customerId = document.getElementById("customerId").value;
+        if (customerId) {
+          const addresses = await request(`/api/v1/addresses/customer/${customerId}`);
+          renderCustomerAddresses(addresses);
+        }
+      }
+
+      async function deleteCustomer(id) {
+        await request(`/api/v1/customers/${id}`, { method: "DELETE" });
+        loadCustomers();
+      }
+
+      async function viewAddresses(customerId) {
+        const data = await request(`/api/v1/addresses/customer/${customerId}`);
+        state.addresses[customerId] = data;
+        const list = data.map((a) => `${a.street}, ${a.city}, ${a.country}`).join("\n");
+        alert(list || "Sin direcciones");
+      }
+
+      async function loadInventory() {
+        const data = await request("/api/v1/inventories");
+        state.inventories = data;
+        const tbody = document.getElementById("inventoryTable");
+        tbody.innerHTML = data
+          .map(
+            (i) => `
+              <tr>
+                <td>${productName(i.productId)}</td>
+                <td>${i.availableStock}</td>
+                <td>${i.minimumStock}</td>
+                <td class="action-row">
+                  <button class="ghost" onclick="editInventory(${i.id})">Editar</button>
+                </td>
+              </tr>`
+          )
+          .join("");
+      }
+
+      function openInventoryModal() {
+        clearFields(["inventoryId", "inventoryStock", "inventoryMin"]);
+        document.getElementById("inventoryModalTitle").textContent = "Nuevo inventario";
+        openModal("inventoryModal");
+      }
+
+      function editInventory(id) {
+        const record = state.inventories.find((i) => i.id === id);
+        document.getElementById("inventoryProduct").value = record.productId;
+        document.getElementById("inventoryStock").value = record.availableStock;
+        document.getElementById("inventoryMin").value = record.minimumStock;
+        document.getElementById("inventoryId").value = record.id;
+        document.getElementById("inventoryModalTitle").textContent = "Editar inventario";
+        openModal("inventoryModal");
+      }
+
+      async function saveInventory() {
+        const id = document.getElementById("inventoryId").value;
+        const payload = {
+          availableStock: Number(document.getElementById("inventoryStock").value),
+          minimumStock: Number(document.getElementById("inventoryMin").value),
+        };
+        if (id) {
+          await request(`/api/v1/inventories/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+        } else {
+          const productId = Number(document.getElementById("inventoryProduct").value);
+          await request("/api/v1/inventories", {
+            method: "POST",
+            body: JSON.stringify({ ...payload, productId }),
+          });
+        }
+        closeModal("inventoryModal");
+        clearFields(["inventoryId", "inventoryStock", "inventoryMin"]);
+        loadInventory();
+      }
+
+      async function loadOrders() {
+        const data = await request("/api/v1/orders");
+        renderOrders(data);
+      }
+
+      async function searchOrders() {
+        const customerId = document.getElementById("orderSearchCustomer").value;
+        const status = document.getElementById("orderSearchStatus").value;
+        const params = new URLSearchParams();
+        if (customerId) params.set("customerId", customerId);
+        if (status) params.set("status", status);
+        const data = await request(`/api/v1/orders/search?${params.toString()}`);
+        renderOrders(data);
+      }
+
+      function renderOrders(data) {
+        const tbody = document.getElementById("ordersTable");
+        tbody.innerHTML = data
+          .map(
+            (o) => `
+              <tr>
+                <td>${o.id}</td>
+                <td>${customerName(o.customerId)}</td>
+                <td>${o.addressId || "-"}</td>
+                <td><span class="status-pill">${o.status}</span></td>
+                <td>${o.total}</td>
+                <td>${o.items ? o.items.length : 0}</td>
+                <td class="action-row">
+                  <button class="ghost" onclick="payOrder(${o.id})">Pagar</button>
+                  <button class="danger" onclick="cancelOrder(${o.id})">Cancelar</button>
+                </td>
+              </tr>`
+          )
+          .join("");
+      }
+
+      function customerName(id) {
+        const customer = state.customers.find((c) => c.id === id);
+        return customer ? customer.name : "-";
+      }
+
+      function openOrderModal() {
+        state.orderItems = [];
+        document.getElementById("orderItemsTable").innerHTML = "";
+        document.getElementById("orderQuantity").value = "1";
+        const customerSelect = document.getElementById("orderCustomer");
+        if (customerSelect.value) {
+          updateOrderAddresses(customerSelect.value);
+        }
+        openModal("orderModal");
+      }
+
+      document.getElementById("orderCustomer").addEventListener("change", (event) => {
+        updateOrderAddresses(event.target.value);
+      });
+
+      async function updateOrderAddresses(customerId) {
+        if (!customerId) {
+          document.getElementById("orderAddress").innerHTML = "<option value=\"\">Selecciona cliente</option>";
+          return;
+        }
+        const data = await request(`/api/v1/addresses/customer/${customerId}`);
+        state.addresses[customerId] = data;
+        const addressSelect = document.getElementById("orderAddress");
+        if (!data.length) {
+          addressSelect.innerHTML = "<option value=\"\">Sin direcciones</option>";
+          return;
+        }
+        addressSelect.innerHTML = data
+          .map((a) => `<option value="${a.id}">${a.street} - ${a.city}</option>`)
+          .join("");
+      }
+
+      async function addOrderItem() {
+        const productId = Number(document.getElementById("orderProduct").value);
+        const quantity = Number(document.getElementById("orderQuantity").value);
+        const product = state.products.find((p) => p.id === productId);
+        state.orderItems.push({ productId, quantity, name: product.name });
+        renderOrderItems();
+      }
+
+      function renderOrderItems() {
+        const tbody = document.getElementById("orderItemsTable");
+        tbody.innerHTML = state.orderItems
+          .map(
+            (item, index) => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td><button class="ghost" onclick="removeOrderItem(${index})">Quitar</button></td>
+              </tr>`
+          )
+          .join("");
+      }
+
+      function removeOrderItem(index) {
+        state.orderItems.splice(index, 1);
+        renderOrderItems();
+      }
+
+      async function saveOrder() {
+        const customerId = Number(document.getElementById("orderCustomer").value);
+        const addressValue = document.getElementById("orderAddress").value;
+        const addressId = addressValue ? Number(addressValue) : null;
+        if (!customerId || !addressId) {
+          alert("Selecciona un cliente y una direccion.");
+          return;
+        }
+        if (!state.orderItems.length) {
+          alert("Agrega al menos un item.");
+          return;
+        }
+        const items = state.orderItems.map(({ productId, quantity }) => ({ productId, quantity }));
+        await request("/api/v1/orders", {
+          method: "POST",
+          body: JSON.stringify({ customerId, addressId, items }),
+        });
+        closeModal("orderModal");
+        loadOrders();
+      }
+
+      async function payOrder(id) {
+        await request(`/api/v1/orders/${id}/pay`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      async function cancelOrder(id) {
+        await request(`/api/v1/orders/${id}/cancel`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      bootstrap();
+    </script>
+  </body>
+</html>

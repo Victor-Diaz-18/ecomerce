@@ -28,6 +28,16 @@ public class InventoryController {
                 .body(mapper.toResponse(created));
     }
 
+    @GetMapping
+    public ResponseEntity<List<InventoryResponse>> findAll() {
+        var result = service.findAll()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(result);
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<InventoryResponse> updateStock(
             @PathVariable Long id,
@@ -52,5 +62,12 @@ public class InventoryController {
                 .toList();
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<InventoryResponse> findByProductId(@PathVariable Long productId) {
+        return ResponseEntity.ok(
+                mapper.toResponse(service.findByProductId(productId))
+        );
     }
 }

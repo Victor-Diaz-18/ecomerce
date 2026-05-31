@@ -47,4 +47,15 @@ public class InventoryServiceImpl implements InventoryService {
     public List<Inventory> findLowStockProducts() {
         return inventoryRepository.findLowStockProducts();
     }
+
+    @Override
+    public List<Inventory> findAll() {
+        return inventoryRepository.findAll();
+    }
+
+    @Override
+    public Inventory findByProductId(Long productId) {
+        return inventoryRepository.findByProductId(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+    }
 }

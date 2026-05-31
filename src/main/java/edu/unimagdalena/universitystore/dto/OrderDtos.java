@@ -38,6 +38,7 @@ public class OrderDtos {
             String status,
             LocalDateTime createdAt,
             Long customerId,
+            Long addressId,
             List<OrderItemResponse> items,
             BigDecimal total
     ) implements Serializable {}

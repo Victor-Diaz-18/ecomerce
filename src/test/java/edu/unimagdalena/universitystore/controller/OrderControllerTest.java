@@ -66,6 +66,7 @@ class OrderControllerTest {
                         "CREATED",
                         LocalDateTime.now(),
                         1L,
+                        1L,
                         List.of(),
                         new BigDecimal("100000")
                 );
@@ -96,6 +97,7 @@ class OrderControllerTest {
                         "CREATED",
                         LocalDateTime.now(),
                         1L,
+                        null,
                         List.of(),
                         new BigDecimal("100000")
                 );
@@ -123,6 +125,7 @@ class OrderControllerTest {
                         "CREATED",
                         LocalDateTime.now(),
                         1L,
+                        null,
                         List.of(),
                         new BigDecimal("100000")
                 );
@@ -150,6 +153,7 @@ class OrderControllerTest {
                         "PAID",
                         LocalDateTime.now(),
                         1L,
+                        null,
                         List.of(),
                         new BigDecimal("100000")
                 );
@@ -177,6 +181,7 @@ class OrderControllerTest {
                         "CANCELLED",
                         LocalDateTime.now(),
                         1L,
+                        null,
                         List.of(),
                         new BigDecimal("100000")
                 );

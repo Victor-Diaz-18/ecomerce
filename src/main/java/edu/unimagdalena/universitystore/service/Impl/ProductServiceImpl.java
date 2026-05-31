@@ -79,4 +79,12 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> findByCategory(Long categoryId) {
         return productRepository.findByCategoryIdAndActiveTrue(categoryId);
     }
+
+    @Override
+    public void delete(Long id) {
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        productRepository.deleteById(id);
+    }
 }

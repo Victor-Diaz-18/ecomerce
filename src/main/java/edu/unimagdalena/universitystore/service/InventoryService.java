@@ -7,5 +7,7 @@ import java.util.List;
 public interface InventoryService {
     Inventory create(Inventory inventory);
     Inventory updateStock(Long id, Integer newStock, Integer newMinimumStock);
+    List<Inventory> findAll();
     List<Inventory> findLowStockProducts();
+    Inventory findByProductId(Long productId);
 }
