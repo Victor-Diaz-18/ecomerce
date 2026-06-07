@@ -885,7 +885,7 @@
 
       function setSelectOptions(selectId, options, labelKey = "name") {
         const select = document.getElementById(selectId);
-        select.innerHTML = options
+        select.innerHTML = `<option value="">Selecciona</option>` + options
           .map((item) => `<option value="${item.id}">${item[labelKey]}</option>`)
           .join("");
       }
@@ -904,7 +904,7 @@
       }
 
       async function refreshDashboard() {
-        await Promise.all([loadOrders(), loadInventory(), loadProducts(), loadCustomers()]);
+        await Promise.all([loadProducts(), loadInventory(), loadOrders(), loadCustomers()]);
       }
 
       async function loadCategories() {
@@ -980,6 +980,9 @@
           .join("");
         setSelectOptions("inventoryProduct", state.products, "name");
         setSelectOptions("orderProduct", state.products, "name");
+        if (state.inventories.length) {
+          loadInventory();
+        }
         updateDashboard();
       }
 
@@ -1265,12 +1268,42 @@
                 <td>${o.total}</td>
                 <td>${o.items ? o.items.length : 0}</td>
                 <td class="action-row">
-                  <button class="ghost" onclick="payOrder(${o.id})">Pagar</button>
-                  <button class="danger" onclick="cancelOrder(${o.id})">Cancelar</button>
+                  ${renderOrderActions(o)}
                 </td>
               </tr>`
           )
           .join("");
+      }
+
+      function renderOrderActions(order) {
+        if (order.status === "CREATED") {
+          return `
+            <button class="ghost" onclick="payOrder(${order.id})">Pagar</button>
+            <button class="danger" onclick="cancelOrder(${order.id})">Cancelar</button>
+          `;
+        }
+        if (order.status === "PAID") {
+          return `
+            <button class="ghost" onclick="shipOrder(${order.id})">Enviar</button>
+            <button class="danger" onclick="cancelOrder(${order.id})">Cancelar</button>
+          `;
+        }
+        if (order.status === "SHIPPED") {
+          return `
+            <button class="ghost" onclick="deliverOrder(${order.id})">Entregar</button>
+          `;
+        }
+        if (order.status === "DELIVERED") {
+          return `
+            <span class="status-pill">Entregada</span>
+          `;
+        }
+        if (order.status === "CANCELLED") {
+          return `
+            <span class="status-pill">Cancelada</span>
+          `;
+        }
+        return "-";
       }
 
       function customerName(id) {
@@ -1281,9 +1314,10 @@
       function openOrderModal() {
         state.orderItems = [];
         document.getElementById("orderItemsTable").innerHTML = "";
-        document.getElementById("orderQuantity").value = "1";
+        document.getElementById("orderQuantity").value = "";
         document.getElementById("orderCustomer").value = "";
         updateOrderAddresses(null);
+        document.getElementById("orderProduct").value = "";
         openModal("orderModal");
       }
 
@@ -1310,8 +1344,14 @@
       }
 
       async function addOrderItem() {
-        const productId = Number(document.getElementById("orderProduct").value);
-        const quantity = Number(document.getElementById("orderQuantity").value);
+        const productValue = document.getElementById("orderProduct").value;
+        const productId = productValue ? Number(productValue) : null;
+        const quantityValue = document.getElementById("orderQuantity").value;
+        const quantity = quantityValue ? Number(quantityValue) : null;
+        if (!productId) {
+          alert("Selecciona un producto.");
+          return;
+        }
         const product = state.products.find((p) => p.id === productId);
         const inventory = state.inventories.find((i) => i.productId === productId);
         if (!inventory) {
@@ -1330,6 +1370,8 @@
           return;
         }
         state.orderItems.push({ productId, quantity, name: product.name });
+        document.getElementById("orderProduct").value = "";
+        document.getElementById("orderQuantity").value = "";
         renderOrderItems();
       }
 
@@ -1370,6 +1412,8 @@
           body: JSON.stringify({ customerId, addressId, items }),
         });
         closeModal("orderModal");
+        state.orderItems = [];
+        document.getElementById("orderItemsTable").innerHTML = "";
         loadOrders();
       }
 
@@ -1593,6 +1637,16 @@
 
       async function payOrder(id) {
         await request(`/api/v1/orders/${id}/pay`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      async function shipOrder(id) {
+        await request(`/api/v1/orders/${id}/ship`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      async function deliverOrder(id) {
+        await request(`/api/v1/orders/${id}/deliver`, { method: "PATCH" });
         loadOrders();
       }
 

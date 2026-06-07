@@ -126,21 +126,21 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .build();
         orderStatusHistoryRepository.save(history);
 
-        PurchaseOrder saved = purchaseOrderRepository.save(order);
-        saved.setItems(orderItemRepository.findByOrderId(saved.getId()));
-        return saved;
+        return purchaseOrderRepository.save(order);
     }
 
     @Override
     @Transactional
     public PurchaseOrder cancelOrder(Long orderId) {
-        PurchaseOrder order = findById(orderId);
+        PurchaseOrder order = purchaseOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (order.getStatus() == OrderStatus.PAID) {
-            throw new BusinessException("Paid orders cannot be cancelled");
+        if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.SHIPPED
+                || order.getStatus() == OrderStatus.DELIVERED) {
+            throw new BusinessException("Order cannot be cancelled in current status");
         }
 
-        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
         for (OrderItem item : items) {
             Inventory inventory = inventoryRepository.findByProductId(item.getProduct().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
@@ -157,9 +157,51 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .build();
         orderStatusHistoryRepository.save(history);
 
-        PurchaseOrder saved = purchaseOrderRepository.save(order);
-        saved.setItems(orderItemRepository.findByOrderId(saved.getId()));
-        return saved;
+        return purchaseOrderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder shipOrder(Long orderId) {
+        PurchaseOrder order = purchaseOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.PAID) {
+            throw new BusinessException("Only PAID orders can be shipped");
+        }
+
+        order.setStatus(OrderStatus.SHIPPED);
+
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .status(OrderStatus.SHIPPED)
+                .changedAt(LocalDateTime.now())
+                .build();
+        orderStatusHistoryRepository.save(history);
+
+        return purchaseOrderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder deliverOrder(Long orderId) {
+        PurchaseOrder order = purchaseOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.SHIPPED) {
+            throw new BusinessException("Only SHIPPED orders can be delivered");
+        }
+
+        order.setStatus(OrderStatus.DELIVERED);
+
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .status(OrderStatus.DELIVERED)
+                .changedAt(LocalDateTime.now())
+                .build();
+        orderStatusHistoryRepository.save(history);
+
+        return purchaseOrderRepository.save(order);
     }
 
     @Override

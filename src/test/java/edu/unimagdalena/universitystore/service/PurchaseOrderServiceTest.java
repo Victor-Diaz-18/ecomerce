@@ -171,12 +171,10 @@ class PurchaseOrderServiceImplTest {
 
         when(purchaseOrderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(1L))
-                .thenReturn(List.of());
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> purchaseOrderService.cancelOrder(1L));
 
-        assertEquals("Paid orders cannot be cancelled", exception.getMessage());
+        assertEquals("Order cannot be cancelled in current status", exception.getMessage());
     }
 }
