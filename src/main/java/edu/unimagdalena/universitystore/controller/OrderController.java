@@ -76,6 +76,24 @@ public class OrderController {
         );
     }
 
+    @PatchMapping("/{id}/ship")
+    public ResponseEntity<OrderResponse> ship(@PathVariable Long id) {
+        var shipped = service.shipOrder(id);
+
+        return ResponseEntity.ok(
+                mapper.toResponse(shipped)
+        );
+    }
+
+    @PatchMapping("/{id}/deliver")
+    public ResponseEntity<OrderResponse> deliver(@PathVariable Long id) {
+        var delivered = service.deliverOrder(id);
+
+        return ResponseEntity.ok(
+                mapper.toResponse(delivered)
+        );
+    }
+
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<OrderResponse> cancel(@PathVariable Long id) {
         var cancelled =  service.cancelOrder(id);

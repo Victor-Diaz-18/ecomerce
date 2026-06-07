@@ -1284,12 +1284,13 @@
         }
         if (order.status === "PAID") {
           return `
-            <span class="status-pill">Pagada</span>
+            <button class="ghost" onclick="shipOrder(${order.id})">Enviar</button>
+            <button class="danger" onclick="cancelOrder(${order.id})">Cancelar</button>
           `;
         }
         if (order.status === "SHIPPED") {
           return `
-            <span class="status-pill">Enviada</span>
+            <button class="ghost" onclick="deliverOrder(${order.id})">Entregar</button>
           `;
         }
         if (order.status === "DELIVERED") {
@@ -1636,6 +1637,16 @@
 
       async function payOrder(id) {
         await request(`/api/v1/orders/${id}/pay`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      async function shipOrder(id) {
+        await request(`/api/v1/orders/${id}/ship`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      async function deliverOrder(id) {
+        await request(`/api/v1/orders/${id}/deliver`, { method: "PATCH" });
         loadOrders();
       }
 
