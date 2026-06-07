@@ -16,11 +16,14 @@
         --ink-soft: #2a333b;
         --paper: #f6f3ee;
         --accent: #0e6d5c;
+        --accent-strong: #0a5a4b;
         --accent-soft: #cfe6e1;
         --gold: #d1a95a;
+        --sun: #f0c66a;
+        --coral: #d66b4f;
         --sky: #e6eef5;
         --card: #ffffff;
-        --shadow: 0 10px 30px rgba(8, 15, 22, 0.08);
+        --shadow: 0 18px 40px rgba(8, 15, 22, 0.12);
         --border: 1px solid rgba(24, 32, 39, 0.12);
         --danger: #b5482f;
       }
@@ -36,13 +39,37 @@
         background: radial-gradient(circle at top, #f8fafc 0%, var(--paper) 55%, #efe7dd 100%);
       }
 
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      body::before {
+        background:
+          radial-gradient(circle at 15% 15%, rgba(14, 109, 92, 0.18), transparent 45%),
+          radial-gradient(circle at 85% 5%, rgba(209, 169, 90, 0.22), transparent 40%),
+          radial-gradient(circle at 80% 80%, rgba(214, 107, 79, 0.18), transparent 42%);
+      }
+
+      body::after {
+        background-image: linear-gradient(120deg, rgba(24, 32, 39, 0.05) 1px, transparent 1px),
+          linear-gradient(60deg, rgba(24, 32, 39, 0.04) 1px, transparent 1px);
+        background-size: 120px 120px;
+        opacity: 0.35;
+      }
+
       header {
-        padding: 24px 36px;
+        padding: 26px 36px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         border-bottom: var(--border);
-        background: linear-gradient(120deg, rgba(14, 109, 92, 0.08), rgba(209, 169, 90, 0.08));
+        background: linear-gradient(120deg, rgba(14, 109, 92, 0.14), rgba(209, 169, 90, 0.18));
+        backdrop-filter: blur(6px);
       }
 
       header h1 {
@@ -67,7 +94,7 @@
       nav {
         padding: 24px;
         border-right: var(--border);
-        background: #fdfbf8;
+        background: linear-gradient(180deg, rgba(253, 251, 248, 0.95), rgba(246, 239, 230, 0.95));
       }
 
       .nav-title {
@@ -98,6 +125,11 @@
         box-shadow: var(--shadow);
       }
 
+      .tab:hover {
+        transform: translateY(-1px);
+        border-color: rgba(14, 109, 92, 0.35);
+      }
+
       main {
         padding: 28px 34px 60px;
       }
@@ -123,6 +155,18 @@
         margin-bottom: 18px;
       }
 
+      .section-header .section-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .section-subtitle {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+
       .section-header h2 {
         margin: 0;
         font-size: 20px;
@@ -136,6 +180,105 @@
         border: var(--border);
         box-shadow: var(--shadow);
         margin-bottom: 20px;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .kpi-card {
+        background: linear-gradient(135deg, #ffffff, #f4f1ea);
+        border-radius: 18px;
+        padding: 18px;
+        border: var(--border);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .kpi-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -40% -40% auto;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgba(14, 109, 92, 0.18), transparent 70%);
+      }
+
+      .kpi-label {
+        font-size: 12px;
+        color: #5d6a72;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+
+      .kpi-value {
+        font-size: 26px;
+        font-weight: 600;
+        margin: 6px 0 4px;
+        font-family: "Libre Baskerville", serif;
+      }
+
+      .kpi-meta {
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .chart-card {
+        background: var(--card);
+        border-radius: 20px;
+        padding: 18px;
+        border: var(--border);
+        box-shadow: var(--shadow);
+        height: 280px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chart-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--ink-soft);
+      }
+
+      .chart-canvas {
+        width: 100%;
+        height: 220px;
+        max-height: 220px;
+        flex: 1;
+      }
+
+      .dash-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      .insight-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .insight-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: #f7f5f1;
+        border-radius: 12px;
+        border: 1px dashed rgba(24, 32, 39, 0.12);
+        font-size: 13px;
       }
 
       .grid {
@@ -160,6 +303,15 @@
         background: #fafafa;
       }
 
+      select {
+        background-image: linear-gradient(45deg, transparent 50%, rgba(24, 32, 39, 0.6) 50%),
+          linear-gradient(135deg, rgba(24, 32, 39, 0.6) 50%, transparent 50%);
+        background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        appearance: none;
+      }
+
       button.primary {
         background: var(--accent);
         color: white;
@@ -167,6 +319,10 @@
         padding: 10px 14px;
         border-radius: 10px;
         cursor: pointer;
+      }
+
+      button.primary:hover {
+        background: var(--accent-strong);
       }
 
       button.ghost {
@@ -184,6 +340,12 @@
         padding: 8px 10px;
         border-radius: 8px;
         cursor: pointer;
+      }
+
+      .action-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       table {
@@ -260,6 +422,9 @@
           gap: 8px;
         }
         .tab { margin: 0; }
+        .dash-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -288,20 +453,58 @@
       <main>
         <section class="panel active" id="dashboard">
           <div class="section-header">
-            <h2>Resumen universitario</h2>
+            <div class="section-copy">
+              <h2>Resumen ejecutivo</h2>
+              <p class="section-subtitle">Indicadores clave con lectura en tiempo real para ventas, ingresos y stock.</p>
+            </div>
+            <div class="toolbar">
+              <button class="ghost" onclick="refreshDashboard()">Actualizar resumen</button>
+            </div>
           </div>
-          <div class="grid">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Ventas del mes</div>
+              <div class="kpi-value" id="kpiMonthlyOrders">0</div>
+              <div class="kpi-meta" id="kpiMonthlyOrdersMeta">0 ordenes en curso</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Ingresos acumulados</div>
+              <div class="kpi-value" id="kpiTotalRevenue">$0</div>
+              <div class="kpi-meta" id="kpiMonthlyRevenue">$0 este mes</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Clientes activos</div>
+              <div class="kpi-value" id="kpiCustomers">0</div>
+              <div class="kpi-meta" id="kpiProducts">0 productos en catalogo</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Alertas de stock</div>
+              <div class="kpi-value" id="kpiLowStock">0</div>
+              <div class="kpi-meta">Productos bajo minimo</div>
+            </div>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-title">Ventas por mes</div>
+              <canvas id="salesChart" class="chart-canvas"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Ingresos por estado</div>
+              <canvas id="statusChart" class="chart-canvas"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Stock critico</div>
+              <canvas id="stockChart" class="chart-canvas"></canvas>
+            </div>
+          </div>
+          <div class="dash-grid">
             <div class="card">
-              <h3>Catalogo activo</h3>
-              <p>Gestiona productos y categorias disponibles para la comunidad.</p>
+              <h3>Alertas prioritarias</h3>
+              <div class="insight-list" id="stockAlertsList"></div>
             </div>
             <div class="card">
-              <h3>Pedidos y estados</h3>
-              <p>Supervisa ordenes, pagos y cancelaciones en tiempo real.</p>
-            </div>
-            <div class="card">
-              <h3>Inventario</h3>
-              <p>Controla stock minimo para evitar faltantes en campus.</p>
+              <h3>Rendimiento rapido</h3>
+              <div class="insight-list" id="quickInsights"></div>
             </div>
           </div>
         </section>
@@ -500,30 +703,26 @@
         <h3 id="customerModalTitle">Nuevo cliente</h3>
         <button class="ghost" onclick="closeModal('customerModal')">Cerrar</button>
       </div>
-      <div class="modal-body grid">
-        <div>
-          <label>Nombre</label>
-          <input id="customerName" />
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="customerEmail" />
-        </div>
-        <div>
-          <label>Estado</label>
-          <select id="customerStatus">
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-          </select>
-        </div>
-        <div>
-          <label>Direcciones (solo nuevos)</label>
-          <textarea id="customerAddresses" rows="3" placeholder="Calle 30 #3-90, Santa Marta, Colombia"></textarea>
-        </div>
-        <div>
-          <label>Direcciones guardadas</label>
-          <div class="card" style="margin: 0;">
-            <table>
+        <div class="modal-body grid">
+          <div>
+            <label>Nombre</label>
+            <input id="customerName" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="customerEmail" />
+          </div>
+          <div>
+            <label>Estado</label>
+            <select id="customerStatus">
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+            </select>
+          </div>
+          <div>
+            <label>Direcciones guardadas</label>
+            <div class="card" style="margin: 0;">
+              <table>
               <thead>
                 <tr>
                   <th>Direccion</th>
@@ -546,7 +745,7 @@
           <button class="primary" onclick="saveCustomer()">Guardar</button>
         </div>
       </div>
-    </dialog>
+      </dialog>
 
     <dialog id="inventoryModal">
       <div class="modal-header">
@@ -618,6 +817,7 @@
       </div>
     </dialog>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       const state = {
         products: [],
@@ -625,7 +825,14 @@
         customers: [],
         addresses: {},
         inventories: [],
+        orders: [],
         orderItems: [],
+      };
+
+      const charts = {
+        sales: null,
+        status: null,
+        stock: null,
       };
 
       const tabs = document.querySelectorAll(".tab");
@@ -645,13 +852,16 @@
       }
 
       async function request(path, options = {}) {
+        const { silent, ...fetchOptions } = options;
         const res = await fetch(`${apiBase()}${path}`, {
           headers: { "Content-Type": "application/json" },
-          ...options,
+          ...fetchOptions,
         });
         if (!res.ok) {
           const body = await res.text();
-          alert(`Error ${res.status}: ${body}`);
+          if (!silent) {
+            alert(`Error ${res.status}: ${body}`);
+          }
           throw new Error(body);
         }
         if (res.status === 204) return null;
@@ -675,7 +885,7 @@
 
       function setSelectOptions(selectId, options, labelKey = "name") {
         const select = document.getElementById(selectId);
-        select.innerHTML = options
+        select.innerHTML = `<option value="">Selecciona</option>` + options
           .map((item) => `<option value="${item.id}">${item[labelKey]}</option>`)
           .join("");
       }
@@ -688,8 +898,13 @@
       }
 
       async function bootstrap() {
-        await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadInventory()]);
+        await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadInventory(), loadOrders()]);
         setCustomerOptions("orderSearchCustomer");
+        updateDashboard();
+      }
+
+      async function refreshDashboard() {
+        await Promise.all([loadProducts(), loadInventory(), loadOrders(), loadCustomers()]);
       }
 
       async function loadCategories() {
@@ -765,6 +980,10 @@
           .join("");
         setSelectOptions("inventoryProduct", state.products, "name");
         setSelectOptions("orderProduct", state.products, "name");
+        if (state.inventories.length) {
+          loadInventory();
+        }
+        updateDashboard();
       }
 
       function categoryName(id) {
@@ -843,10 +1062,11 @@
           .join("");
         setCustomerOptions("orderSearchCustomer");
         setCustomerOptions("orderCustomer");
+        updateDashboard();
       }
 
       function openCustomerModal() {
-        clearFields(["customerName", "customerEmail", "customerId", "customerAddresses"]);
+        clearFields(["customerName", "customerEmail", "customerId", "newAddressLine"]);
         document.getElementById("customerStatus").value = "ACTIVE";
         document.getElementById("customerModalTitle").textContent = "Nuevo cliente";
         openModal("customerModal");
@@ -858,8 +1078,6 @@
         document.getElementById("customerEmail").value = customer.email;
         document.getElementById("customerStatus").value = customer.status;
         document.getElementById("customerId").value = customer.id;
-
-        document.getElementById("customerAddresses").value = "";
         const addresses = await request(`/api/v1/addresses/customer/${id}`);
         renderCustomerAddresses(addresses);
 
@@ -882,19 +1100,18 @@
           customerId = created.id;
         }
 
-        if (!id) {
-          await saveCustomerAddresses(customerId);
-        }
+        await saveCustomerAddresses(customerId, !id);
 
         closeModal("customerModal");
-        clearFields(["customerName", "customerEmail", "customerId", "customerAddresses", "newAddressLine"]);
+        clearFields(["customerName", "customerEmail", "customerId", "newAddressLine"]);
         loadCustomers();
       }
 
-      async function saveCustomerAddresses(customerId) {
-        const addressLines = document.getElementById("customerAddresses").value.trim();
-        if (!addressLines) return;
-        const lines = addressLines.split("\n").map((l) => l.trim()).filter(Boolean);
+      async function saveCustomerAddresses(customerId, isNewCustomer) {
+        if (!isNewCustomer) return;
+        const addressLine = document.getElementById("newAddressLine").value.trim();
+        if (!addressLine) return;
+        const lines = addressLine.split(/\n|;/).map((l) => l.trim()).filter(Boolean);
         for (const line of lines) {
           await createAddressFromLine(customerId, line);
         }
@@ -976,6 +1193,7 @@
               </tr>`
           )
           .join("");
+        updateDashboard();
       }
 
       function openInventoryModal() {
@@ -1015,8 +1233,16 @@
       }
 
       async function loadOrders() {
-        const data = await request("/api/v1/orders");
-        renderOrders(data);
+        try {
+          const data = await request("/api/v1/orders", { silent: true });
+          state.orders = data;
+          renderOrders(data);
+        } catch (error) {
+          console.error("No se pudieron cargar las ordenes", error);
+          state.orders = [];
+          renderOrders([]);
+        }
+        updateDashboard();
       }
 
       async function searchOrders() {
@@ -1042,12 +1268,41 @@
                 <td>${o.total}</td>
                 <td>${o.items ? o.items.length : 0}</td>
                 <td class="action-row">
-                  <button class="ghost" onclick="payOrder(${o.id})">Pagar</button>
-                  <button class="danger" onclick="cancelOrder(${o.id})">Cancelar</button>
+                  ${renderOrderActions(o)}
                 </td>
               </tr>`
           )
           .join("");
+      }
+
+      function renderOrderActions(order) {
+        if (order.status === "CREATED") {
+          return `
+            <button class="ghost" onclick="payOrder(${order.id})">Pagar</button>
+            <button class="danger" onclick="cancelOrder(${order.id})">Cancelar</button>
+          `;
+        }
+        if (order.status === "PAID") {
+          return `
+            <span class="status-pill">Pagada</span>
+          `;
+        }
+        if (order.status === "SHIPPED") {
+          return `
+            <span class="status-pill">Enviada</span>
+          `;
+        }
+        if (order.status === "DELIVERED") {
+          return `
+            <span class="status-pill">Entregada</span>
+          `;
+        }
+        if (order.status === "CANCELLED") {
+          return `
+            <span class="status-pill">Cancelada</span>
+          `;
+        }
+        return "-";
       }
 
       function customerName(id) {
@@ -1058,11 +1313,10 @@
       function openOrderModal() {
         state.orderItems = [];
         document.getElementById("orderItemsTable").innerHTML = "";
-        document.getElementById("orderQuantity").value = "1";
-        const customerSelect = document.getElementById("orderCustomer");
-        if (customerSelect.value) {
-          updateOrderAddresses(customerSelect.value);
-        }
+        document.getElementById("orderQuantity").value = "";
+        document.getElementById("orderCustomer").value = "";
+        updateOrderAddresses(null);
+        document.getElementById("orderProduct").value = "";
         openModal("orderModal");
       }
 
@@ -1082,16 +1336,41 @@
           addressSelect.innerHTML = "<option value=\"\">Sin direcciones</option>";
           return;
         }
-        addressSelect.innerHTML = data
+        addressSelect.innerHTML = "<option value=\"\">Selecciona direccion</option>" + data
           .map((a) => `<option value="${a.id}">${a.street} - ${a.city}</option>`)
           .join("");
+        addressSelect.value = "";
       }
 
       async function addOrderItem() {
-        const productId = Number(document.getElementById("orderProduct").value);
-        const quantity = Number(document.getElementById("orderQuantity").value);
+        const productValue = document.getElementById("orderProduct").value;
+        const productId = productValue ? Number(productValue) : null;
+        const quantityValue = document.getElementById("orderQuantity").value;
+        const quantity = quantityValue ? Number(quantityValue) : null;
+        if (!productId) {
+          alert("Selecciona un producto.");
+          return;
+        }
         const product = state.products.find((p) => p.id === productId);
+        const inventory = state.inventories.find((i) => i.productId === productId);
+        if (!inventory) {
+          alert("No hay inventario configurado para este producto.");
+          return;
+        }
+        if (!quantity || quantity <= 0) {
+          alert("Ingresa una cantidad valida.");
+          return;
+        }
+        const currentQty = state.orderItems
+          .filter((item) => item.productId === productId)
+          .reduce((sum, item) => sum + item.quantity, 0);
+        if (currentQty + quantity > inventory.availableStock) {
+          alert("Stock insuficiente para este producto.");
+          return;
+        }
         state.orderItems.push({ productId, quantity, name: product.name });
+        document.getElementById("orderProduct").value = "";
+        document.getElementById("orderQuantity").value = "";
         renderOrderItems();
       }
 
@@ -1132,7 +1411,227 @@
           body: JSON.stringify({ customerId, addressId, items }),
         });
         closeModal("orderModal");
+        state.orderItems = [];
+        document.getElementById("orderItemsTable").innerHTML = "";
         loadOrders();
+      }
+
+      function updateDashboard() {
+        const orders = state.orders || [];
+        const customers = state.customers || [];
+        const products = state.products || [];
+        const inventories = state.inventories || [];
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const revenueOrders = orders.filter((o) => ["PAID", "SHIPPED", "DELIVERED"].includes(o.status));
+        const totalRevenue = revenueOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+        const monthlyOrders = orders.filter((o) => {
+          if (!o.createdAt) return false;
+          const date = new Date(o.createdAt);
+          return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        });
+        const monthlyRevenue = revenueOrders
+          .filter((o) => {
+            if (!o.createdAt) return false;
+            const date = new Date(o.createdAt);
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+          })
+          .reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+        const lowStockItems = inventories.filter((i) => i.availableStock <= i.minimumStock);
+        const activeOrders = orders.filter((o) => ["CREATED", "PAID", "SHIPPED"].includes(o.status));
+
+        document.getElementById("kpiMonthlyOrders").textContent = monthlyOrders.length.toString();
+        document.getElementById("kpiMonthlyOrdersMeta").textContent = `${activeOrders.length} ordenes en curso`;
+        document.getElementById("kpiTotalRevenue").textContent = formatCurrency(totalRevenue);
+        document.getElementById("kpiMonthlyRevenue").textContent = `${formatCurrency(monthlyRevenue)} este mes`;
+        document.getElementById("kpiCustomers").textContent = customers.length.toString();
+        document.getElementById("kpiProducts").textContent = `${products.length} productos en catalogo`;
+        document.getElementById("kpiLowStock").textContent = lowStockItems.length.toString();
+
+        renderStockAlerts(lowStockItems);
+        renderQuickInsights(orders, inventories);
+        renderCharts(orders, revenueOrders, inventories);
+      }
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("es-CO", {
+          style: "currency",
+          currency: "COP",
+          maximumFractionDigits: 0,
+        }).format(value || 0);
+      }
+
+      function renderStockAlerts(items) {
+        const list = document.getElementById("stockAlertsList");
+        if (!items.length) {
+          list.innerHTML = "<div class=\"insight-item\">Sin alertas de stock. Todo en orden.</div>";
+          return;
+        }
+        const sorted = [...items]
+          .sort((a, b) => a.availableStock - b.availableStock)
+          .slice(0, 5);
+        list.innerHTML = sorted
+          .map((item) => {
+            const name = productName(item.productId);
+            return `
+              <div class="insight-item">
+                <span>${name}</span>
+                <span>${item.availableStock} / min ${item.minimumStock}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderQuickInsights(orders, inventories) {
+        const list = document.getElementById("quickInsights");
+        const cancelled = orders.filter((o) => o.status === "CANCELLED").length;
+        const paid = orders.filter((o) => o.status === "PAID").length;
+        const totalStock = inventories.reduce((sum, i) => sum + i.availableStock, 0);
+        const avgOrder = orders.length
+          ? orders.reduce((sum, o) => sum + Number(o.total || 0), 0) / orders.length
+          : 0;
+        list.innerHTML = [
+          `Ordenes pagadas: ${paid}`,
+          `Ordenes canceladas: ${cancelled}`,
+          `Stock total disponible: ${totalStock}`,
+          `Ticket promedio: ${formatCurrency(avgOrder)}`,
+        ]
+          .map((text) => `<div class="insight-item">${text}</div>`)
+          .join("");
+      }
+
+      function renderCharts(orders, revenueOrders, inventories) {
+        if (!window.Chart) return;
+
+        const monthLabels = lastMonthsLabels(6);
+        const monthTotals = monthLabels.map((label) => {
+          const [year, month] = label.split("-").map(Number);
+          return revenueOrders
+            .filter((o) => {
+              if (!o.createdAt) return false;
+              const date = new Date(o.createdAt);
+              return date.getFullYear() === year && date.getMonth() + 1 === month;
+            })
+            .reduce((sum, o) => sum + Number(o.total || 0), 0);
+        });
+
+        charts.sales = upsertChart(charts.sales, document.getElementById("salesChart"), {
+          type: "line",
+          data: {
+            labels: monthLabels.map(formatMonthLabel),
+            datasets: [
+              {
+                label: "Ingresos",
+                data: monthTotals,
+                borderColor: "#0e6d5c",
+                backgroundColor: "rgba(14, 109, 92, 0.15)",
+                fill: true,
+                tension: 0.3,
+              },
+            ],
+          },
+          options: baseChartOptions(),
+        });
+
+        const statusGroups = ["CREATED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"].map((status) => {
+          const total = orders.filter((o) => o.status === status).length;
+          return total;
+        });
+
+        charts.status = upsertChart(charts.status, document.getElementById("statusChart"), {
+          type: "doughnut",
+          data: {
+            labels: ["CREATED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"],
+            datasets: [
+              {
+                data: statusGroups,
+                backgroundColor: ["#7aa6a0", "#0e6d5c", "#d1a95a", "#e3c98a", "#d66b4f"],
+              },
+            ],
+          },
+          options: {
+            ...baseChartOptions(),
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+
+        const lowStock = [...inventories]
+          .sort((a, b) => a.availableStock - b.availableStock)
+          .slice(0, 6);
+        const stockLabels = lowStock.map((i) => productName(i.productId));
+        const stockValues = lowStock.map((i) => i.availableStock);
+        const minValues = lowStock.map((i) => i.minimumStock);
+
+        charts.stock = upsertChart(charts.stock, document.getElementById("stockChart"), {
+          type: "bar",
+          data: {
+            labels: stockLabels,
+            datasets: [
+              {
+                label: "Disponible",
+                data: stockValues,
+                backgroundColor: "rgba(14, 109, 92, 0.6)",
+              },
+              {
+                label: "Minimo",
+                data: minValues,
+                backgroundColor: "rgba(214, 107, 79, 0.45)",
+              },
+            ],
+          },
+          options: {
+            ...baseChartOptions(),
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+      }
+
+      function upsertChart(current, canvas, config) {
+        if (!canvas) return current;
+        if (current) {
+          current.data = config.data;
+          current.options = config.options;
+          current.update();
+          return current;
+        }
+        return new Chart(canvas, config);
+      }
+
+      function baseChartOptions() {
+        return {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed}` } },
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+          },
+        };
+      }
+
+      function lastMonthsLabels(count) {
+        const labels = [];
+        const date = new Date();
+        date.setDate(1);
+        for (let i = count - 1; i >= 0; i--) {
+          const temp = new Date(date.getFullYear(), date.getMonth() - i, 1);
+          labels.push(`${temp.getFullYear()}-${temp.getMonth() + 1}`);
+        }
+        return labels;
+      }
+
+      function formatMonthLabel(label) {
+        const [year, month] = label.split("-").map(Number);
+        const date = new Date(year, month - 1, 1);
+        return date.toLocaleDateString("es-CO", { month: "short", year: "2-digit" });
       }
 
       async function payOrder(id) {
