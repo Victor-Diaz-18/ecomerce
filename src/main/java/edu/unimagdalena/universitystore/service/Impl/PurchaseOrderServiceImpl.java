@@ -126,7 +126,9 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .build();
         orderStatusHistoryRepository.save(history);
 
-        return purchaseOrderRepository.save(order);
+        PurchaseOrder saved = purchaseOrderRepository.save(order);
+        saved.setItems(orderItemRepository.findByOrderId(saved.getId()));
+        return saved;
     }
 
     @Override
@@ -155,12 +157,18 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .build();
         orderStatusHistoryRepository.save(history);
 
-        return purchaseOrderRepository.save(order);
+        PurchaseOrder saved = purchaseOrderRepository.save(order);
+        saved.setItems(orderItemRepository.findByOrderId(saved.getId()));
+        return saved;
     }
 
     @Override
     public List<PurchaseOrder> findAll() {
-        return purchaseOrderRepository.findAll();
+        List<PurchaseOrder> orders = purchaseOrderRepository.findAll();
+        for (PurchaseOrder order : orders) {
+            order.setItems(orderItemRepository.findByOrderId(order.getId()));
+        }
+        return orders;
     }
 
     @Override
@@ -173,6 +181,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     @Override
     public List<PurchaseOrder> search(Long customerId, OrderStatus status) {
-        return purchaseOrderRepository.searchOrders(customerId, status);
+        List<PurchaseOrder> orders = purchaseOrderRepository.searchOrders(customerId, status);
+        for (PurchaseOrder order : orders) {
+            order.setItems(orderItemRepository.findByOrderId(order.getId()));
+        }
+        return orders;
     }
 }

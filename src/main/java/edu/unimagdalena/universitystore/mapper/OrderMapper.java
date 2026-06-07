@@ -25,8 +25,8 @@ public interface OrderMapper {
     @Mapping(target = "product.id", source = "productId")
     OrderItem toItemEntity(OrderDtos.CreateOrderItemRequest request);
 
-    @Mapping(target = "customerId", source = "customer.id")
-    @Mapping(target = "addressId", source = "address.id")
+    @Mapping(target = "customerId", expression = "java(order.getCustomer() != null ? order.getCustomer().getId() : null)")
+    @Mapping(target = "addressId", expression = "java(order.getAddress() != null ? order.getAddress().getId() : null)")
     @Mapping(target = "status", source = "status")
     OrderDtos.OrderResponse toResponse(PurchaseOrder order);
 
