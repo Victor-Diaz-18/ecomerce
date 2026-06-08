@@ -49,7 +49,8 @@ class InventoryControllerTest {
                         1L,
                         10,
                         5,
-                        1L
+                        1L,
+                        "Product"
                 );
 
         InventoryDtos.CreateInventoryRequest request =
@@ -59,13 +60,12 @@ class InventoryControllerTest {
                         1L
                 );
 
-        when(mapper.toEntity(request)).thenReturn(inventory);
-        when(service.create(inventory)).thenReturn(inventory);
+        when(service.create(any(Inventory.class))).thenReturn(inventory);
         when(mapper.toResponse(inventory)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/inventories")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.availableStock").value(10));
     }
@@ -84,7 +84,8 @@ class InventoryControllerTest {
                         1L,
                         20,
                         5,
-                        1L
+                        1L,
+                        "Product"
                 );
 
         InventoryDtos.UpdateInventoryRequest request =
@@ -97,8 +98,8 @@ class InventoryControllerTest {
         when(mapper.toResponse(updated)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/inventories/1")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.availableStock").value(20));
     }

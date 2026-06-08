@@ -7,37 +7,11 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-07T16:01:04-0500",
+    date = "2026-06-08T00:27:21-0500",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Microsoft)"
 )
 @Component
 public class CategoryMapperImpl implements CategoryMapper {
-
-    @Override
-    public Category toEntity(CategoryDtos.CreateCategoryRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Category.CategoryBuilder category = Category.builder();
-
-        category.name( request.name() );
-
-        return category.build();
-    }
-
-    @Override
-    public Category toEntity(CategoryDtos.UpdateCategoryRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Category.CategoryBuilder category = Category.builder();
-
-        category.name( request.name() );
-
-        return category.build();
-    }
 
     @Override
     public CategoryDtos.CategoryResponse toResponse(Category category) {

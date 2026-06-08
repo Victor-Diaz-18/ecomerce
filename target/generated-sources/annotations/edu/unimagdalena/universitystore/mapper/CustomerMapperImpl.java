@@ -8,40 +8,11 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-07T16:01:04-0500",
+    date = "2026-06-08T00:27:21-0500",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Microsoft)"
 )
 @Component
 public class CustomerMapperImpl implements CustomerMapper {
-
-    @Override
-    public Customer toEntity(CustomerDtos.CreateCustomerRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Customer.CustomerBuilder customer = Customer.builder();
-
-        customer.name( request.name() );
-        customer.email( request.email() );
-
-        return customer.build();
-    }
-
-    @Override
-    public Customer toEntity(CustomerDtos.UpdateCustomerRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Customer.CustomerBuilder customer = Customer.builder();
-
-        customer.name( request.name() );
-        customer.email( request.email() );
-        customer.status( request.status() );
-
-        return customer.build();
-    }
 
     @Override
     public CustomerDtos.CustomerResponse toResponse(Customer customer) {

@@ -18,6 +18,8 @@ public class AddressDtos {
             String street,
             String city,
             String country,
-            Long customerId
+            Long customerId,
+            String customerName,
+            String addressLine
     ) implements Serializable {}
 }

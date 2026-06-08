@@ -1,14 +1,16 @@
 package edu.unimagdalena.universitystore.service;
 
-import edu.unimagdalena.universitystore.entity.PurchaseOrder;
+import edu.unimagdalena.universitystore.dto.OrderDtos.*;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import edu.unimagdalena.universitystore.exception.BusinessException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.mapper.OrderMapper;
 import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.repository.InventoryRepository;
 import edu.unimagdalena.universitystore.repository.OrderItemRepository;
 import edu.unimagdalena.universitystore.repository.OrderStatusHistoryRepository;
+import edu.unimagdalena.universitystore.repository.ProductPriceHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.repository.PurchaseOrderRepository;
 import edu.unimagdalena.universitystore.service.Impl.PurchaseOrderServiceImpl;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,40 +45,58 @@ class PurchaseOrderServiceImplTest {
     private ProductRepository productRepository;
 
     @Mock
+    private ProductPriceHistoryRepository priceHistoryRepository;
+
+    @Mock
     private CustomerRepository customerRepository;
 
     @Mock
     private AddressRepository addressRepository;
 
+    @Mock
+    private OrderMapper mapper;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private PurchaseOrderServiceImpl purchaseOrderService;
 
     @Test
-    void shouldCreateOrder() {
-        PurchaseOrder order = PurchaseOrder.builder().build();
+    void shouldThrowExceptionWhenCreateOrderWithInvalidCustomer() {
+        CreateOrderRequest request = new CreateOrderRequest(
+                99L, 1L, List.of(new CreateOrderItemRequest(1L, 1))
+        );
+
+        when(customerRepository.existsById(99L)).thenReturn(false);
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> purchaseOrderService.create(order));
+                () -> purchaseOrderService.create(request));
 
         assertEquals("Customer not found", exception.getMessage());
     }
 
     @Test
     void shouldPayOrder() {
-        PurchaseOrder order = PurchaseOrder.builder()
-                .id(1L)
-                .status(OrderStatus.CREATED)
-                .build();
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.CREATED);
 
         when(purchaseOrderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
-
-        when(purchaseOrderRepository.save(any(PurchaseOrder.class)))
+        when(purchaseOrderRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
+        when(mapper.toResponse(any())).thenAnswer(inv -> {
+            var o = inv.getArgument(0, edu.unimagdalena.universitystore.entity.PurchaseOrder.class);
+            return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
+                    o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
+                    o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
+                    List.of(), o.getTotal());
+        });
 
-        PurchaseOrder result = purchaseOrderService.payOrder(1L);
+        OrderResponse result = purchaseOrderService.payOrder(1L);
 
-        assertEquals(OrderStatus.PAID, result.getStatus());
+        assertEquals(OrderStatus.PAID, OrderStatus.valueOf(result.status()));
     }
 
     @Test
@@ -91,10 +112,9 @@ class PurchaseOrderServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenOrderStatusInvalidForPay() {
-        PurchaseOrder order = PurchaseOrder.builder()
-                .id(1L)
-                .status(OrderStatus.PAID)
-                .build();
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.PAID);
 
         when(purchaseOrderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
@@ -102,33 +122,50 @@ class PurchaseOrderServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> purchaseOrderService.payOrder(1L));
 
-        assertEquals("Only CREATED orders can be paid", exception.getMessage());
+        assertEquals("Order must be in CREATED status to transition to PAID", exception.getMessage());
     }
 
     @Test
     void shouldFindAllOrders() {
-        when(purchaseOrderRepository.findAll())
-                .thenReturn(List.of(new PurchaseOrder(), new PurchaseOrder()));
+        var order1 = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order1.setStatus(OrderStatus.CREATED);
+        var order2 = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order2.setStatus(OrderStatus.PAID);
 
-        List<PurchaseOrder> result = purchaseOrderService.findAll();
+        when(purchaseOrderRepository.findAll())
+                .thenReturn(List.of(order1, order2));
+        when(mapper.toResponse(any())).thenAnswer(inv -> {
+            var o = inv.getArgument(0, edu.unimagdalena.universitystore.entity.PurchaseOrder.class);
+            return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
+                    o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
+                    o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
+                    List.of(), o.getTotal());
+        });
+
+        List<OrderResponse> result = purchaseOrderService.findAll();
 
         assertEquals(2, result.size());
     }
 
     @Test
     void shouldFindOrderById() {
-        PurchaseOrder order = PurchaseOrder.builder()
-                .id(1L)
-                .build();
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.CREATED);
 
         when(purchaseOrderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(1L))
-                .thenReturn(List.of());
+        when(mapper.toResponse(any())).thenAnswer(inv -> {
+            var o = inv.getArgument(0, edu.unimagdalena.universitystore.entity.PurchaseOrder.class);
+            return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
+                    o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
+                    o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
+                    List.of(), o.getTotal());
+        });
 
-        PurchaseOrder result = purchaseOrderService.findById(1L);
+        OrderResponse result = purchaseOrderService.findById(1L);
 
-        assertEquals(1L, result.getId());
+        assertEquals(1L, result.id());
     }
 
     @Test
@@ -144,30 +181,32 @@ class PurchaseOrderServiceImplTest {
 
     @Test
     void shouldCancelOrder() {
-        PurchaseOrder order = PurchaseOrder.builder()
-                .id(1L)
-                .status(OrderStatus.CREATED)
-                .build();
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.CREATED);
 
         when(purchaseOrderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(1L))
-                .thenReturn(List.of());
-
-        when(purchaseOrderRepository.save(any(PurchaseOrder.class)))
+        when(purchaseOrderRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
+        when(mapper.toResponse(any())).thenAnswer(inv -> {
+            var o = inv.getArgument(0, edu.unimagdalena.universitystore.entity.PurchaseOrder.class);
+            return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
+                    o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
+                    o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
+                    List.of(), o.getTotal());
+        });
 
-        PurchaseOrder result = purchaseOrderService.cancelOrder(1L);
+        OrderResponse result = purchaseOrderService.cancelOrder(1L);
 
-        assertEquals(OrderStatus.CANCELLED, result.getStatus());
+        assertEquals(OrderStatus.CANCELLED, OrderStatus.valueOf(result.status()));
     }
 
     @Test
-    void shouldThrowExceptionWhenCancelPaidOrder() {
-        PurchaseOrder order = PurchaseOrder.builder()
-                .id(1L)
-                .status(OrderStatus.PAID)
-                .build();
+    void shouldThrowExceptionWhenCancelShippedOrder() {
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.SHIPPED);
 
         when(purchaseOrderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
@@ -175,6 +214,6 @@ class PurchaseOrderServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> purchaseOrderService.cancelOrder(1L));
 
-        assertEquals("Order cannot be cancelled in current status", exception.getMessage());
+        assertEquals("Shipped or delivered orders cannot be cancelled. Use return process instead.", exception.getMessage());
     }
 }

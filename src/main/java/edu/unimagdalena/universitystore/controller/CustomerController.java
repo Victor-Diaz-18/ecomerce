@@ -1,6 +1,7 @@
 package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.CustomerDtos.*;
+import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.mapper.CustomerMapper;
 import edu.unimagdalena.universitystore.service.CustomerService;
 import jakarta.validation.Valid;
@@ -25,7 +26,11 @@ public class CustomerController {
             @Valid @RequestBody CreateCustomerRequest req,
             UriComponentsBuilder uriBuilder) {
 
-        var created = service.create(mapper.toEntity(req));
+        Customer customer = new Customer();
+        customer.setName(req.name());
+        customer.setEmail(req.email());
+
+        var created = service.create(customer);
 
         var location = uriBuilder
                 .path("/api/v1/customers/{id}")
@@ -58,7 +63,14 @@ public class CustomerController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateCustomerRequest req) {
 
-        var updated = service.update(id, mapper.toEntity(req));
+        Customer customer = service.findById(id);
+        customer.setName(req.name());
+        customer.setEmail(req.email());
+        if (req.status() != null) {
+            customer.setStatus(req.status());
+        }
+
+        var updated = service.update(id, customer);
 
         return ResponseEntity.ok(
                 mapper.toResponse(updated)

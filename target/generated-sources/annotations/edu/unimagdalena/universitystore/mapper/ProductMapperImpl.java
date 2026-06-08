@@ -9,44 +9,11 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-07T16:01:05-0500",
+    date = "2026-06-08T00:27:21-0500",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Microsoft)"
 )
 @Component
 public class ProductMapperImpl implements ProductMapper {
-
-    @Override
-    public Product toEntity(ProductDtos.CreateProductRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Product.ProductBuilder product = Product.builder();
-
-        product.category( createProductRequestToCategory( request ) );
-        product.sku( request.sku() );
-        product.name( request.name() );
-        product.price( request.price() );
-
-        return product.build();
-    }
-
-    @Override
-    public Product toEntity(ProductDtos.UpdateProductRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Product.ProductBuilder product = Product.builder();
-
-        product.category( updateProductRequestToCategory( request ) );
-        product.sku( request.sku() );
-        product.name( request.name() );
-        product.price( request.price() );
-        product.active( request.active() );
-
-        return product.build();
-    }
 
     @Override
     public ProductDtos.ProductResponse toResponse(Product product) {
@@ -55,6 +22,7 @@ public class ProductMapperImpl implements ProductMapper {
         }
 
         Long categoryId = null;
+        String categoryName = null;
         Long id = null;
         String name = null;
         String sku = null;
@@ -62,39 +30,16 @@ public class ProductMapperImpl implements ProductMapper {
         Boolean active = null;
 
         categoryId = productCategoryId( product );
+        categoryName = productCategoryName( product );
         id = product.getId();
         name = product.getName();
         sku = product.getSku();
         price = product.getPrice();
         active = product.getActive();
 
-        ProductDtos.ProductResponse productResponse = new ProductDtos.ProductResponse( id, name, sku, price, active, categoryId );
+        ProductDtos.ProductResponse productResponse = new ProductDtos.ProductResponse( id, name, sku, price, active, categoryId, categoryName );
 
         return productResponse;
-    }
-
-    protected Category createProductRequestToCategory(ProductDtos.CreateProductRequest createProductRequest) {
-        if ( createProductRequest == null ) {
-            return null;
-        }
-
-        Category.CategoryBuilder category = Category.builder();
-
-        category.id( createProductRequest.categoryId() );
-
-        return category.build();
-    }
-
-    protected Category updateProductRequestToCategory(ProductDtos.UpdateProductRequest updateProductRequest) {
-        if ( updateProductRequest == null ) {
-            return null;
-        }
-
-        Category.CategoryBuilder category = Category.builder();
-
-        category.id( updateProductRequest.categoryId() );
-
-        return category.build();
     }
 
     private Long productCategoryId(Product product) {
@@ -103,5 +48,13 @@ public class ProductMapperImpl implements ProductMapper {
             return null;
         }
         return category.getId();
+    }
+
+    private String productCategoryName(Product product) {
+        Category category = product.getCategory();
+        if ( category == null ) {
+            return null;
+        }
+        return category.getName();
     }
 }

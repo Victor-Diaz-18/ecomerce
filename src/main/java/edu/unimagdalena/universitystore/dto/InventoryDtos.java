@@ -10,7 +10,7 @@ public class InventoryDtos {
             @NotNull @Min(0) Integer availableStock,
             @NotNull @Min(0) Integer minimumStock,
             @NotNull Long productId
-    )implements  Serializable {}
+    ) implements Serializable {}
 
     public record UpdateInventoryRequest(
             @NotNull @Min(0) Integer availableStock,
@@ -21,7 +21,8 @@ public class InventoryDtos {
             Long id,
             Integer availableStock,
             Integer minimumStock,
-            Long productId
+            Long productId,
+            String productName
     ) implements Serializable {}
 
     public record LowStockProductResponse(

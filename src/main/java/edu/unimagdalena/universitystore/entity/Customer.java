@@ -3,6 +3,7 @@ package edu.unimagdalena.universitystore.entity;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "customers")
@@ -10,12 +11,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Customer {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class Customer extends BaseEntity {
     @Column(nullable = false)
     private String name;
 

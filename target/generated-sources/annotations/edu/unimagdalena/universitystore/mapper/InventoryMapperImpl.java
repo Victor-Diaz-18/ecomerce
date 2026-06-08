@@ -8,26 +8,11 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-07T16:01:04-0500",
+    date = "2026-06-08T00:27:21-0500",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Microsoft)"
 )
 @Component
 public class InventoryMapperImpl implements InventoryMapper {
-
-    @Override
-    public Inventory toEntity(InventoryDtos.CreateInventoryRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        Inventory.InventoryBuilder inventory = Inventory.builder();
-
-        inventory.product( createInventoryRequestToProduct( request ) );
-        inventory.availableStock( request.availableStock() );
-        inventory.minimumStock( request.minimumStock() );
-
-        return inventory.build();
-    }
 
     @Override
     public InventoryDtos.InventoryResponse toResponse(Inventory inventory) {
@@ -36,16 +21,18 @@ public class InventoryMapperImpl implements InventoryMapper {
         }
 
         Long productId = null;
+        String productName = null;
         Long id = null;
         Integer availableStock = null;
         Integer minimumStock = null;
 
         productId = inventoryProductId( inventory );
+        productName = inventoryProductName( inventory );
         id = inventory.getId();
         availableStock = inventory.getAvailableStock();
         minimumStock = inventory.getMinimumStock();
 
-        InventoryDtos.InventoryResponse inventoryResponse = new InventoryDtos.InventoryResponse( id, availableStock, minimumStock, productId );
+        InventoryDtos.InventoryResponse inventoryResponse = new InventoryDtos.InventoryResponse( id, availableStock, minimumStock, productId, productName );
 
         return inventoryResponse;
     }
@@ -69,18 +56,6 @@ public class InventoryMapperImpl implements InventoryMapper {
         InventoryDtos.LowStockProductResponse lowStockProductResponse = new InventoryDtos.LowStockProductResponse( productId, productName, availableStock, minimumStock );
 
         return lowStockProductResponse;
-    }
-
-    protected Product createInventoryRequestToProduct(InventoryDtos.CreateInventoryRequest createInventoryRequest) {
-        if ( createInventoryRequest == null ) {
-            return null;
-        }
-
-        Product.ProductBuilder product = Product.builder();
-
-        product.id( createInventoryRequest.productId() );
-
-        return product.build();
     }
 
     private Long inventoryProductId(Inventory inventory) {

@@ -57,16 +57,17 @@ class AddressControllerTest {
                         "Street 10",
                         "Santa Marta",
                         "Colombia",
-                        1L
+                        1L,
+                        "Customer",
+                        "Street 10, Santa Marta, Colombia"
                 );
 
-        when(mapper.toEntity(request)).thenReturn(address);
-        when(service.create(address)).thenReturn(address);
+        when(service.create(any(Address.class))).thenReturn(address);
         when(mapper.toResponse(address)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/addresses")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.street").value("Street 10"));
     }
@@ -76,6 +77,9 @@ class AddressControllerTest {
         Address address = Address.builder()
                 .id(1L)
                 .street("Street 10")
+                .city("Santa Marta")
+                .country("Colombia")
+                .customer(Customer.builder().id(1L).build())
                 .build();
 
         AddressDtos.AddressResponse response =
@@ -84,7 +88,9 @@ class AddressControllerTest {
                         "Street 10",
                         "Santa Marta",
                         "Colombia",
-                        1L
+                        1L,
+                        "Customer",
+                        "Street 10, Santa Marta, Colombia"
                 );
 
         when(service.findById(1L)).thenReturn(address);

@@ -6,6 +6,7 @@ import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.CategoryRepository;
+import edu.unimagdalena.universitystore.repository.ProductPriceHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.service.Impl.ProductServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ class ProductServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private ProductPriceHistoryRepository priceHistoryRepository;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -193,6 +197,8 @@ class ProductServiceImplTest {
                 .thenReturn(Optional.empty());
 
         when(productRepository.save(any(Product.class)))
+                .thenAnswer(i -> i.getArgument(0));
+        when(priceHistoryRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
 
         Product result = productService.update(1L, updated);

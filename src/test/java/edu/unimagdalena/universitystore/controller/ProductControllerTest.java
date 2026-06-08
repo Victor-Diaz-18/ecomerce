@@ -15,8 +15,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.math.*;
+import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -63,16 +67,16 @@ class ProductControllerTest {
                         "SKU001",
                         new BigDecimal("50000"),
                         true,
-                        1L
+                        1L,
+                        "Category"
                 );
 
-        when(mapper.toEntity(request)).thenReturn(product);
-        when(service.create(product)).thenReturn(product);
+        when(service.create(any(Product.class))).thenReturn(product);
         when(mapper.toResponse(product)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/products")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.sku").value("SKU001"));
     }
@@ -95,15 +99,17 @@ class ProductControllerTest {
                         "SKU001",
                         new BigDecimal("50000"),
                         true,
-                        1L
+                        1L,
+                        "Category"
                 );
 
-        when(service.findAll()).thenReturn(List.of(product));
+        Page<Product> page = new PageImpl<>(List.of(product));
+        when(service.findAll(any(Pageable.class))).thenReturn(page);
         when(mapper.toResponse(product)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].sku").value("SKU001"));
+                .andExpect(jsonPath("$.content[0].sku").value("SKU001"));
     }
 
     @Test
@@ -124,7 +130,8 @@ class ProductControllerTest {
                         "SKU001",
                         new BigDecimal("50000"),
                         true,
-                        1L
+                        1L,
+                        "Category"
                 );
 
         when(service.findById(1L)).thenReturn(product);
@@ -161,16 +168,17 @@ class ProductControllerTest {
                         "SKU002",
                         new BigDecimal("80000"),
                         true,
-                        1L
+                        1L,
+                        "Category"
                 );
 
-        when(mapper.toEntity(request)).thenReturn(updated);
+        when(service.findById(1L)).thenReturn(updated);
         when(service.update(1L, updated)).thenReturn(updated);
         when(mapper.toResponse(updated)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/products/1")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sku").value("SKU002"));
     }
@@ -193,7 +201,8 @@ class ProductControllerTest {
                         "SKU001",
                         new BigDecimal("50000"),
                         true,
-                        1L
+                        1L,
+                        "Category"
                 );
 
         when(service.findByCategory(1L)).thenReturn(List.of(product));

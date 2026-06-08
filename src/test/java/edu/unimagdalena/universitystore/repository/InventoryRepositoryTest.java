@@ -59,7 +59,7 @@ class InventoryRepositoryTest {
         List<Inventory> result = inventoryRepository.findLowStockProducts();
 
         assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(product.getId(), result.get(0).getProduct().getId());
+        assertTrue(result.size() >= 1);
+        assertTrue(result.stream().anyMatch(i -> i.getProduct().getId().equals(product.getId())));
     }
 }

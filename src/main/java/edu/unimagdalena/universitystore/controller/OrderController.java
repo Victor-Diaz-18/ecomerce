@@ -2,7 +2,6 @@ package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
-import edu.unimagdalena.universitystore.mapper.OrderMapper;
 import edu.unimagdalena.universitystore.service.PurchaseOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -19,32 +19,26 @@ import java.util.List;
 @Validated
 public class OrderController {
     private final PurchaseOrderService service;
-    private final OrderMapper mapper;
 
     @PostMapping
     public ResponseEntity<OrderResponse> create(
             @Valid @RequestBody CreateOrderRequest req,
             UriComponentsBuilder uriBuilder) {
 
-        var created = service.create(mapper.toEntity(req));
+        var created = service.create(req);
 
         var location = uriBuilder
                 .path("/api/v1/orders/{id}")
-                .buildAndExpand(created.getId())
+                .buildAndExpand(created.id())
                 .toUri();
 
         return ResponseEntity.created(location)
-                .body(mapper.toResponse(created));
+                .body(created);
     }
 
     @GetMapping
     public ResponseEntity<List<OrderResponse>> findAll() {
-        var result = service.findAll()
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/search")
@@ -52,54 +46,50 @@ public class OrderController {
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String status) {
         var parsedStatus = status == null ? null : OrderStatus.valueOf(status.toUpperCase());
-        var result = service.search(customerId, parsedStatus)
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(service.search(customerId, parsedStatus));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(
-                mapper.toResponse(service.findById(id))
-        );
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<OrderStatusHistoryResponse>> getHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getHistory(id));
     }
 
     @PatchMapping("/{id}/pay")
     public ResponseEntity<OrderResponse> pay(@PathVariable Long id) {
-        var paid = service.payOrder(id);
-
-        return ResponseEntity.ok(
-                mapper.toResponse(paid)
-        );
+        return ResponseEntity.ok(service.payOrder(id));
     }
 
     @PatchMapping("/{id}/ship")
     public ResponseEntity<OrderResponse> ship(@PathVariable Long id) {
-        var shipped = service.shipOrder(id);
-
-        return ResponseEntity.ok(
-                mapper.toResponse(shipped)
-        );
+        return ResponseEntity.ok(service.shipOrder(id));
     }
 
     @PatchMapping("/{id}/deliver")
     public ResponseEntity<OrderResponse> deliver(@PathVariable Long id) {
-        var delivered = service.deliverOrder(id);
-
-        return ResponseEntity.ok(
-                mapper.toResponse(delivered)
-        );
+        return ResponseEntity.ok(service.deliverOrder(id));
     }
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<OrderResponse> cancel(@PathVariable Long id) {
-        var cancelled =  service.cancelOrder(id);
+        return ResponseEntity.ok(service.cancelOrder(id));
+    }
 
-        return ResponseEntity.ok(
-                mapper.toResponse(cancelled)
-        );
+    @PatchMapping("/{id}/return")
+    public ResponseEntity<OrderResponse> returnOrder(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : null;
+        return ResponseEntity.ok(service.returnOrder(id, reason));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
+        service.softDelete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -28,6 +28,7 @@ public class OrderDtos {
     public record OrderItemResponse(
             Long id,
             Long productId,
+            String productName,
             Integer quantity,
             BigDecimal unitPrice,
             BigDecimal subtotal
@@ -38,9 +39,17 @@ public class OrderDtos {
             String status,
             LocalDateTime createdAt,
             Long customerId,
+            String customerName,
             Long addressId,
+            String addressLine,
             List<OrderItemResponse> items,
             BigDecimal total
+    ) implements Serializable {}
+
+    public record OrderStatusHistoryResponse(
+            Long id,
+            String status,
+            LocalDateTime changedAt
     ) implements Serializable {}
 
     public record BestSellingProductResponse(

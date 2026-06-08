@@ -58,13 +58,12 @@ class CustomerControllerTest {
                         CustomerStatus.ACTIVE
                 );
 
-        when(mapper.toEntity(request)).thenReturn(customer);
-        when(service.create(customer)).thenReturn(customer);
+        when(service.create(any(Customer.class))).thenReturn(customer);
         when(mapper.toResponse(customer)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/customers")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("juan@test.com"));
     }
@@ -143,13 +142,13 @@ class CustomerControllerTest {
                         CustomerStatus.ACTIVE
                 );
 
-        when(mapper.toEntity(request)).thenReturn(updated);
+        when(service.findById(1L)).thenReturn(updated);
         when(service.update(1L, updated)).thenReturn(updated);
         when(mapper.toResponse(updated)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/customers/1")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Pedro Alvarez"));
     }
@@ -163,8 +162,8 @@ class CustomerControllerTest {
                 );
 
         mockMvc.perform(post("/api/v1/customers")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }

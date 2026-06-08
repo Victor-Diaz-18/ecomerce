@@ -3,8 +3,7 @@ package edu.unimagdalena.universitystore.entity;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "order_status_history")
@@ -12,18 +11,17 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class OrderStatusHistory {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class OrderStatusHistory extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
 
     @Column(nullable = false)
-    private LocalDateTime changedAt;
+    private java.time.LocalDateTime changedAt;
+
+    @Column(nullable = true)
+    private String reason;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)

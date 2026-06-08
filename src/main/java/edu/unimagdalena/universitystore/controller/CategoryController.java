@@ -1,6 +1,7 @@
 package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.CategoryDtos.*;
+import edu.unimagdalena.universitystore.entity.Category;
 import edu.unimagdalena.universitystore.mapper.CategoryMapper;
 import edu.unimagdalena.universitystore.service.CategoryService;
 import jakarta.validation.Valid;
@@ -25,7 +26,10 @@ public class CategoryController {
             @Valid @RequestBody CreateCategoryRequest req,
             UriComponentsBuilder uriBuilder) {
 
-        var created = service.create(mapper.toEntity(req));
+        Category category = new Category();
+        category.setName(req.name());
+
+        var created = service.create(category);
 
         var location = uriBuilder
                 .path("/api/v1/categories/{id}")
@@ -57,7 +61,12 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCategoryRequest req) {
-        var updated = service.update(id, mapper.toEntity(req));
+
+        Category category = service.findById(id);
+        category.setName(req.name());
+
+        var updated = service.update(id, category);
+
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
