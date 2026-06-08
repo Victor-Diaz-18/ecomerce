@@ -3,9 +3,9 @@ package edu.unimagdalena.universitystore.entity;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,15 +15,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class PurchaseOrder {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
+@SuperBuilder
+public class PurchaseOrder extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal total;
 

@@ -66,18 +66,18 @@ class OrderControllerTest {
                         "CREATED",
                         LocalDateTime.now(),
                         1L,
+                        "Customer Name",
                         1L,
+                        "Street, City, Country",
                         List.of(),
                         new BigDecimal("100000")
                 );
 
-        when(mapper.toEntity(request)).thenReturn(order);
-        when(service.create(order)).thenReturn(order);
-        when(mapper.toResponse(order)).thenReturn(response);
+        when(service.create(any(OrderDtos.CreateOrderRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/orders")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("CREATED"));
     }
@@ -97,12 +97,14 @@ class OrderControllerTest {
                         "CREATED",
                         LocalDateTime.now(),
                         1L,
-                        null,
+                        "Customer Name",
+                        1L,
+                        "Street, City, Country",
                         List.of(),
                         new BigDecimal("100000")
                 );
 
-        when(service.findAll()).thenReturn(List.of(order));
+        when(service.findAll()).thenReturn(List.of(response));
         when(mapper.toResponse(order)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/orders"))
@@ -125,12 +127,14 @@ class OrderControllerTest {
                         "CREATED",
                         LocalDateTime.now(),
                         1L,
-                        null,
+                        "Customer Name",
+                        1L,
+                        "Street, City, Country",
                         List.of(),
                         new BigDecimal("100000")
                 );
 
-        when(service.findById(1L)).thenReturn(order);
+        when(service.findById(1L)).thenReturn(response);
         when(mapper.toResponse(order)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/orders/1"))
@@ -140,26 +144,20 @@ class OrderControllerTest {
 
     @Test
     void shouldPayOrder() throws Exception {
-        PurchaseOrder paid = PurchaseOrder.builder()
-                .id(1L)
-                .status(OrderStatus.PAID)
-                .total(new BigDecimal("100000"))
-                .customer(Customer.builder().id(1L).build())
-                .build();
-
         OrderDtos.OrderResponse response =
                 new OrderDtos.OrderResponse(
                         1L,
                         "PAID",
                         LocalDateTime.now(),
                         1L,
-                        null,
+                        "Customer Name",
+                        1L,
+                        "Street, City, Country",
                         List.of(),
                         new BigDecimal("100000")
                 );
 
-        when(service.payOrder(1L)).thenReturn(paid);
-        when(mapper.toResponse(paid)).thenReturn(response);
+        when(service.payOrder(1L)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/orders/1/pay"))
                 .andExpect(status().isOk())
@@ -168,26 +166,20 @@ class OrderControllerTest {
 
     @Test
     void shouldCancelOrder() throws Exception {
-        PurchaseOrder cancelled = PurchaseOrder.builder()
-                .id(1L)
-                .status(OrderStatus.CANCELLED)
-                .total(new BigDecimal("100000"))
-                .customer(Customer.builder().id(1L).build())
-                .build();
-
         OrderDtos.OrderResponse response =
                 new OrderDtos.OrderResponse(
                         1L,
                         "CANCELLED",
                         LocalDateTime.now(),
                         1L,
-                        null,
+                        "Customer Name",
+                        1L,
+                        "Street, City, Country",
                         List.of(),
                         new BigDecimal("100000")
                 );
 
-        when(service.cancelOrder(1L)).thenReturn(cancelled);
-        when(mapper.toResponse(cancelled)).thenReturn(response);
+        when(service.cancelOrder(1L)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/orders/1/cancel"))
                 .andExpect(status().isOk())

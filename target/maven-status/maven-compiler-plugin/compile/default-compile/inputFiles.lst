@@ -4,8 +4,11 @@ C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\unive
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\exception\ConflictException.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\repository\OrderItemRepository.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\service\Impl\CategoryServiceImpl.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\event\OrderStatusChangedListener.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\repository\ProductPriceHistoryRepository.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\mapper\CategoryMapper.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\mapper\OrderMapper.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\BaseEntity.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\UniversityStoreApplication.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\mapper\InventoryMapper.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\repository\OrderStatusHistoryRepository.java
@@ -16,6 +19,7 @@ C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\unive
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\dto\CategoryDtos.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\OrderItem.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\dto\InventoryDtos.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\config\OpenApiConfig.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\Customer.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\PurchaseOrder.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\service\Impl\OrderStatusHistoryServiceImpl.java
@@ -25,6 +29,7 @@ C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\unive
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\mapper\ProductMapper.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\repository\InventoryRepository.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\dto\AddressDtos.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\config\JpaAuditingConfig.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\OrderStatusHistory.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\service\CustomerService.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\repository\ProductRepository.java
@@ -42,9 +47,11 @@ C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\unive
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\service\Impl\AddressServiceImpl.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\controller\ProductController.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\service\Impl\OrderItemServiceImpl.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\event\OrderStatusChangedEvent.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\Category.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\enums\CustomerStatus.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\dto\CustomerDtos.java
+C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\entity\ProductPriceHistory.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\service\Impl\PurchaseOrderServiceImpl.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\enums\OrderStatus.java
 C:\Users\recup\OneDrive\Documentos\ecomerce\src\main\java\edu\unimagdalena\universitystore\controller\AddressController.java

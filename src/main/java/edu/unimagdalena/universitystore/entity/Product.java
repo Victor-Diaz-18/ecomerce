@@ -2,6 +2,7 @@ package edu.unimagdalena.universitystore.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 
@@ -11,12 +12,8 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class Product extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String sku;
 

@@ -904,7 +904,10 @@
       }
 
       async function refreshDashboard() {
-        await Promise.all([loadProducts(), loadInventory(), loadOrders(), loadCustomers()]);
+        await loadProducts();
+        await loadInventory();
+        await Promise.all([loadOrders(), loadCustomers()]);
+        updateDashboard();
       }
 
       async function loadCategories() {
@@ -1291,16 +1294,22 @@
         if (order.status === "SHIPPED") {
           return `
             <button class="ghost" onclick="deliverOrder(${order.id})">Entregar</button>
+            <button class="danger" onclick="returnOrder(${order.id})">Devolver</button>
           `;
         }
         if (order.status === "DELIVERED") {
           return `
-            <span class="status-pill">Entregada</span>
+            <button class="danger" onclick="returnOrder(${order.id})">Devolver</button>
           `;
         }
         if (order.status === "CANCELLED") {
           return `
             <span class="status-pill">Cancelada</span>
+          `;
+        }
+        if (order.status === "RETURNED") {
+          return `
+            <span class="status-pill" style="background: #fff3e0; color: #e65100;">Devuelta</span>
           `;
         }
         return "-";
@@ -1492,6 +1501,7 @@
       function renderQuickInsights(orders, inventories) {
         const list = document.getElementById("quickInsights");
         const cancelled = orders.filter((o) => o.status === "CANCELLED").length;
+        const returned = orders.filter((o) => o.status === "RETURNED").length;
         const paid = orders.filter((o) => o.status === "PAID").length;
         const totalStock = inventories.reduce((sum, i) => sum + i.availableStock, 0);
         const avgOrder = orders.length
@@ -1500,6 +1510,7 @@
         list.innerHTML = [
           `Ordenes pagadas: ${paid}`,
           `Ordenes canceladas: ${cancelled}`,
+          `Ordenes devueltas: ${returned}`,
           `Stock total disponible: ${totalStock}`,
           `Ticket promedio: ${formatCurrency(avgOrder)}`,
         ]
@@ -1540,7 +1551,7 @@
           options: baseChartOptions(),
         });
 
-        const statusGroups = ["CREATED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"].map((status) => {
+        const statusGroups = ["CREATED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"].map((status) => {
           const total = orders.filter((o) => o.status === status).length;
           return total;
         });
@@ -1548,11 +1559,11 @@
         charts.status = upsertChart(charts.status, document.getElementById("statusChart"), {
           type: "doughnut",
           data: {
-            labels: ["CREATED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"],
+            labels: ["CREATED", "PAID", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"],
             datasets: [
               {
                 data: statusGroups,
-                backgroundColor: ["#7aa6a0", "#0e6d5c", "#d1a95a", "#e3c98a", "#d66b4f"],
+                backgroundColor: ["#7aa6a0", "#0e6d5c", "#d1a95a", "#e3c98a", "#d66b4f", "#ff9800"],
               },
             ],
           },
@@ -1652,6 +1663,15 @@
 
       async function cancelOrder(id) {
         await request(`/api/v1/orders/${id}/cancel`, { method: "PATCH" });
+        loadOrders();
+      }
+
+      async function returnOrder(id) {
+        const reason = prompt("Motivo de la devolución (opcional):");
+        await request(`/api/v1/orders/${id}/return`, { 
+          method: "PATCH", 
+          body: JSON.stringify({ reason }) 
+        });
         loadOrders();
       }
 

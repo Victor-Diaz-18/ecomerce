@@ -1,23 +1,30 @@
 package edu.unimagdalena.universitystore.service.Impl;
 
 import edu.unimagdalena.universitystore.entity.Product;
+import edu.unimagdalena.universitystore.entity.ProductPriceHistory;
 import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.CategoryRepository;
+import edu.unimagdalena.universitystore.repository.ProductPriceHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductPriceHistoryRepository priceHistoryRepository;
 
     @Override
     public Product create(Product product) {
@@ -31,9 +38,16 @@ public class ProductServiceImpl implements ProductService {
             throw new ResourceNotFoundException("Category not found");
         }
 
-        product.setActive(true);
+        if (product.getActive() == null) {
+            product.setActive(true);
+        }
 
         return productRepository.save(product);
+    }
+
+    @Override
+    public Page<Product> findAll(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
     @Override
@@ -67,6 +81,17 @@ public class ProductServiceImpl implements ProductService {
             existing.setCategory(product.getCategory());
         }
 
+        // Registrar historial de precio si cambió
+        if (!existing.getPrice().equals(product.getPrice())) {
+            ProductPriceHistory history = ProductPriceHistory.builder()
+                    .product(existing)
+                    .oldPrice(existing.getPrice())
+                    .newPrice(product.getPrice())
+                    .changedAt(LocalDateTime.now())
+                    .build();
+            priceHistoryRepository.save(history);
+        }
+
         existing.setName(product.getName());
         existing.setSku(product.getSku());
         existing.setPrice(product.getPrice());
@@ -82,9 +107,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void delete(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
-        }
-        productRepository.deleteById(id);
+        Product product = findById(id);
+        product.softDelete();
+        productRepository.save(product);
     }
 }

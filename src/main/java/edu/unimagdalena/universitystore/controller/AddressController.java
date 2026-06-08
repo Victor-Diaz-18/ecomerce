@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.AddressDtos.*;
+import edu.unimagdalena.universitystore.entity.Address;
+import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.mapper.AddressMapper;
 import edu.unimagdalena.universitystore.service.AddressService;
 import jakarta.validation.Valid;
@@ -24,7 +26,16 @@ public class AddressController {
     public ResponseEntity<AddressResponse> create(
             @Valid @RequestBody CreateAddressRequest req,
             UriComponentsBuilder uriBuilder) {
-        var created = service.create(mapper.toEntity(req));
+
+        Address address = new Address();
+        address.setStreet(req.street());
+        address.setCity(req.city());
+        address.setCountry(req.country());
+        Customer customer = new Customer();
+        customer.setId(req.customerId());
+        address.setCustomer(customer);
+
+        var created = service.create(address);
 
         var location = uriBuilder
                 .path("/api/v1/addresses/{id}")

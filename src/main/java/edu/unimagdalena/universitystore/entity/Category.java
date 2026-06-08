@@ -2,6 +2,7 @@ package edu.unimagdalena.universitystore.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "categories")
@@ -9,12 +10,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Category {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class Category extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String name;
 }

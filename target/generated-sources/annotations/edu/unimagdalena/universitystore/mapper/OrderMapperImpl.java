@@ -4,6 +4,7 @@ import edu.unimagdalena.universitystore.dto.OrderDtos;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.entity.OrderItem;
+import edu.unimagdalena.universitystore.entity.OrderStatusHistory;
 import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import java.math.BigDecimal;
@@ -15,40 +16,11 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-07T16:01:04-0500",
+    date = "2026-06-08T00:27:21-0500",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Microsoft)"
 )
 @Component
 public class OrderMapperImpl implements OrderMapper {
-
-    @Override
-    public PurchaseOrder toEntity(OrderDtos.CreateOrderRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        PurchaseOrder.PurchaseOrderBuilder purchaseOrder = PurchaseOrder.builder();
-
-        purchaseOrder.customer( createOrderRequestToCustomer( request ) );
-        purchaseOrder.address( createOrderRequestToAddress( request ) );
-        purchaseOrder.items( createOrderItemRequestListToOrderItemList( request.items() ) );
-
-        return purchaseOrder.build();
-    }
-
-    @Override
-    public OrderItem toItemEntity(OrderDtos.CreateOrderItemRequest request) {
-        if ( request == null ) {
-            return null;
-        }
-
-        OrderItem.OrderItemBuilder orderItem = OrderItem.builder();
-
-        orderItem.product( createOrderItemRequestToProduct( request ) );
-        orderItem.quantity( request.quantity() );
-
-        return orderItem.build();
-    }
 
     @Override
     public OrderDtos.OrderResponse toResponse(PurchaseOrder order) {
@@ -56,24 +28,26 @@ public class OrderMapperImpl implements OrderMapper {
             return null;
         }
 
-        String status = null;
+        Long customerId = null;
+        String customerName = null;
+        Long addressId = null;
+        List<OrderDtos.OrderItemResponse> items = null;
         Long id = null;
         LocalDateTime createdAt = null;
-        List<OrderDtos.OrderItemResponse> items = null;
         BigDecimal total = null;
 
-        if ( order.getStatus() != null ) {
-            status = order.getStatus().name();
-        }
+        customerId = orderCustomerId( order );
+        customerName = orderCustomerName( order );
+        addressId = orderAddressId( order );
+        items = mapItems( order.getItems() );
         id = order.getId();
         createdAt = order.getCreatedAt();
-        items = toItemResponseList( order.getItems() );
         total = order.getTotal();
 
-        Long customerId = order.getCustomer() != null ? order.getCustomer().getId() : null;
-        Long addressId = order.getAddress() != null ? order.getAddress().getId() : null;
+        String addressLine = order.getAddress() != null ? order.getAddress().getStreet() + ", " + order.getAddress().getCity() + ", " + order.getAddress().getCountry() : null;
+        String status = order.getStatus() != null ? order.getStatus().name() : null;
 
-        OrderDtos.OrderResponse orderResponse = new OrderDtos.OrderResponse( id, status, createdAt, customerId, addressId, items, total );
+        OrderDtos.OrderResponse orderResponse = new OrderDtos.OrderResponse( id, status, createdAt, customerId, customerName, addressId, addressLine, items, total );
 
         return orderResponse;
     }
@@ -85,18 +59,20 @@ public class OrderMapperImpl implements OrderMapper {
         }
 
         Long productId = null;
+        String productName = null;
         Long id = null;
         Integer quantity = null;
         BigDecimal unitPrice = null;
         BigDecimal subtotal = null;
 
         productId = itemProductId( item );
+        productName = itemProductName( item );
         id = item.getId();
         quantity = item.getQuantity();
         unitPrice = item.getUnitPrice();
         subtotal = item.getSubtotal();
 
-        OrderDtos.OrderItemResponse orderItemResponse = new OrderDtos.OrderItemResponse( id, productId, quantity, unitPrice, subtotal );
+        OrderDtos.OrderItemResponse orderItemResponse = new OrderDtos.OrderItemResponse( id, productId, productName, quantity, unitPrice, subtotal );
 
         return orderItemResponse;
     }
@@ -115,53 +91,61 @@ public class OrderMapperImpl implements OrderMapper {
         return list;
     }
 
-    protected Customer createOrderRequestToCustomer(OrderDtos.CreateOrderRequest createOrderRequest) {
-        if ( createOrderRequest == null ) {
+    @Override
+    public OrderDtos.OrderStatusHistoryResponse toHistoryResponse(OrderStatusHistory history) {
+        if ( history == null ) {
             return null;
         }
 
-        Customer.CustomerBuilder customer = Customer.builder();
+        Long id = null;
+        LocalDateTime changedAt = null;
 
-        customer.id( createOrderRequest.customerId() );
+        id = history.getId();
+        changedAt = history.getChangedAt();
 
-        return customer.build();
+        String status = history.getStatus() != null ? history.getStatus().name() : null;
+
+        OrderDtos.OrderStatusHistoryResponse orderStatusHistoryResponse = new OrderDtos.OrderStatusHistoryResponse( id, status, changedAt );
+
+        return orderStatusHistoryResponse;
     }
 
-    protected Address createOrderRequestToAddress(OrderDtos.CreateOrderRequest createOrderRequest) {
-        if ( createOrderRequest == null ) {
+    @Override
+    public List<OrderDtos.OrderStatusHistoryResponse> toHistoryResponseList(List<OrderStatusHistory> history) {
+        if ( history == null ) {
             return null;
         }
 
-        Address.AddressBuilder address = Address.builder();
+        List<OrderDtos.OrderStatusHistoryResponse> list = new ArrayList<OrderDtos.OrderStatusHistoryResponse>( history.size() );
+        for ( OrderStatusHistory orderStatusHistory : history ) {
+            list.add( toHistoryResponse( orderStatusHistory ) );
+        }
 
-        address.id( createOrderRequest.addressId() );
-
-        return address.build();
+        return list;
     }
 
-    protected List<OrderItem> createOrderItemRequestListToOrderItemList(List<OrderDtos.CreateOrderItemRequest> list) {
-        if ( list == null ) {
+    private Long orderCustomerId(PurchaseOrder purchaseOrder) {
+        Customer customer = purchaseOrder.getCustomer();
+        if ( customer == null ) {
             return null;
         }
-
-        List<OrderItem> list1 = new ArrayList<OrderItem>( list.size() );
-        for ( OrderDtos.CreateOrderItemRequest createOrderItemRequest : list ) {
-            list1.add( toItemEntity( createOrderItemRequest ) );
-        }
-
-        return list1;
+        return customer.getId();
     }
 
-    protected Product createOrderItemRequestToProduct(OrderDtos.CreateOrderItemRequest createOrderItemRequest) {
-        if ( createOrderItemRequest == null ) {
+    private String orderCustomerName(PurchaseOrder purchaseOrder) {
+        Customer customer = purchaseOrder.getCustomer();
+        if ( customer == null ) {
             return null;
         }
+        return customer.getName();
+    }
 
-        Product.ProductBuilder product = Product.builder();
-
-        product.id( createOrderItemRequest.productId() );
-
-        return product.build();
+    private Long orderAddressId(PurchaseOrder purchaseOrder) {
+        Address address = purchaseOrder.getAddress();
+        if ( address == null ) {
+            return null;
+        }
+        return address.getId();
     }
 
     private Long itemProductId(OrderItem orderItem) {
@@ -170,5 +154,13 @@ public class OrderMapperImpl implements OrderMapper {
             return null;
         }
         return product.getId();
+    }
+
+    private String itemProductName(OrderItem orderItem) {
+        Product product = orderItem.getProduct();
+        if ( product == null ) {
+            return null;
+        }
+        return product.getName();
     }
 }

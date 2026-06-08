@@ -2,6 +2,7 @@ package edu.unimagdalena.universitystore.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "inventories")
@@ -9,12 +10,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Inventory {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class Inventory extends BaseEntity {
     @Column(nullable = false)
     private Integer availableStock;
 

@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.InventoryDtos.*;
+import edu.unimagdalena.universitystore.entity.Inventory;
+import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.mapper.InventoryMapper;
 import edu.unimagdalena.universitystore.service.InventoryService;
 import jakarta.validation.Valid;
@@ -22,7 +24,15 @@ public class InventoryController {
     @PostMapping
     public ResponseEntity<InventoryResponse> create(
             @Valid @RequestBody CreateInventoryRequest req) {
-        var created = service.create(mapper.toEntity(req));
+
+        Inventory inventory = new Inventory();
+        inventory.setAvailableStock(req.availableStock());
+        inventory.setMinimumStock(req.minimumStock());
+        Product product = new Product();
+        product.setId(req.productId());
+        inventory.setProduct(product);
+
+        var created = service.create(inventory);
 
         return ResponseEntity.status(201)
                 .body(mapper.toResponse(created));

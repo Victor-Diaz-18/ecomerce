@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.controller;
 
 import edu.unimagdalena.universitystore.dto.ProductDtos.*;
+import edu.unimagdalena.universitystore.entity.Product;
+import edu.unimagdalena.universitystore.entity.Category;
 import edu.unimagdalena.universitystore.mapper.ProductMapper;
 import edu.unimagdalena.universitystore.service.ProductService;
 import jakarta.validation.Valid;
@@ -10,7 +12,12 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -25,7 +32,16 @@ public class ProductController {
             @Valid @RequestBody CreateProductRequest req,
             UriComponentsBuilder uriBuilder) {
 
-        var created = service.create(mapper.toEntity(req));
+        Product product = new Product();
+        product.setName(req.name());
+        product.setSku(req.sku());
+        product.setPrice(req.price());
+        product.setActive(true);
+        Category category = new Category();
+        category.setId(req.categoryId());
+        product.setCategory(category);
+
+        var created = service.create(product);
 
         var location = uriBuilder
                 .path("/api/v1/products/{id}")
@@ -37,7 +53,16 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> findAll() {
+    public ResponseEntity<Page<ProductResponse>> findAll(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        var result = service.findAll(pageable)
+                .map(mapper::toResponse);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<ProductResponse>> findAllList() {
         var result = service.findAll()
                 .stream()
                 .map(mapper::toResponse)
@@ -58,7 +83,20 @@ public class ProductController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateProductRequest req) {
 
-        var updated = service.update(id, mapper.toEntity(req));
+        Product product = service.findById(id);
+        product.setName(req.name());
+        product.setSku(req.sku());
+        product.setPrice(req.price());
+        if (req.active() != null) {
+            product.setActive(req.active());
+        }
+        if (req.categoryId() != null) {
+            Category category = new Category();
+            category.setId(req.categoryId());
+            product.setCategory(category);
+        }
+
+        var updated = service.update(id, product);
 
         return ResponseEntity.ok(
                 mapper.toResponse(updated)

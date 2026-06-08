@@ -1,17 +1,20 @@
 package edu.unimagdalena.universitystore.service;
 
-import edu.unimagdalena.universitystore.entity.PurchaseOrder;
+import edu.unimagdalena.universitystore.dto.OrderDtos.*;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 
 import java.util.List;
 
 public interface PurchaseOrderService {
-    PurchaseOrder create(PurchaseOrder order);
-    PurchaseOrder payOrder(Long orderId);
-    PurchaseOrder shipOrder(Long orderId);
-    PurchaseOrder deliverOrder(Long orderId);
-    PurchaseOrder cancelOrder(Long orderId);
-    List<PurchaseOrder> findAll();
-    PurchaseOrder findById(Long id);
-    List<PurchaseOrder> search(Long customerId, OrderStatus status);
+    OrderResponse create(CreateOrderRequest req);
+    OrderResponse payOrder(Long orderId);
+    OrderResponse shipOrder(Long orderId);
+    OrderResponse deliverOrder(Long orderId);
+    OrderResponse cancelOrder(Long orderId);
+    OrderResponse returnOrder(Long orderId, String reason);
+    List<OrderResponse> findAll();
+    OrderResponse findById(Long id);
+    List<OrderResponse> search(Long customerId, OrderStatus status);
+    List<OrderStatusHistoryResponse> getHistory(Long orderId);
+    void softDelete(Long orderId);
 }
