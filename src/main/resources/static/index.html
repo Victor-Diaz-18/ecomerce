@@ -1026,7 +1026,7 @@
           )
           .join("");
         setSelectOptions("inventoryProduct", state.products, "name");
-        setSelectOptions("orderProduct", state.products, "name");
+        setSelectOptions("orderProduct", state.products.filter((p) => p.active), "name");
       }
 
       function categoryName(id) {
