@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,7 +43,7 @@ class InventoryServiceImplTest {
                 .product(product)
                 .build();
 
-        when(productRepository.existsById(1L)).thenReturn(true);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(inventoryRepository.save(inventory)).thenReturn(inventory);
 
         Inventory result = inventoryService.create(inventory);
@@ -62,7 +63,7 @@ class InventoryServiceImplTest {
                 .product(product)
                 .build();
 
-        when(productRepository.existsById(1L)).thenReturn(false);
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> inventoryService.create(inventory));
@@ -111,17 +112,9 @@ class InventoryServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenStockNegative() {
-        Inventory inventory = Inventory.builder()
-                .id(1L)
-                .availableStock(10)
-                .build();
-
-        when(inventoryRepository.findById(1L))
-                .thenReturn(Optional.of(inventory));
-
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> inventoryService.updateStock(1L, -5, 5));
 
-        assertEquals("New stock cannot be negative", exception.getMessage());
+        assertEquals("New stock cannot be null or negative", exception.getMessage());
     }
 }

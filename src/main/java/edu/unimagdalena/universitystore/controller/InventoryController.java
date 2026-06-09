@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -23,7 +24,8 @@ public class InventoryController {
 
     @PostMapping
     public ResponseEntity<InventoryResponse> create(
-            @Valid @RequestBody CreateInventoryRequest req) {
+            @Valid @RequestBody CreateInventoryRequest req,
+            UriComponentsBuilder uriBuilder) {
 
         Inventory inventory = new Inventory();
         inventory.setAvailableStock(req.availableStock());
@@ -34,7 +36,12 @@ public class InventoryController {
 
         var created = service.create(inventory);
 
-        return ResponseEntity.status(201)
+        var location = uriBuilder
+                .path("/api/v1/inventories/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        return ResponseEntity.created(location)
                 .body(mapper.toResponse(created));
     }
 
@@ -46,6 +53,12 @@ public class InventoryController {
                 .toList();
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<InventoryResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                mapper.toResponse(service.findByProductId(id)));
     }
 
     @PatchMapping("/{id}")

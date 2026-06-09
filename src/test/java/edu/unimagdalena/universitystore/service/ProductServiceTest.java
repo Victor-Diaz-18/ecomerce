@@ -52,8 +52,8 @@ class ProductServiceImplTest {
         when(productRepository.findBySku("SKU001"))
                 .thenReturn(Optional.empty());
 
-        when(categoryRepository.existsById(1L))
-                .thenReturn(true);
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.of(category));
 
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(i -> i.getArgument(0));
@@ -116,8 +116,8 @@ class ProductServiceImplTest {
         when(productRepository.findBySku("SKU001"))
                 .thenReturn(Optional.empty());
 
-        when(categoryRepository.existsById(1L))
-                .thenReturn(false);
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> productService.create(product));

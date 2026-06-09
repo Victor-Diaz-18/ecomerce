@@ -7,7 +7,6 @@ import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.OrderItem;
 import edu.unimagdalena.universitystore.entity.OrderStatusHistory;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
-import edu.unimagdalena.universitystore.entity.ProductPriceHistory;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import edu.unimagdalena.universitystore.event.OrderStatusChangedEvent;
 import edu.unimagdalena.universitystore.exception.BusinessException;
@@ -19,7 +18,6 @@ import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.repository.InventoryRepository;
 import edu.unimagdalena.universitystore.repository.OrderItemRepository;
 import edu.unimagdalena.universitystore.repository.OrderStatusHistoryRepository;
-import edu.unimagdalena.universitystore.repository.ProductPriceHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.repository.PurchaseOrderRepository;
 import edu.unimagdalena.universitystore.service.PurchaseOrderService;
@@ -31,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +38,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final ProductRepository productRepository;
-    private final ProductPriceHistoryRepository priceHistoryRepository;
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
     private final OrderMapper mapper;
@@ -50,22 +46,27 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public OrderResponse create(CreateOrderRequest req) {
-        if (req.customerId() == null || !customerRepository.existsById(req.customerId())) {
+        if (req.customerId() == null || !customerRepository.existsByIdNotDeleted(req.customerId())) {
             throw new ResourceNotFoundException("Customer not found");
         }
-        if (req.addressId() == null || !addressRepository.existsById(req.addressId())) {
+        if (req.addressId() == null || !addressRepository.existsByIdNotDeleted(req.addressId())) {
             throw new ResourceNotFoundException("Address not found");
         }
         if (req.items() == null || req.items().isEmpty()) {
             throw new ValidationException("Order items are required");
         }
 
-        PurchaseOrder order = new PurchaseOrder();
-        order.setStatus(OrderStatus.CREATED);
-        order.setCustomer(new Customer());
-        order.getCustomer().setId(req.customerId());
-        order.setAddress(new Address());
-        order.getAddress().setId(req.addressId());
+        Customer customer = customerRepository.findById(req.customerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+        Address address = addressRepository.findById(req.addressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
+
+        PurchaseOrder order = PurchaseOrder.builder()
+                .status(OrderStatus.CREATED)
+                .customer(customer)
+                .address(address)
+                .total(BigDecimal.ZERO)
+                .build();
 
         BigDecimal total = BigDecimal.ZERO;
 
@@ -92,8 +93,9 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                     .product(product)
                     .quantity(itemReq.quantity())
                     .unitPrice(product.getPrice())
-                    .subtotal(product.getPrice().multiply(BigDecimal.valueOf(itemReq.quantity())))
                     .build();
+
+            item.calculateSubtotal();
 
             order.getItems().add(item);
             total = total.add(item.getSubtotal());
@@ -101,8 +103,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         order.setTotal(total);
         PurchaseOrder saved = purchaseOrderRepository.save(order);
-
-        orderItemRepository.saveAll(saved.getItems());
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(saved)
@@ -142,9 +142,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             throw new BusinessException("Shipped or delivered orders cannot be cancelled. Use return process instead.");
         }
 
-        if (order.getStatus() == OrderStatus.PAID) {
-            restoreStock(order);
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.RETURNED) {
+            throw new BusinessException("Order is already " + order.getStatus());
         }
+
+        restoreStock(order);
 
         return transitionStatusInternal(order, OrderStatus.CANCELLED, null);
     }
@@ -166,7 +168,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private void restoreStock(PurchaseOrder order) {
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
         for (OrderItem item : items) {
-            Inventory inventory = inventoryRepository.findByProductId(item.getProduct().getId())
+            Inventory inventory = inventoryRepository.findByProductIdForUpdate(item.getProduct().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
             inventory.setAvailableStock(inventory.getAvailableStock() + item.getQuantity());
             inventoryRepository.save(inventory);

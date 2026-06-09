@@ -90,6 +90,6 @@ class CategoryControllerTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Category already exists"));
+                .andExpect(jsonPath("$.message").value("Category already exists"));
     }
 }

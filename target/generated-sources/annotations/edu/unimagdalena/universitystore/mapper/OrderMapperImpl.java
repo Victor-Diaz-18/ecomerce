@@ -9,14 +9,13 @@ import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-08T00:27:21-0500",
+    date = "2026-06-08T21:09:30-0500",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Microsoft)"
 )
 @Component
@@ -31,7 +30,6 @@ public class OrderMapperImpl implements OrderMapper {
         Long customerId = null;
         String customerName = null;
         Long addressId = null;
-        List<OrderDtos.OrderItemResponse> items = null;
         Long id = null;
         LocalDateTime createdAt = null;
         BigDecimal total = null;
@@ -39,13 +37,13 @@ public class OrderMapperImpl implements OrderMapper {
         customerId = orderCustomerId( order );
         customerName = orderCustomerName( order );
         addressId = orderAddressId( order );
-        items = mapItems( order.getItems() );
         id = order.getId();
         createdAt = order.getCreatedAt();
         total = order.getTotal();
 
         String addressLine = order.getAddress() != null ? order.getAddress().getStreet() + ", " + order.getAddress().getCity() + ", " + order.getAddress().getCountry() : null;
         String status = order.getStatus() != null ? order.getStatus().name() : null;
+        List<OrderDtos.OrderItemResponse> items = order.getItems() != null ? order.getItems().stream().map(this::toItemResponse).toList() : java.util.List.of();
 
         OrderDtos.OrderResponse orderResponse = new OrderDtos.OrderResponse( id, status, createdAt, customerId, customerName, addressId, addressLine, items, total );
 
@@ -78,20 +76,6 @@ public class OrderMapperImpl implements OrderMapper {
     }
 
     @Override
-    public List<OrderDtos.OrderItemResponse> toItemResponseList(List<OrderItem> items) {
-        if ( items == null ) {
-            return null;
-        }
-
-        List<OrderDtos.OrderItemResponse> list = new ArrayList<OrderDtos.OrderItemResponse>( items.size() );
-        for ( OrderItem orderItem : items ) {
-            list.add( toItemResponse( orderItem ) );
-        }
-
-        return list;
-    }
-
-    @Override
     public OrderDtos.OrderStatusHistoryResponse toHistoryResponse(OrderStatusHistory history) {
         if ( history == null ) {
             return null;
@@ -108,20 +92,6 @@ public class OrderMapperImpl implements OrderMapper {
         OrderDtos.OrderStatusHistoryResponse orderStatusHistoryResponse = new OrderDtos.OrderStatusHistoryResponse( id, status, changedAt );
 
         return orderStatusHistoryResponse;
-    }
-
-    @Override
-    public List<OrderDtos.OrderStatusHistoryResponse> toHistoryResponseList(List<OrderStatusHistory> history) {
-        if ( history == null ) {
-            return null;
-        }
-
-        List<OrderDtos.OrderStatusHistoryResponse> list = new ArrayList<OrderDtos.OrderStatusHistoryResponse>( history.size() );
-        for ( OrderStatusHistory orderStatusHistory : history ) {
-            list.add( toHistoryResponse( orderStatusHistory ) );
-        }
-
-        return list;
     }
 
     private Long orderCustomerId(PurchaseOrder purchaseOrder) {

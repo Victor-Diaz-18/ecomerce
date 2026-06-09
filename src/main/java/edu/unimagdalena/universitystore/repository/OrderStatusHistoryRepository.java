@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, Long> {
+    @Query("SELECT osh FROM OrderStatusHistory osh WHERE osh.deletedAt IS NULL AND osh.order.id = :orderId")
     List<OrderStatusHistory> findByOrderId(Long orderId);
 
     @Modifying
