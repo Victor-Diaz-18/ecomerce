@@ -68,7 +68,7 @@ class PurchaseOrderServiceImplTest {
                 99L, 1L, List.of(new CreateOrderItemRequest(1L, 1))
         );
 
-        when(customerRepository.existsById(99L)).thenReturn(false);
+        when(customerRepository.existsByIdNotDeleted(99L)).thenReturn(false);
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> purchaseOrderService.create(request));

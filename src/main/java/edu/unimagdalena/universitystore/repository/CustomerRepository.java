@@ -11,12 +11,16 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
+    @Query("SELECT c FROM Customer c WHERE c.deletedAt IS NULL AND c.email = :email")
     Optional<Customer> findByEmail(String email);
 
     @Modifying
     @Transactional
     @Query("UPDATE Customer c SET c.deletedAt = :now WHERE c.id = :id")
     void softDelete(Long id, LocalDateTime now);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Customer c WHERE c.deletedAt IS NULL AND c.id = :id")
+    boolean existsByIdNotDeleted(Long id);
 
     @Override
     @Query("SELECT c FROM Customer c WHERE c.deletedAt IS NULL")

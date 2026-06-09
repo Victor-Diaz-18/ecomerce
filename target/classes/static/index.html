@@ -381,6 +381,11 @@
         font-size: 11px;
       }
 
+      .status-pill.returned {
+        background: #fff3e0;
+        color: #e65100;
+      }
+
       dialog {
         border: none;
         border-radius: 16px;
@@ -623,6 +628,7 @@
                 <option value="SHIPPED">SHIPPED</option>
                 <option value="DELIVERED">DELIVERED</option>
                 <option value="CANCELLED">CANCELLED</option>
+                <option value="RETURNED">RETURNED</option>
               </select>
               <button class="ghost" onclick="searchOrders()">Buscar</button>
             </div>
@@ -820,13 +826,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       const state = {
-        products: [],
         categories: [],
+        products: [],
         customers: [],
         addresses: {},
         inventories: [],
         orders: [],
         orderItems: [],
+        pendingAddresses: [],
       };
 
       const charts = {
@@ -851,21 +858,44 @@
         return document.getElementById("apiBase").value.replace(/\/$/, "");
       }
 
+      function escapeHtml(str) {
+        if (str == null) return "";
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
       async function request(path, options = {}) {
         const { silent, ...fetchOptions } = options;
+        const headers = {};
+        if (fetchOptions.body) {
+          headers["Content-Type"] = "application/json";
+        }
         const res = await fetch(`${apiBase()}${path}`, {
-          headers: { "Content-Type": "application/json" },
           ...fetchOptions,
+          headers,
         });
         if (!res.ok) {
           const body = await res.text();
           if (!silent) {
-            alert(`Error ${res.status}: ${body}`);
+            showToast(`Error ${res.status}: ${body}`, "error");
           }
           throw new Error(body);
         }
         if (res.status === 204) return null;
         return res.json();
+      }
+
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.style.cssText = `
+          position: fixed; top: 20px; right: 20px; z-index: 9999;
+          padding: 12px 20px; border-radius: 10px; font-size: 13px;
+          color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          animation: fade 0.3s ease; max-width: 400px;
+          background: ${type === "error" ? "var(--danger)" : type === "success" ? "var(--accent)" : "var(--ink-soft)"};
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
       }
 
       function closeModal(id) {
@@ -898,15 +928,20 @@
       }
 
       async function bootstrap() {
-        await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadInventory(), loadOrders()]);
+        try { await loadCategories(); } catch (e) { console.error(e); }
+        try { await loadProducts(); } catch (e) { console.error(e); }
+        try { await loadCustomers(); } catch (e) { console.error(e); }
+        try { await loadInventory(); } catch (e) { console.error(e); }
+        try { await loadOrders(); } catch (e) { console.error(e); }
         setCustomerOptions("orderSearchCustomer");
         updateDashboard();
       }
 
       async function refreshDashboard() {
-        await loadProducts();
-        await loadInventory();
-        await Promise.all([loadOrders(), loadCustomers()]);
+        try { await loadProducts(); } catch (e) { console.error(e); }
+        try { await loadInventory(); } catch (e) { console.error(e); }
+        try { await loadOrders(); } catch (e) { console.error(e); }
+        try { await loadCustomers(); } catch (e) { console.error(e); }
         updateDashboard();
       }
 
@@ -918,7 +953,7 @@
             (c) => `
               <tr>
                 <td>${c.id}</td>
-                <td>${c.name}</td>
+                <td>${escapeHtml(c.name)}</td>
                 <td class="action-row">
                   <button class="ghost" onclick="editCategory(${c.id})">Editar</button>
                   <button class="danger" onclick="deleteCategory(${c.id})">Eliminar</button>
@@ -944,35 +979,44 @@
       }
 
       async function saveCategory() {
-        const id = document.getElementById("categoryId").value;
-        const payload = { name: document.getElementById("categoryName").value.trim() };
-        if (id) {
-          await request(`/api/v1/categories/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
-        } else {
-          await request("/api/v1/categories", { method: "POST", body: JSON.stringify(payload) });
+        try {
+          const id = document.getElementById("categoryId").value;
+          const payload = { name: document.getElementById("categoryName").value.trim() };
+          if (id) {
+            await request(`/api/v1/categories/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+          } else {
+            await request("/api/v1/categories", { method: "POST", body: JSON.stringify(payload) });
+          }
+          closeModal("categoryModal");
+          clearFields(["categoryName", "categoryId"]);
+          loadCategories();
+        } catch (error) {
+          console.error("Error saving category", error);
         }
-        closeModal("categoryModal");
-        clearFields(["categoryName", "categoryId"]);
-        loadCategories();
       }
 
       async function deleteCategory(id) {
-        await request(`/api/v1/categories/${id}`, { method: "DELETE" });
-        loadCategories();
+        try {
+          await request(`/api/v1/categories/${id}`, { method: "DELETE" });
+          loadCategories();
+        } catch (error) {
+          console.error("Error deleting category", error);
+        }
       }
 
       async function loadProducts() {
-        state.products = await request("/api/v1/products");
+        const page = await request("/api/v1/products");
+        state.products = page.content || [];
         const tbody = document.getElementById("productsTable");
         tbody.innerHTML = state.products
           .map(
             (p) => `
               <tr>
                 <td>${p.id}</td>
-                <td>${p.name}</td>
-                <td>${p.sku}</td>
+                <td>${escapeHtml(p.name)}</td>
+                <td>${escapeHtml(p.sku)}</td>
                 <td>${p.price}</td>
-                <td>${categoryName(p.categoryId)}</td>
+                <td>${escapeHtml(categoryName(p.categoryId))}</td>
                 <td>${p.active}</td>
                 <td class="action-row">
                   <button class="ghost" onclick="editProduct(${p.id})">Editar</button>
@@ -983,10 +1027,6 @@
           .join("");
         setSelectOptions("inventoryProduct", state.products, "name");
         setSelectOptions("orderProduct", state.products, "name");
-        if (state.inventories.length) {
-          loadInventory();
-        }
-        updateDashboard();
       }
 
       function categoryName(id) {
@@ -1000,7 +1040,7 @@
       }
 
       function openProductModal() {
-        clearFields(["productName", "productSku", "productPrice", "productId"]);
+        clearFields(["productName", "productSku", "productPrice", "productId", "productCategory"]);
         document.getElementById("productActive").value = "true";
         document.getElementById("productModalTitle").textContent = "Nuevo producto";
         openModal("productModal");
@@ -1019,27 +1059,35 @@
       }
 
       async function saveProduct() {
-        const id = document.getElementById("productId").value;
-        const payload = {
-          name: document.getElementById("productName").value.trim(),
-          sku: document.getElementById("productSku").value.trim(),
-          price: Number(document.getElementById("productPrice").value),
-          active: document.getElementById("productActive").value === "true",
-          categoryId: Number(document.getElementById("productCategory").value),
-        };
-        if (id) {
-          await request(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
-        } else {
-          await request("/api/v1/products", { method: "POST", body: JSON.stringify(payload) });
+        try {
+          const id = document.getElementById("productId").value;
+          const payload = {
+            name: document.getElementById("productName").value.trim(),
+            sku: document.getElementById("productSku").value.trim(),
+            price: Number(document.getElementById("productPrice").value),
+            active: document.getElementById("productActive").value === "true",
+            categoryId: Number(document.getElementById("productCategory").value),
+          };
+          if (id) {
+            await request(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+          } else {
+            await request("/api/v1/products", { method: "POST", body: JSON.stringify(payload) });
+          }
+          closeModal("productModal");
+          clearFields(["productName", "productSku", "productPrice", "productId"]);
+          loadProducts();
+        } catch (error) {
+          console.error("Error saving product", error);
         }
-        closeModal("productModal");
-        clearFields(["productName", "productSku", "productPrice", "productId"]);
-        loadProducts();
       }
 
       async function deleteProduct(id) {
-        await request(`/api/v1/products/${id}`, { method: "DELETE" });
-        loadProducts();
+        try {
+          await request(`/api/v1/products/${id}`, { method: "DELETE" });
+          loadProducts();
+        } catch (error) {
+          console.error("Error deleting product", error);
+        }
       }
 
       async function loadCustomers() {
@@ -1050,8 +1098,8 @@
             (c) => `
               <tr>
                 <td>${c.id}</td>
-                <td>${c.name}</td>
-                <td>${c.email}</td>
+                <td>${escapeHtml(c.name)}</td>
+                <td>${escapeHtml(c.email)}</td>
                 <td><span class="status-pill">${c.status}</span></td>
                 <td>
                   <button class="ghost" onclick="viewAddresses(${c.id})">Ver</button>
@@ -1065,7 +1113,6 @@
           .join("");
         setCustomerOptions("orderSearchCustomer");
         setCustomerOptions("orderCustomer");
-        updateDashboard();
       }
 
       function openCustomerModal() {
@@ -1089,60 +1136,87 @@
       }
 
       async function saveCustomer() {
-        const id = document.getElementById("customerId").value;
-        const payload = {
-          name: document.getElementById("customerName").value.trim(),
-          email: document.getElementById("customerEmail").value.trim(),
-          status: document.getElementById("customerStatus").value,
-        };
-        let customerId = id;
-        if (id) {
-          await request(`/api/v1/customers/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
-        } else {
-          const created = await request("/api/v1/customers", { method: "POST", body: JSON.stringify(payload) });
-          customerId = created.id;
+        try {
+          const id = document.getElementById("customerId").value;
+          const payload = {
+            name: document.getElementById("customerName").value.trim(),
+            email: document.getElementById("customerEmail").value.trim(),
+            status: document.getElementById("customerStatus").value,
+          };
+          let customerId = id;
+          if (id) {
+            await request(`/api/v1/customers/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+          } else {
+            const created = await request("/api/v1/customers", { method: "POST", body: JSON.stringify(payload) });
+            customerId = created.id;
+          }
+
+          await saveCustomerAddresses(customerId, !id);
+
+          closeModal("customerModal");
+          clearFields(["customerName", "customerEmail", "customerId", "newAddressLine"]);
+          loadCustomers();
+          showToast("Cliente guardado", "success");
+        } catch (error) {
+          console.error("Error saving customer", error);
+          showToast("Error al guardar cliente: " + error.message, "error");
         }
-
-        await saveCustomerAddresses(customerId, !id);
-
-        closeModal("customerModal");
-        clearFields(["customerName", "customerEmail", "customerId", "newAddressLine"]);
-        loadCustomers();
       }
 
       async function saveCustomerAddresses(customerId, isNewCustomer) {
         if (!isNewCustomer) return;
+        console.log("saveCustomerAddresses called with customerId:", customerId, "pending:", state.pendingAddresses);
         const addressLine = document.getElementById("newAddressLine").value.trim();
-        if (!addressLine) return;
-        const lines = addressLine.split(/\n|;/).map((l) => l.trim()).filter(Boolean);
+        const lines = addressLine ? addressLine.split(/\n|;/).map((l) => l.trim()).filter(Boolean) : [];
         for (const line of lines) {
-          await createAddressFromLine(customerId, line);
+          try {
+            await createAddressFromLine(customerId, line);
+          } catch (e) {
+            showToast("Error en dirección: " + line, "error");
+          }
         }
+        console.log("Processing pending addresses:", state.pendingAddresses);
+        for (const addr of state.pendingAddresses) {
+          try {
+            await createAddressFromLine(customerId, addr);
+          } catch (e) {
+            showToast("Error en dirección pendiente: " + addr, "error");
+          }
+        }
+        state.pendingAddresses = [];
       }
 
       async function addCustomerAddress() {
         const customerId = document.getElementById("customerId").value;
-        if (!customerId) {
-          alert("Guarda el cliente primero.");
-          return;
-        }
         const line = document.getElementById("newAddressLine").value.trim();
         if (!line) return;
-        await createAddressFromLine(customerId, line);
-        document.getElementById("newAddressLine").value = "";
-        const addresses = await request(`/api/v1/addresses/customer/${customerId}`);
-        renderCustomerAddresses(addresses);
+        try {
+          if (customerId) {
+            await createAddressFromLine(customerId, line);
+            document.getElementById("newAddressLine").value = "";
+            const addresses = await request(`/api/v1/addresses/customer/${customerId}`);
+            renderCustomerAddresses(addresses);
+          } else {
+            state.pendingAddresses.push(line);
+            renderCustomerAddresses(state.pendingAddresses.map((l, i) => ({ id: `temp-${i}`, street: l.split(",")[0]?.trim() || l, city: l.split(",")[1]?.trim() || "", country: l.split(",")[2]?.trim() || "" })));
+            document.getElementById("newAddressLine").value = "";
+            showToast("Dirección agregada. Se guardará al crear el cliente.", "success");
+          }
+        } catch (error) {
+          showToast("Error: " + error.message, "error");
+        }
       }
 
       async function createAddressFromLine(customerId, line) {
         const parts = line.split(",").map((part) => part.trim()).filter(Boolean);
         const [street, city, country] = parts;
-        if (street && city && country) {
-          await request("/api/v1/addresses", {
-            method: "POST",
-            body: JSON.stringify({ street, city, country, customerId: Number(customerId) }),
-          });
+        if (!street || !city || !country) {
+          throw new Error(`Formato inválido: "${line}". Usa: Calle, Ciudad, País`);
         }
+        await request("/api/v1/addresses", {
+          method: "POST",
+          body: JSON.stringify({ street, city, country, customerId: Number(customerId) }),
+        });
       }
 
       function renderCustomerAddresses(addresses) {
@@ -1152,7 +1226,7 @@
             (a) => `
               <tr>
                 <td>${a.street}, ${a.city}, ${a.country}</td>
-                <td><button class="ghost" onclick="deleteAddress(${a.id})">Eliminar</button></td>
+                <td>${String(a.id).startsWith("temp-") ? "" : `<button class="ghost" onclick="deleteAddress(${a.id})">Eliminar</button>`}</td>
               </tr>`
           )
           .join("");
@@ -1168,26 +1242,34 @@
       }
 
       async function deleteCustomer(id) {
-        await request(`/api/v1/customers/${id}`, { method: "DELETE" });
-        loadCustomers();
+        try {
+          await request(`/api/v1/customers/${id}`, { method: "DELETE" });
+          loadCustomers();
+        } catch (error) {
+          console.error("Error deleting customer", error);
+        }
       }
 
       async function viewAddresses(customerId) {
         const data = await request(`/api/v1/addresses/customer/${customerId}`);
         state.addresses[customerId] = data;
+        if (!data || !data.length) {
+          showToast("Sin direcciones registradas", "info");
+          return;
+        }
         const list = data.map((a) => `${a.street}, ${a.city}, ${a.country}`).join("\n");
-        alert(list || "Sin direcciones");
+        showToast(list, "info");
       }
 
       async function loadInventory() {
         const data = await request("/api/v1/inventories");
         state.inventories = data;
         const tbody = document.getElementById("inventoryTable");
-        tbody.innerHTML = data
+        tbody.innerHTML = state.inventories
           .map(
             (i) => `
               <tr>
-                <td>${productName(i.productId)}</td>
+                <td>${escapeHtml(productName(i.productId))}</td>
                 <td>${i.availableStock}</td>
                 <td>${i.minimumStock}</td>
                 <td class="action-row">
@@ -1196,11 +1278,10 @@
               </tr>`
           )
           .join("");
-        updateDashboard();
       }
 
       function openInventoryModal() {
-        clearFields(["inventoryId", "inventoryStock", "inventoryMin"]);
+        clearFields(["inventoryId", "inventoryStock", "inventoryMin", "inventoryProduct"]);
         document.getElementById("inventoryModalTitle").textContent = "Nuevo inventario";
         openModal("inventoryModal");
       }
@@ -1216,46 +1297,54 @@
       }
 
       async function saveInventory() {
-        const id = document.getElementById("inventoryId").value;
-        const payload = {
-          availableStock: Number(document.getElementById("inventoryStock").value),
-          minimumStock: Number(document.getElementById("inventoryMin").value),
-        };
-        if (id) {
-          await request(`/api/v1/inventories/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
-        } else {
-          const productId = Number(document.getElementById("inventoryProduct").value);
-          await request("/api/v1/inventories", {
-            method: "POST",
-            body: JSON.stringify({ ...payload, productId }),
-          });
+        try {
+          const id = document.getElementById("inventoryId").value;
+          const payload = {
+            availableStock: Number(document.getElementById("inventoryStock").value),
+            minimumStock: Number(document.getElementById("inventoryMin").value),
+          };
+          if (id) {
+            await request(`/api/v1/inventories/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+          } else {
+            const productId = Number(document.getElementById("inventoryProduct").value);
+            await request("/api/v1/inventories", {
+              method: "POST",
+              body: JSON.stringify({ ...payload, productId }),
+            });
+          }
+          closeModal("inventoryModal");
+          clearFields(["inventoryId", "inventoryStock", "inventoryMin"]);
+          loadInventory();
+        } catch (error) {
+          console.error("Error saving inventory", error);
         }
-        closeModal("inventoryModal");
-        clearFields(["inventoryId", "inventoryStock", "inventoryMin"]);
-        loadInventory();
       }
 
       async function loadOrders() {
         try {
           const data = await request("/api/v1/orders", { silent: true });
-          state.orders = data;
-          renderOrders(data);
+          state.orders = data || [];
+          renderOrders(state.orders);
         } catch (error) {
           console.error("No se pudieron cargar las ordenes", error);
           state.orders = [];
           renderOrders([]);
         }
-        updateDashboard();
       }
 
       async function searchOrders() {
-        const customerId = document.getElementById("orderSearchCustomer").value;
-        const status = document.getElementById("orderSearchStatus").value;
-        const params = new URLSearchParams();
-        if (customerId) params.set("customerId", customerId);
-        if (status) params.set("status", status);
-        const data = await request(`/api/v1/orders/search?${params.toString()}`);
-        renderOrders(data);
+        try {
+          const customerId = document.getElementById("orderSearchCustomer").value;
+          const status = document.getElementById("orderSearchStatus").value;
+          const params = new URLSearchParams();
+          if (customerId) params.set("customerId", customerId);
+          if (status) params.set("status", status);
+          const data = await request(`/api/v1/orders/search?${params.toString()}`, { silent: true });
+          renderOrders(data || []);
+        } catch (error) {
+          console.error("Error searching orders", error);
+          renderOrders([]);
+        }
       }
 
       function renderOrders(data) {
@@ -1309,7 +1398,7 @@
         }
         if (order.status === "RETURNED") {
           return `
-            <span class="status-pill" style="background: #fff3e0; color: #e65100;">Devuelta</span>
+            <span class="status-pill returned">Devuelta</span>
           `;
         }
         return "-";
@@ -1358,24 +1447,24 @@
         const quantityValue = document.getElementById("orderQuantity").value;
         const quantity = quantityValue ? Number(quantityValue) : null;
         if (!productId) {
-          alert("Selecciona un producto.");
+          showToast("Selecciona un producto.", "error");
           return;
         }
         const product = state.products.find((p) => p.id === productId);
         const inventory = state.inventories.find((i) => i.productId === productId);
         if (!inventory) {
-          alert("No hay inventario configurado para este producto.");
+          showToast("No hay inventario configurado para este producto.", "error");
           return;
         }
         if (!quantity || quantity <= 0) {
-          alert("Ingresa una cantidad valida.");
+          showToast("Ingresa una cantidad valida.", "error");
           return;
         }
         const currentQty = state.orderItems
           .filter((item) => item.productId === productId)
           .reduce((sum, item) => sum + item.quantity, 0);
         if (currentQty + quantity > inventory.availableStock) {
-          alert("Stock insuficiente para este producto.");
+          showToast("Stock insuficiente para este producto.", "error");
           return;
         }
         state.orderItems.push({ productId, quantity, name: product.name });
@@ -1408,22 +1497,28 @@
         const addressValue = document.getElementById("orderAddress").value;
         const addressId = addressValue ? Number(addressValue) : null;
         if (!customerId || !addressId) {
-          alert("Selecciona un cliente y una direccion.");
+          showToast("Selecciona un cliente y una direccion.", "error");
           return;
         }
         if (!state.orderItems.length) {
-          alert("Agrega al menos un item.");
+          showToast("Agrega al menos un item.", "error");
           return;
         }
-        const items = state.orderItems.map(({ productId, quantity }) => ({ productId, quantity }));
-        await request("/api/v1/orders", {
-          method: "POST",
-          body: JSON.stringify({ customerId, addressId, items }),
-        });
-        closeModal("orderModal");
-        state.orderItems = [];
-        document.getElementById("orderItemsTable").innerHTML = "";
-        loadOrders();
+        try {
+          const items = state.orderItems.map(({ productId, quantity }) => ({ productId, quantity }));
+          await request("/api/v1/orders", {
+            method: "POST",
+            body: JSON.stringify({ customerId, addressId, items }),
+          });
+          closeModal("orderModal");
+          state.orderItems = [];
+          document.getElementById("orderItemsTable").innerHTML = "";
+          showToast("Orden creada correctamente", "success");
+          loadOrders();
+          loadInventory();
+        } catch (error) {
+          console.error("Error saving order", error);
+        }
       }
 
       function updateDashboard() {
@@ -1647,32 +1742,63 @@
       }
 
       async function payOrder(id) {
-        await request(`/api/v1/orders/${id}/pay`, { method: "PATCH" });
-        loadOrders();
+        try {
+          await request(`/api/v1/orders/${id}/pay`, { method: "PATCH" });
+          showToast("Orden pagada", "success");
+          loadOrders();
+          loadInventory();
+        } catch (error) {
+          console.error("Error paying order", error);
+        }
       }
 
       async function shipOrder(id) {
-        await request(`/api/v1/orders/${id}/ship`, { method: "PATCH" });
-        loadOrders();
+        try {
+          await request(`/api/v1/orders/${id}/ship`, { method: "PATCH" });
+          showToast("Orden enviada", "success");
+          loadOrders();
+          loadInventory();
+        } catch (error) {
+          console.error("Error shipping order", error);
+        }
       }
 
       async function deliverOrder(id) {
-        await request(`/api/v1/orders/${id}/deliver`, { method: "PATCH" });
-        loadOrders();
+        try {
+          await request(`/api/v1/orders/${id}/deliver`, { method: "PATCH" });
+          showToast("Orden entregada", "success");
+          loadOrders();
+          loadInventory();
+        } catch (error) {
+          console.error("Error delivering order", error);
+        }
       }
 
       async function cancelOrder(id) {
-        await request(`/api/v1/orders/${id}/cancel`, { method: "PATCH" });
-        loadOrders();
+        try {
+          await request(`/api/v1/orders/${id}/cancel`, { method: "PATCH" });
+          showToast("Orden cancelada", "success");
+          loadOrders();
+          loadInventory();
+        } catch (error) {
+          console.error("Error cancelling order", error);
+        }
       }
 
       async function returnOrder(id) {
         const reason = prompt("Motivo de la devolución (opcional):");
-        await request(`/api/v1/orders/${id}/return`, { 
-          method: "PATCH", 
-          body: JSON.stringify({ reason }) 
-        });
-        loadOrders();
+        if (reason === null) return;
+        try {
+          await request(`/api/v1/orders/${id}/return`, { 
+            method: "PATCH", 
+            body: JSON.stringify({ reason: reason || "" }) 
+          });
+          showToast("Orden devuelta correctamente", "success");
+          loadOrders();
+          loadInventory();
+        } catch (error) {
+          console.error("Error returning order", error);
+        }
       }
 
       bootstrap();

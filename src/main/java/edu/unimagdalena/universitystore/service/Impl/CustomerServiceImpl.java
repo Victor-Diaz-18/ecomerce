@@ -8,6 +8,7 @@ import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,8 +18,9 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     @Override
+    @Transactional
     public Customer create(Customer customer) {
-        if (customerRepository.findByEmail(customer.getEmail()).isPresent()) {
+        if (customer.getEmail() != null && customerRepository.findByEmail(customer.getEmail()).isPresent()) {
             throw new ConflictException("Email already exists");
         }
         if (customer.getStatus() == null) {
@@ -28,25 +30,32 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Customer> findAll() {
         return customerRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Customer findById(Long id) {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
     }
 
     @Override
+    @Transactional
     public Customer update(Long id, Customer customer) {
         Customer existing = findById(id);
-        if (!existing.getEmail().equalsIgnoreCase(customer.getEmail())
-                && customerRepository.findByEmail(customer.getEmail()).isPresent()) {
-            throw new ConflictException("Email already exists");
+
+        if (customer.getName() != null) {
+            existing.setName(customer.getName());
         }
-        existing.setName(customer.getName());
-        existing.setEmail(customer.getEmail());
+        if (customer.getEmail() != null && !customer.getEmail().equalsIgnoreCase(existing.getEmail())) {
+            if (customerRepository.findByEmail(customer.getEmail()).isPresent()) {
+                throw new ConflictException("Email already exists");
+            }
+            existing.setEmail(customer.getEmail());
+        }
         if (customer.getStatus() != null) {
             existing.setStatus(customer.getStatus());
         }
@@ -54,10 +63,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-        if (!customerRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Customer not found");
-        }
-        customerRepository.deleteById(id);
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+        customer.softDelete();
+        customerRepository.save(customer);
     }
 }

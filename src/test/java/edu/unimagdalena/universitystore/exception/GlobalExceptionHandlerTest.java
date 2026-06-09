@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,27 +22,31 @@ class GlobalExceptionHandlerTest {
     void shouldHandleResourceNotFoundException() throws Exception {
         mockMvc.perform(get("/test/not-found"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Resource not found"));
+                .andExpect(jsonPath("$.message").value("Resource not found"))
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
     void shouldHandleBusinessException() throws Exception {
         mockMvc.perform(get("/test/business"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Business rule violated"));
+                .andExpect(jsonPath("$.message").value("Business rule violated"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
     void shouldHandleConflictException() throws Exception {
         mockMvc.perform(get("/test/conflict"))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflict occurred"));
+                .andExpect(jsonPath("$.message").value("Conflict occurred"))
+                .andExpect(jsonPath("$.status").value(409));
     }
 
     @Test
     void shouldHandleValidationException() throws Exception {
         mockMvc.perform(get("/test/validation"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation failed"));
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 }

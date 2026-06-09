@@ -42,7 +42,7 @@ class AddressServiceImplTest {
                 .customer(customer)
                 .build();
 
-        when(customerRepository.existsById(1L)).thenReturn(true);
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(addressRepository.save(address)).thenReturn(address);
 
         Address result = addressService.create(address);
@@ -62,7 +62,7 @@ class AddressServiceImplTest {
                 .customer(customer)
                 .build();
 
-        when(customerRepository.existsById(1L)).thenReturn(false);
+        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> addressService.create(address));

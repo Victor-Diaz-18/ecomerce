@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -12,13 +14,17 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class Inventory extends BaseEntity {
+    @NotNull
+    @Min(0)
     @Column(nullable = false)
     private Integer availableStock;
 
+    @NotNull
+    @Min(0)
     @Column(nullable = false)
     private Integer minimumStock;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false, unique = true)
     private Product product;
 }

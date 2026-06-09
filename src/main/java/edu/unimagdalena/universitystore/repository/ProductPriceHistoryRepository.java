@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductPriceHistoryRepository extends JpaRepository<ProductPriceHistory, Long> {
+    @Query("SELECT pph FROM ProductPriceHistory pph WHERE pph.deletedAt IS NULL AND pph.product.id = :productId")
     List<ProductPriceHistory> findByProductId(Long productId);
 
     @Modifying

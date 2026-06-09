@@ -11,12 +11,16 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+    @Query("SELECT c FROM Category c WHERE c.deletedAt IS NULL AND c.name = :name")
     Optional<Category> findByName(String name);
 
     @Modifying
     @Transactional
     @Query("UPDATE Category c SET c.deletedAt = :now WHERE c.id = :id")
     void softDelete(Long id, LocalDateTime now);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Category c WHERE c.deletedAt IS NULL AND c.id = :id")
+    boolean existsByIdNotDeleted(Long id);
 
     @Override
     @Query("SELECT c FROM Category c WHERE c.deletedAt IS NULL")

@@ -4,14 +4,12 @@ import edu.unimagdalena.universitystore.dto.AddressDtos;
 import edu.unimagdalena.universitystore.entity.Address;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface AddressMapper {
-    AddressMapper INSTANCE = Mappers.getMapper(AddressMapper.class);
 
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.name")
-    @Mapping(target = "addressLine", expression = "java(address.getStreet() + \", \" + address.getCity() + \", \" + address.getCountry())")
+    @Mapping(target = "addressLine", expression = "java(address.getStreet() != null && address.getCity() != null && address.getCountry() != null ? address.getStreet() + \", \" + address.getCity() + \", \" + address.getCountry() : null)")
     AddressDtos.AddressResponse toResponse(Address address);
 }

@@ -45,7 +45,14 @@ public class OrderController {
     public ResponseEntity<List<OrderResponse>> search(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String status) {
-        var parsedStatus = status == null ? null : OrderStatus.valueOf(status.toUpperCase());
+        OrderStatus parsedStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                parsedStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
         return ResponseEntity.ok(service.search(customerId, parsedStatus));
     }
 
