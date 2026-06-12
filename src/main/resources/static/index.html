@@ -922,7 +922,10 @@
 
       function setCustomerOptions(selectId) {
         const select = document.getElementById(selectId);
-        select.innerHTML = `<option value="">Cliente</option>` + state.customers
+        const customers = selectId.startsWith("order") 
+          ? state.customers.filter((c) => c.status === "ACTIVE")
+          : state.customers;
+        select.innerHTML = `<option value="">Cliente</option>` + customers
           .map((c) => `<option value="${c.id}">${c.name}</option>`)
           .join("");
       }
