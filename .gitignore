@@ -19,7 +19,5 @@ dist/
 .DS_Store
 Thumbs.db
 
-respaldo.sql
-
 frontend/node_modules/
 frontend/dist/
