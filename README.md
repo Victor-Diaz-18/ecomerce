@@ -47,7 +47,18 @@ El frontend hace proxy de `/api` al backend, así que desde el navegador todo se
 | `npm run backend` | Solo el backend |
 | `npm run frontend` | Solo el frontend |
 | `npm test` | Tests del backend |
-| `npm run build` | Compila frontend y backend |
+| `npm run build` | Genera un único `.jar` con backend + frontend |
+
+## Producción: un solo `.jar`
+
+```bash
+npm run build          # o ./mvnw package
+java -jar target/university-store-0.0.1-SNAPSHOT.jar
+```
+
+Maven compila el frontend con Vite y lo mete dentro del `.jar`, así que todo (página web, API y Swagger)
+queda en `http://localhost:8080`, sin necesidad de Vite ni de Node para ejecutarlo.
+Para empaquetar solo el backend: `./mvnw package -Dskip.frontend=true`.
 
 ## Base de datos
 

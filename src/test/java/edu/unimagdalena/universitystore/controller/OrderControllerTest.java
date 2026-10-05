@@ -185,4 +185,53 @@ class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
+
+    @Test
+    void shouldReturnMonthlyIncomeStats() throws Exception {
+        when(service.getMonthlyIncome()).thenReturn(List.of(
+                new OrderDtos.MonthlyIncomeResponse(2026, 6, new BigDecimal("1500.00"))
+        ));
+
+        mockMvc.perform(get("/api/v1/orders/stats/monthly-income"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].year").value(2026))
+                .andExpect(jsonPath("$[0].month").value(6))
+                .andExpect(jsonPath("$[0].totalIncome").value(1500.00));
+    }
+
+    @Test
+    void shouldReturnBestSellingStats() throws Exception {
+        when(service.getBestSellingProducts()).thenReturn(List.of(
+                new OrderDtos.BestSellingProductResponse("Camisa", 5L)
+        ));
+
+        mockMvc.perform(get("/api/v1/orders/stats/best-selling"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].productName").value("Camisa"))
+                .andExpect(jsonPath("$[0].totalSold").value(5));
+    }
+
+    @Test
+    void shouldReturnTopCustomersStats() throws Exception {
+        when(service.getTopCustomers()).thenReturn(List.of(
+                new OrderDtos.TopCustomerResponse("Ana", 2L)
+        ));
+
+        mockMvc.perform(get("/api/v1/orders/stats/top-customers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].customerName").value("Ana"))
+                .andExpect(jsonPath("$[0].totalOrders").value(2));
+    }
+
+    @Test
+    void shouldReturnIncomeByStatusStats() throws Exception {
+        when(service.getIncomeByStatus()).thenReturn(List.of(
+                new OrderDtos.IncomeByStatusResponse("CANCELLED", new BigDecimal("500"))
+        ));
+
+        mockMvc.perform(get("/api/v1/orders/stats/income-by-status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("CANCELLED"))
+                .andExpect(jsonPath("$[0].totalIncome").value(500));
+    }
 }
