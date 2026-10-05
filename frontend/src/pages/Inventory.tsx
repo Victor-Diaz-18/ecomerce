@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApi, useMutation } from '../hooks/useApi';
 import { inventoryApi, productApi } from '../services/api';
-import { Inventory, CreateInventoryRequest, UpdateInventoryRequest, Product } from '../types';
+import { Inventory, CreateInventoryRequest, UpdateInventoryRequest } from '../types';
 import { Modal } from '../components/Modal';
 
 export function InventoryPage() {
@@ -55,7 +55,7 @@ export function InventoryPage() {
         <p>Cargando...</p>
       ) : (
         <>
-          {lowStock.length > 0 && (
+          {lowStock && lowStock.length > 0 && (
             <div className="alert alert-warning">
               <h4>⚠️ Productos con stock bajo ({lowStock.length})</h4>
               <ul>

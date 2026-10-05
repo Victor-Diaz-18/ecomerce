@@ -58,6 +58,7 @@ public class OrderDtos {
     ) implements Serializable {}
 
     public record MonthlyIncomeResponse(
+            Integer year,
             Integer month,
             BigDecimal totalIncome
     ) implements Serializable {}
@@ -65,5 +66,10 @@ public class OrderDtos {
     public record TopCustomerResponse(
             String customerName,
             Long totalOrders
+    ) implements Serializable {}
+
+    public record IncomeByStatusResponse(
+            String status,
+            BigDecimal totalIncome
     ) implements Serializable {}
 }

@@ -1,21 +1,21 @@
 package edu.unimagdalena.universitystore;
 
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@Testcontainers
-@Configuration
+@TestConfiguration(proxyBeanMethods = false)
 @EnableJpaAuditing
 public class TestcontainersConfiguration {
 
-    @Container
+    @Bean
     @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("university_store")
-            .withUsername("postgres")
-            .withPassword("postgres");
+    PostgreSQLContainer postgresContainer() {
+        return new PostgreSQLContainer("postgres:16")
+                .withDatabaseName("university_store")
+                .withUsername("postgres")
+                .withPassword("postgres");
+    }
 }

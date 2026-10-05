@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useApi, useMutation } from '../hooks/useApi';
 import { customerApi, addressApi } from '../services/api';
-import { Customer, Address, CreateCustomerRequest, UpdateCustomerRequest, CreateAddressRequest } from '../types';
+import { Customer, Address } from '../types';
 import { Modal } from '../components/Modal';
+import { useToast } from '../context/ToastContext';
 
 export function Customers() {
   const { data: customers, loading, refetch } = useApi(() => customerApi.getAll(), []);
+  const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [formData, setFormData] = useState<CreateCustomerRequest>({ name: '', email: '' });
+  const [formData, setFormData] = useState<{ name: string; email: string; status?: 'ACTIVE' | 'INACTIVE' }>({ name: '', email: '' });
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [newAddress, setNewAddress] = useState('');
   const [pendingAddresses, setPendingAddresses] = useState<string[]>([]);
@@ -30,7 +32,7 @@ export function Customers() {
 
   const openEditModal = async (customer: Customer) => {
     setEditingCustomer(customer);
-    setFormData({ name: customer.name, email: customer.email });
+    setFormData({ name: customer.name, email: customer.email, status: customer.status });
     const addrs = await customerApi.getAddresses(customer.id);
     setAddresses(addrs);
     setPendingAddresses([]);
@@ -59,23 +61,34 @@ export function Customers() {
     e.preventDefault();
     setSaving(true);
     let customerId = editingCustomer?.id;
-    if (customerId) {
-      await updateCustomer(customerId, { ...formData, status: editingCustomer.status });
-    } else {
-      const created = await createCustomer(formData);
-      customerId = created?.id;
-    }
-    if (customerId) {
-      for (const addr of pendingAddresses) {
-        const parts = addr.split(',').map(p => p.trim()).filter(Boolean);
-        if (parts.length === 3) {
-          await createAddress({ street: parts[0], city: parts[1], country: parts[2], customerId: customerId! });
+    try {
+      if (customerId) {
+        const result = await updateCustomer(customerId, { name: formData.name, email: formData.email, status: formData.status ?? 'ACTIVE' });
+        if (result) {
+          showToast('Cliente actualizado correctamente', 'success');
+        } else {
+          showToast('Error al actualizar cliente', 'error');
+        }
+      } else {
+        const created = await createCustomer({ name: formData.name, email: formData.email });
+        customerId = created?.id;
+        if (created) showToast('Cliente creado correctamente', 'success');
+      }
+      if (customerId) {
+        for (const addr of pendingAddresses) {
+          const parts = addr.split(',').map(p => p.trim()).filter(Boolean);
+          if (parts.length === 3) {
+            await createAddress({ street: parts[0], city: parts[1], country: parts[2], customerId: customerId! });
+          }
         }
       }
+      setIsModalOpen(false);
+      refetch();
+    } catch {
+      showToast('Error al guardar el cliente', 'error');
+    } finally {
+      setSaving(false);
     }
-    setIsModalOpen(false);
-    setSaving(false);
-    refetch();
   };
 
   const handleDelete = async (id: number) => {
@@ -136,6 +149,15 @@ export function Customers() {
             <label htmlFor="email">Email</label>
             <input id="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
           </div>
+          {editingCustomer && (
+            <div className="form-group">
+              <label htmlFor="status">Estado</label>
+              <select id="status" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as 'ACTIVE' | 'INACTIVE' })}>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
+          )}
           <div className="form-group">
             <label>Direcciones guardadas</label>
             <div className="addresses-list">

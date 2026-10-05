@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
-import { orderApi, customerApi, addressApi, productApi } from '../services/api';
-import { Order, Customer, Address, Product, CreateOrderRequest } from '../types';
+import { orderApi, customerApi, productApi } from '../services/api';
+import { Address, CreateOrderRequest } from '../types';
 import { Modal } from '../components/Modal';
 
 export function Orders() {
@@ -74,7 +74,7 @@ export function Orders() {
     refetch();
   };
 
-  const handleStatus = async (id: number, action: string, reason?: string) => {
+  const handleStatus = async (id: number, action: string) => {
     switch (action) {
       case 'pay': await orderApi.pay(id); break;
       case 'ship': await orderApi.ship(id); break;

@@ -156,3 +156,24 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
 }
+
+export interface MonthlyIncomeResponse {
+  year: number;
+  month: number;
+  totalIncome: number;
+}
+
+export interface BestSellingProductResponse {
+  productName: string;
+  totalSold: number;
+}
+
+export interface TopCustomerResponse {
+  customerName: string;
+  totalOrders: number;
+}
+
+export interface IncomeByStatusResponse {
+  status: string;
+  totalIncome: number;
+}
