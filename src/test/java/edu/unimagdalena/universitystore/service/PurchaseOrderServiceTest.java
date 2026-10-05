@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -215,5 +216,47 @@ class PurchaseOrderServiceImplTest {
                 () -> purchaseOrderService.cancelOrder(1L));
 
         assertEquals("Shipped or delivered orders cannot be cancelled. Use return process instead.", exception.getMessage());
+    }
+
+    @Test
+    void shouldMapMonthlyIncomeRows() {
+        when(purchaseOrderRepository.findMonthlyIncome()).thenReturn(List.<Object[]>of(
+                new Object[]{2026, 6, new BigDecimal("1500.00")}
+        ));
+
+        assertEquals(List.of(new MonthlyIncomeResponse(2026, 6, new BigDecimal("1500.00"))),
+                purchaseOrderService.getMonthlyIncome());
+    }
+
+    @Test
+    void shouldMapBestSellingProductRows() {
+        when(purchaseOrderRepository.findBestSellingProducts()).thenReturn(List.<Object[]>of(
+                new Object[]{"Camisa", 5L},
+                new Object[]{"Gorra", 1L}
+        ));
+
+        assertEquals(List.of(
+                new BestSellingProductResponse("Camisa", 5L),
+                new BestSellingProductResponse("Gorra", 1L)
+        ), purchaseOrderService.getBestSellingProducts());
+    }
+
+    @Test
+    void shouldMapTopCustomerRows() {
+        when(purchaseOrderRepository.findTopCustomers()).thenReturn(List.<Object[]>of(
+                new Object[]{"Ana", 2L}
+        ));
+
+        assertEquals(List.of(new TopCustomerResponse("Ana", 2L)), purchaseOrderService.getTopCustomers());
+    }
+
+    @Test
+    void shouldMapIncomeByStatusRowsUsingEnumName() {
+        when(purchaseOrderRepository.findIncomeByStatus()).thenReturn(List.<Object[]>of(
+                new Object[]{OrderStatus.CANCELLED, new BigDecimal("500")}
+        ));
+
+        assertEquals(List.of(new IncomeByStatusResponse("CANCELLED", new BigDecimal("500"))),
+                purchaseOrderService.getIncomeByStatus());
     }
 }

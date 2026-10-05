@@ -1,8 +1,11 @@
 import { useApi } from '../hooks/useApi';
 import { orderApi, customerApi, productApi, inventoryApi, dashboardApi } from '../services/api';
+import type { OrderStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 const MONTH_NAMES = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+// Mismos estados que el backend cuenta como ingreso real (ver PurchaseOrderRepository)
+const INCOME_STATUSES: OrderStatus[] = ['PAID', 'SHIPPED', 'DELIVERED'];
 const PIE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b'];
 
 export function Dashboard() {
@@ -18,7 +21,9 @@ export function Dashboard() {
   const activeProducts = products?.filter(p => p.active).length ?? 0;
   const lowStockItems = inventories?.filter(i => i.availableStock < i.minimumStock) ?? [];
   const pendingOrders = orders?.filter(o => o.status === 'CREATED').length ?? 0;
-  const totalIncome = orders?.reduce((sum, o) => sum + (o.total ?? 0), 0) ?? 0;
+  const totalIncome = orders
+    ?.filter(o => INCOME_STATUSES.includes(o.status))
+    .reduce((sum, o) => sum + (o.total ?? 0), 0) ?? 0;
   const now = new Date();
   const thisMonthIncome = monthlyIncome?.find(m => m.year === now.getFullYear() && m.month === now.getMonth() + 1)?.totalIncome ?? 0;
 

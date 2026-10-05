@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 
 const navigation = [
@@ -33,10 +34,12 @@ export function Layout() {
       </aside>
       <main className="main-content">
         <header className="top-bar">
-          <h2>{navigation.find(n => location.pathname.startsWith(n.href))?.name || 'University Store'}</h2>
+          <h2>{navigation.find(n => n.href === '/' ? location.pathname === '/' : location.pathname.startsWith(n.href))?.name || 'University Store'}</h2>
         </header>
         <div className="content-area">
-          <Outlet />
+          <Suspense fallback={<p className="loading-text">Cargando...</p>}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>

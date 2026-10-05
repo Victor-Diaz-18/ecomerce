@@ -10,7 +10,7 @@ body {
   color: #333;
 }
 
-.app-layout {
+.layout {
   display: flex;
   min-height: 100vh;
 }
@@ -24,14 +24,18 @@ body {
   flex-direction: column;
 }
 
-.sidebar h2 {
+.sidebar-header h1 {
   padding: 0 20px 20px;
   font-size: 1.3rem;
   border-bottom: 1px solid #333;
   margin-bottom: 10px;
 }
 
-.sidebar a {
+.nav-icon {
+  margin-right: 10px;
+}
+
+.sidebar .nav-link {
   display: block;
   padding: 12px 20px;
   color: #ccc;
@@ -39,7 +43,7 @@ body {
   transition: all 0.2s;
 }
 
-.sidebar a:hover, .sidebar a.active {
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
   background: #16213e;
   color: #fff;
   border-left: 3px solid #0f3460;
@@ -51,7 +55,7 @@ body {
   flex-direction: column;
 }
 
-.navbar {
+.top-bar {
   background: #fff;
   padding: 15px 30px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -60,12 +64,12 @@ body {
   align-items: center;
 }
 
-.navbar h1 {
+.top-bar h2 {
   font-size: 1.2rem;
   color: #333;
 }
 
-.content {
+.content-area {
   padding: 30px;
   flex: 1;
 }
@@ -480,11 +484,11 @@ modal-content h3 {
 }
 
 @media (max-width: 768px) {
-  .app-layout { flex-direction: column; }
+  .layout { flex-direction: column; }
   .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; padding: 10px; }
-  .sidebar h2 { display: none; }
-  .sidebar a { padding: 8px 12px; }
-  .content { padding: 15px; }
+  .sidebar-header h1 { display: none; }
+  .sidebar .nav-link { padding: 8px 12px; }
+  .content-area { padding: 15px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .dashboard-grid { grid-template-columns: 1fr; }
   modal-content { min-width: auto; width: 95%; }
