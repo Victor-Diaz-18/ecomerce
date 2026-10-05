@@ -4,14 +4,14 @@ Sistema de gestión de tienda universitaria con catálogo de productos, clientes
 
 ## Tecnologías
 
-- **Backend:** Java 21, Spring Boot 3, Maven, PostgreSQL, Testcontainers
+- **Backend:** Java 21+, Spring Boot 4, Maven, PostgreSQL, Testcontainers
 - **Frontend:** React 18, TypeScript, Vite, React Router
 - **Infraestructura:** Docker Compose (PostgreSQL 16)
 
 ## Requisitos
 
 - Java 21+
-- Node.js 18+
+- Node.js 20+
 - Docker Desktop
 
 ## Inicio rápido
@@ -21,24 +21,33 @@ Sistema de gestión de tienda universitaria con catálogo de productos, clientes
 git clone https://github.com/Victor-Diaz-18/ecomerce.git
 cd ecomerce
 
-# 2. Levantar la base de datos
-docker compose up -d
-
-# 3. Construir y ejecutar el backend
-./mvnw spring-boot:run
-```
-
-El backend arranca en `http://localhost:8080`.
-
-## Frontend
-
-```bash
-cd frontend
+# 2. Instalar dependencias (solo la primera vez; también instala las del frontend)
 npm install
+
+# 3. Arrancar todo: base de datos + backend + frontend
 npm run dev
 ```
 
-El frontend arranca en `http://localhost:3000` y hace proxy de `/api` al backend.
+Abre `http://localhost:3000`. Los logs del backend salen con el prefijo `[API]` y los del frontend con `[WEB]`.
+Con `Ctrl + C` se detienen los dos (la base de datos sigue corriendo en Docker; se apaga con `docker compose down`).
+
+| Servicio | URL |
+|---|---|
+| Frontend (Vite) | `http://localhost:3000` |
+| API REST | `http://localhost:8080/api/v1` |
+| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
+
+El frontend hace proxy de `/api` al backend, así que desde el navegador todo se usa por el puerto 3000.
+
+### Otros comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm run db` | Solo levanta PostgreSQL |
+| `npm run backend` | Solo el backend |
+| `npm run frontend` | Solo el frontend |
+| `npm test` | Tests del backend |
+| `npm run build` | Compila frontend y backend |
 
 ## Base de datos
 
@@ -68,7 +77,7 @@ Get-Content respaldo.sql | docker exec -i university-postgres psql -U postgres u
 ## Tests
 
 ```bash
-./mvnw test
+npm test        # o ./mvnw test
 ```
 
 Los tests usan Testcontainers y requieren Docker corriendo.
@@ -98,6 +107,8 @@ ecomerce/
 │       ├── context/              # Contextos (Toast)
 │       ├── types/                # Interfaces TypeScript
 │       └── utils/                # Utilidades
+├── scripts/mvnw.js               # Lanza Maven Wrapper en Windows/Linux/macOS
+├── package.json                  # Scripts para arrancar todo junto
 ├── compose.yaml                  # Docker Compose
 ├── respaldo.sql                  # Dump de la base de datos
 └── pom.xml                       # Configuración Maven
