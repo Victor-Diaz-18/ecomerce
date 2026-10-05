@@ -99,4 +99,24 @@ public class OrderController {
         service.softDelete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/stats/monthly-income")
+    public ResponseEntity<List<MonthlyIncomeResponse>> getMonthlyIncome() {
+        return ResponseEntity.ok(service.getMonthlyIncome());
+    }
+
+    @GetMapping("/stats/best-selling")
+    public ResponseEntity<List<BestSellingProductResponse>> getBestSellingProducts() {
+        return ResponseEntity.ok(service.getBestSellingProducts());
+    }
+
+    @GetMapping("/stats/top-customers")
+    public ResponseEntity<List<TopCustomerResponse>> getTopCustomers() {
+        return ResponseEntity.ok(service.getTopCustomers());
+    }
+
+    @GetMapping("/stats/income-by-status")
+    public ResponseEntity<List<IncomeByStatusResponse>> getIncomeByStatus() {
+        return ResponseEntity.ok(service.getIncomeByStatus());
+    }
 }

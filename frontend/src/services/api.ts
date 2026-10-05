@@ -1,3 +1,11 @@
+import type {
+  Category, Customer, Address, Product, Inventory, Order, OrderStatus, OrderStatusHistory,
+  CreateCategoryRequest, CreateCustomerRequest, UpdateCustomerRequest, CreateAddressRequest,
+  CreateProductRequest, UpdateProductRequest, CreateInventoryRequest, UpdateInventoryRequest,
+  CreateOrderRequest, PageResponse, MonthlyIncomeResponse, BestSellingProductResponse,
+  TopCustomerResponse, IncomeByStatusResponse,
+} from '../types';
+
 const API_BASE = '/api/v1';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -77,4 +85,11 @@ export const orderApi = {
   return: (id: number, reason?: string) => request<Order>(`/orders/${id}/return`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
   getHistory: (id: number) => request<OrderStatusHistory[]>(`/orders/${id}/history`),
   delete: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
+};
+
+export const dashboardApi = {
+  getMonthlyIncome: () => request<MonthlyIncomeResponse[]>('/orders/stats/monthly-income'),
+  getBestSellingProducts: () => request<BestSellingProductResponse[]>('/orders/stats/best-selling'),
+  getTopCustomers: () => request<TopCustomerResponse[]>('/orders/stats/top-customers'),
+  getIncomeByStatus: () => request<IncomeByStatusResponse[]>('/orders/stats/income-by-status'),
 };

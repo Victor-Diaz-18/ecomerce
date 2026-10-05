@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useApi, useMutation } from '../hooks/useApi';
 import { productApi, categoryApi } from '../services/api';
-import { Product, CreateProductRequest, UpdateProductRequest, Category } from '../types';
+import { Product, CreateProductRequest, UpdateProductRequest } from '../types';
 import { Modal } from '../components/Modal';
 
 export function Products() {

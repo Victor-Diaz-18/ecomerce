@@ -25,15 +25,15 @@ export function useApi<T>(apiCall: () => Promise<T>, deps: unknown[] = []) {
   return { data, loading, error, refetch: fetch };
 }
 
-export function useMutation<T, P>(mutationFn: (payload: P) => Promise<T>) {
+export function useMutation<T, A extends unknown[]>(mutationFn: (...args: A) => Promise<T>) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const execute = async (payload: P): Promise<T | null> => {
+  const execute = async (...args: A): Promise<T | null> => {
     setLoading(true);
     setError(null);
     try {
-      const result = await mutationFn(payload);
+      const result = await mutationFn(...args);
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');

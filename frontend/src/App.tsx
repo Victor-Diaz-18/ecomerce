@@ -5,7 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Categories } from './pages/Categories';
 import { Products } from './pages/Products';
 import { Customers } from './pages/Customers';
-import { Inventory } from './pages/Inventory';
+import { InventoryPage } from './pages/Inventory';
 import { Orders } from './pages/Orders';
 
 export function App() {
@@ -18,7 +18,7 @@ export function App() {
             <Route path="/categories" element={<Categories />} />
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />
-            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/orders" element={<Orders />} />
           </Route>
         </Routes>

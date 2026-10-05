@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -247,5 +248,50 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         order.softDelete();
         purchaseOrderRepository.save(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MonthlyIncomeResponse> getMonthlyIncome() {
+        return purchaseOrderRepository.findMonthlyIncome().stream()
+                .map(row -> new MonthlyIncomeResponse(
+                        ((Number) row[0]).intValue(),
+                        ((Number) row[1]).intValue(),
+                        (BigDecimal) row[2]
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BestSellingProductResponse> getBestSellingProducts() {
+        return purchaseOrderRepository.findBestSellingProducts().stream()
+                .map(row -> new BestSellingProductResponse(
+                        (String) row[0],
+                        ((Number) row[1]).longValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopCustomerResponse> getTopCustomers() {
+        return purchaseOrderRepository.findTopCustomers().stream()
+                .map(row -> new TopCustomerResponse(
+                        (String) row[0],
+                        ((Number) row[1]).longValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IncomeByStatusResponse> getIncomeByStatus() {
+        return purchaseOrderRepository.findIncomeByStatus().stream()
+                .map(row -> new IncomeByStatusResponse(
+                        row[0].toString(),
+                        (BigDecimal) row[1]
+                ))
+                .collect(Collectors.toList());
     }
 }
