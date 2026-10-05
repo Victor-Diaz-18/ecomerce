@@ -29,7 +29,8 @@ npm run dev
 ```
 
 Abre `http://localhost:3000`. Los logs del backend salen con el prefijo `[API]` y los del frontend con `[WEB]`.
-Con `Ctrl + C` se detienen los dos (la base de datos sigue corriendo en Docker; se apaga con `docker compose down`).
+Con `Ctrl + C` se detiene **todo**: backend, frontend y la base de datos de Docker (los datos se conservan).
+Si cierras la terminal de golpe y Postgres queda encendido, apágalo con `npm run stop`.
 
 | Servicio | URL |
 |---|---|
@@ -44,6 +45,7 @@ El frontend hace proxy de `/api` al backend, así que desde el navegador todo se
 | Comando | Qué hace |
 |---|---|
 | `npm run db` | Solo levanta PostgreSQL |
+| `npm run stop` | Detiene PostgreSQL |
 | `npm run backend` | Solo el backend |
 | `npm run frontend` | Solo el frontend |
 | `npm test` | Tests del backend |
