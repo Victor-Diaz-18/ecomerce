@@ -80,11 +80,19 @@ export function Orders() {
       case 'ship': await orderApi.ship(id); break;
       case 'deliver': await orderApi.deliver(id); break;
       case 'cancel': await orderApi.cancel(id); break;
-      case 'return':
+      case 'return': {
         const r = prompt('Motivo de la devolución (opcional):');
         if (r === null) return;
         await orderApi.return(id, r || '');
         break;
+      }
+      case 'confirmReturn': await orderApi.confirmReturn(id); break;
+      case 'rejectReturn': {
+        const r = prompt('Motivo del rechazo (opcional):');
+        if (r === null) return;
+        await orderApi.rejectReturn(id, r || '');
+        break;
+      }
     }
     refetch();
   };
@@ -92,7 +100,7 @@ export function Orders() {
   const statusColor = (status: string) => {
     const colors: Record<string, string> = {
       CREATED: '#f59e0b', PAID: '#3b82f6', SHIPPED: '#8b5cf6',
-      DELIVERED: '#10b981', CANCELLED: '#ef4444', RETURNED: '#6b7280',
+      DELIVERED: '#10b981', RETURN_REQUESTED: '#f97316', CANCELLED: '#ef4444', RETURNED: '#6b7280',
     };
     return colors[status] || '#6b7280';
   };
@@ -117,7 +125,7 @@ export function Orders() {
         </select>
         <select value={searchStatus} onChange={e => setSearchStatus(e.target.value)}>
           <option value="">Estado</option>
-          {['CREATED', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'].map(s => (
+          {['CREATED', 'PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED', 'CANCELLED', 'RETURNED'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
@@ -166,11 +174,17 @@ export function Orders() {
                   {order.status === 'SHIPPED' && (
                     <>
                       <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'deliver')}>Entregar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Devolver</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Solicitar devolución</button>
                     </>
                   )}
                   {order.status === 'DELIVERED' && (
-                    <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Devolver</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Solicitar devolución</button>
+                  )}
+                  {order.status === 'RETURN_REQUESTED' && (
+                    <>
+                      <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'confirmReturn')}>Producto recibido</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'rejectReturn')}>Rechazar devolución</button>
+                    </>
                   )}
                 </td>
               </tr>

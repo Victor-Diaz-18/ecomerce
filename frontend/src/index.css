@@ -167,6 +167,7 @@ body {
 .status-delivered { background: #8b5cf6; }
 .status-cancelled { background: #ef4444; }
 .status-returned { background: #f59e0b; }
+.status-return_requested { background: #f97316; }
 .status-active { background: #10b981; }
 .status-inactive { background: #ef4444; }
 

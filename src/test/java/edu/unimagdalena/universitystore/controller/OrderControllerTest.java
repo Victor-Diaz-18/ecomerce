@@ -186,6 +186,31 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
 
+    private static OrderDtos.OrderResponse responseWithStatus(String status) {
+        return new OrderDtos.OrderResponse(1L, status, LocalDateTime.now(), 1L, "Customer Name",
+                1L, "Street, City, Country", List.of(), new BigDecimal("100000"));
+    }
+
+    @Test
+    void shouldConfirmReturn() throws Exception {
+        when(service.confirmReturn(1L)).thenReturn(responseWithStatus("RETURNED"));
+
+        mockMvc.perform(patch("/api/v1/orders/1/return/confirm"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RETURNED"));
+    }
+
+    @Test
+    void shouldRejectReturnWithReason() throws Exception {
+        when(service.rejectReturn(1L, "No llego el paquete")).thenReturn(responseWithStatus("DELIVERED"));
+
+        mockMvc.perform(patch("/api/v1/orders/1/return/reject")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"reason\":\"No llego el paquete\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DELIVERED"));
+    }
+
     @Test
     void shouldReturnMonthlyIncomeStats() throws Exception {
         when(service.getMonthlyIncome()).thenReturn(List.of(

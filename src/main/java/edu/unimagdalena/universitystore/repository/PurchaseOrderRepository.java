@@ -45,7 +45,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
         SELECT EXTRACT(YEAR FROM o.createdAt) as year, EXTRACT(MONTH FROM o.createdAt) as month, SUM(o.total) as totalIncome
         FROM PurchaseOrder o
         WHERE o.deletedAt IS NULL
-        AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED')
+        AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED')
         GROUP BY EXTRACT(YEAR FROM o.createdAt), EXTRACT(MONTH FROM o.createdAt)
         ORDER BY year, month
     """)
@@ -57,7 +57,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
         JOIN o.items oi
         JOIN oi.product p
         WHERE o.deletedAt IS NULL
-        AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED')
+        AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED')
         GROUP BY p.name
         ORDER BY totalSold DESC
     """)
@@ -77,7 +77,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
         SELECT o.status, SUM(o.total) as totalIncome
         FROM PurchaseOrder o
         WHERE o.deletedAt IS NULL
-        AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED')
+        AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED', 'CANCELLED', 'RETURNED')
         GROUP BY o.status
     """)
     List<Object[]> findIncomeByStatus();

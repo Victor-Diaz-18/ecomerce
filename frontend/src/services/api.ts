@@ -83,6 +83,8 @@ export const orderApi = {
   deliver: (id: number) => request<Order>(`/orders/${id}/deliver`, { method: 'PATCH' }),
   cancel: (id: number) => request<Order>(`/orders/${id}/cancel`, { method: 'PATCH' }),
   return: (id: number, reason?: string) => request<Order>(`/orders/${id}/return`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
+  confirmReturn: (id: number) => request<Order>(`/orders/${id}/return/confirm`, { method: 'PATCH' }),
+  rejectReturn: (id: number, reason?: string) => request<Order>(`/orders/${id}/return/reject`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
   getHistory: (id: number) => request<OrderStatusHistory[]>(`/orders/${id}/history`),
   delete: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
 };

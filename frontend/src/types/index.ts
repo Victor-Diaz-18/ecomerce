@@ -59,7 +59,7 @@ export interface Order {
   total?: number;
 }
 
-export type OrderStatus = 'CREATED' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED';
+export type OrderStatus = 'CREATED' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'RETURN_REQUESTED' | 'CANCELLED' | 'RETURNED';
 
 export interface OrderStatusHistory {
   id: number;
