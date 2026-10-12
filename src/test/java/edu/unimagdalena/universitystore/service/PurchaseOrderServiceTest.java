@@ -3,7 +3,6 @@ package edu.unimagdalena.universitystore.service;
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
 import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.OrderItem;
-import edu.unimagdalena.universitystore.entity.OrderStatusHistory;
 import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
@@ -27,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -273,7 +271,7 @@ class PurchaseOrderServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> purchaseOrderService.returnOrder(1L, null));
 
-        assertEquals("Only paid, shipped or delivered orders can be returned", exception.getMessage());
+        assertEquals("Only paid or delivered orders can be returned", exception.getMessage());
     }
 
     private PurchaseOrder orderWithStatus(OrderStatus status) {
@@ -303,13 +301,25 @@ class PurchaseOrderServiceImplTest {
     }
 
     @Test
-    void returningShippedOrderOnlyRequestsReturnAndKeepsStock() {
-        orderWithStatus(OrderStatus.SHIPPED);
+    void returningDeliveredOrderOnlyRequestsReturnAndKeepsStock() {
+        orderWithStatus(OrderStatus.DELIVERED);
         stubSaveAndMapper();
 
         OrderResponse result = purchaseOrderService.returnOrder(1L, "Llego rota");
 
         assertEquals("RETURN_REQUESTED", result.status());
+        verifyNoInteractions(inventoryRepository);
+    }
+
+    @Test
+    void shouldNotReturnOrderThatIsStillOnItsWay() {
+        PurchaseOrder order = orderWithStatus(OrderStatus.SHIPPED);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.returnOrder(1L, null));
+
+        assertEquals("Shipped orders cannot be returned until they are delivered", exception.getMessage());
+        assertEquals(OrderStatus.SHIPPED, order.getStatus());
         verifyNoInteractions(inventoryRepository);
     }
 
@@ -359,19 +369,13 @@ class PurchaseOrderServiceImplTest {
     }
 
     @Test
-    void rejectingReturnPutsOrderBackInItsPreviousStatus() {
+    void rejectingReturnPutsOrderBackToDelivered() {
         orderWithStatus(OrderStatus.RETURN_REQUESTED);
         stubSaveAndMapper();
-        LocalDateTime base = LocalDateTime.of(2026, 10, 1, 10, 0);
-        when(orderStatusHistoryRepository.findByOrderId(1L)).thenReturn(List.of(
-                OrderStatusHistory.builder().status(OrderStatus.PAID).changedAt(base).build(),
-                OrderStatusHistory.builder().status(OrderStatus.SHIPPED).changedAt(base.plusDays(1)).build(),
-                OrderStatusHistory.builder().status(OrderStatus.RETURN_REQUESTED).changedAt(base.plusDays(2)).build()
-        ));
 
         OrderResponse result = purchaseOrderService.rejectReturn(1L, "El paquete nunca llego");
 
-        assertEquals("SHIPPED", result.status());
+        assertEquals("DELIVERED", result.status());
         verifyNoInteractions(inventoryRepository);
     }
 
