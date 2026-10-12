@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,7 +44,8 @@ public class OrderDtos {
             Long addressId,
             String addressLine,
             List<OrderItemResponse> items,
-            BigDecimal total
+            BigDecimal total,
+            LocalDate estimatedDelivery
     ) implements Serializable {}
 
     public record OrderStatusHistoryResponse(
