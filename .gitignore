@@ -24,3 +24,6 @@ frontend/dist/
 
 *.err
 .vscode/
+
+# Notas locales de Claude Code (no se suben)
+CLAUDE.local.md

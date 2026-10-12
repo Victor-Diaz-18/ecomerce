@@ -103,4 +103,18 @@ class AddressServiceImplTest {
 
         assertEquals("Address not found", exception.getMessage());
     }
+
+    @Test
+    void shouldSoftDeleteAddress() {
+        Address address = new Address();
+        address.setId(1L);
+
+        when(addressRepository.findById(1L))
+                .thenReturn(Optional.of(address));
+
+        addressService.delete(1L);
+
+        assertTrue(address.isDeleted());
+        verify(addressRepository).save(address);
+    }
 }
