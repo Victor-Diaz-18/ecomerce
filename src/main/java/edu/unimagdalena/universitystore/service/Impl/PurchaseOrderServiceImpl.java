@@ -21,6 +21,7 @@ import edu.unimagdalena.universitystore.repository.OrderStatusHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.repository.PurchaseOrderRepository;
 import edu.unimagdalena.universitystore.service.PurchaseOrderService;
+import edu.unimagdalena.universitystore.service.ShippingEstimator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
     private final OrderMapper mapper;
+    private final ShippingEstimator shippingEstimator;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -237,6 +239,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         OrderStatus oldStatus = order.getStatus();
         order.setStatus(newStatus);
         order.setStatusChangedOn(LocalDate.now());
+
+        // The promise made at payment is corrected with the real departure date once it ships
+        if (newStatus == OrderStatus.PAID) {
+            order.setEstimatedDelivery(LocalDate.now().plusDays(shippingEstimator.daysFromPaymentToDelivery(order.getAddress())));
+        } else if (newStatus == OrderStatus.SHIPPED) {
+            order.setEstimatedDelivery(LocalDate.now().plusDays(shippingEstimator.transitDays(order.getAddress())));
+        }
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)

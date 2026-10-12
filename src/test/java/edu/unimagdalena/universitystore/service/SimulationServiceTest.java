@@ -42,8 +42,8 @@ class SimulationServiceTest {
 
     @BeforeEach
     void setUp() {
-        // ship after 1 day, deliver after 3, return spin after 2 (20%), resolve after 3 (70% accepted)
-        SimulationProperties properties = new SimulationProperties(true, 1, 3, 2, 0.2, 3, 0.7);
+        // ship after 1 day, deliver on the estimated date (3 days when there is none), return spin after 2 (20%), resolve after 3 (70% accepted)
+        SimulationProperties properties = new SimulationProperties(true, 1, "Santa Marta", "Colombia", 1, 3, 8, 2, 0.2, 3, 0.7);
         Clock clock = Clock.fixed(TODAY.atTime(9, 0).atZone(ZONE).toInstant(), ZONE);
         simulationService = new SimulationService(properties, orderService, purchaseOrderRepository, clock, random);
     }
@@ -83,6 +83,18 @@ class SimulationServiceTest {
         verify(orderService, never()).deliverOrder(anyLong());
 
         order(1L, OrderStatus.SHIPPED, 3);
+        simulationService.advanceOrders();
+        verify(orderService).deliverOrder(1L);
+    }
+
+    @Test
+    void shouldDeliverOnTheEstimatedDateWhenTheOrderHasOne() {
+        PurchaseOrder order = order(1L, OrderStatus.SHIPPED, 5);
+        order.setEstimatedDelivery(TODAY.plusDays(1));
+        simulationService.advanceOrders();
+        verify(orderService, never()).deliverOrder(anyLong());
+
+        order.setEstimatedDelivery(TODAY);
         simulationService.advanceOrders();
         verify(orderService).deliverOrder(1L);
     }
@@ -179,7 +191,7 @@ class SimulationServiceTest {
 
     @Test
     void scheduledRunDoesNothingWhenDisabled() {
-        SimulationProperties disabled = new SimulationProperties(false, 1, 3, 2, 0.2, 3, 0.7);
+        SimulationProperties disabled = new SimulationProperties(false, 1, "Santa Marta", "Colombia", 1, 3, 8, 2, 0.2, 3, 0.7);
         SimulationService service = new SimulationService(disabled, orderService, purchaseOrderRepository,
                 Clock.systemDefaultZone(), random);
 

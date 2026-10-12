@@ -56,7 +56,7 @@ public class SimulationService {
             }
         }));
         shipped.forEach(order -> process(order, () -> {
-            if (daysInStatus(order, today) >= properties.daysToDeliver()) {
+            if (!today.isBefore(deliveryDate(order))) {
                 orderService.deliverOrder(order.getId());
             }
         }));
@@ -91,6 +91,17 @@ public class SimulationService {
                 ? order.getStatusChangedOn()
                 : order.getUpdatedAt().toLocalDate();
         return ChronoUnit.DAYS.between(since, today);
+    }
+
+    // Orders shipped before estimates existed travel the standard same-country time
+    private LocalDate deliveryDate(PurchaseOrder order) {
+        if (order.getEstimatedDelivery() != null) {
+            return order.getEstimatedDelivery();
+        }
+        LocalDate shippedOn = order.getStatusChangedOn() != null
+                ? order.getStatusChangedOn()
+                : order.getUpdatedAt().toLocalDate();
+        return shippedOn.plusDays(properties.transitDaysSameCountry());
     }
 
     private List<PurchaseOrder> ordersIn(OrderStatus status) {

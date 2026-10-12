@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { orderApi, customerApi, productApi } from '../services/api';
-import { Address, CreateOrderRequest } from '../types';
+import { Address, CreateOrderRequest, Order } from '../types';
 import { Modal } from '../components/Modal';
 
 export function Orders() {
@@ -109,7 +109,14 @@ export function Orders() {
     return colors[status] || '#6b7280';
   };
 
-  const filteredOrders = orders?.filter(o => {
+  // Only orders that are still on their way to the customer have a pending delivery date
+  const estimatedDelivery = (order: Order) => {
+    if (!order.estimatedDelivery || (order.status !== 'PAID' && order.status !== 'SHIPPED')) return '—';
+    // "T00:00" keeps the date in local time; a bare "2026-10-16" would be read as UTC and show the day before
+    return new Date(`${order.estimatedDelivery}T00:00`).toLocaleDateString();
+  };
+
+  const filteredOrders =orders?.filter(o => {
     if (searchCustomer && o.customerId !== Number(searchCustomer)) return false;
     if (searchStatus && o.status !== searchStatus) return false;
     return true;
@@ -149,6 +156,7 @@ export function Orders() {
               <th>Total</th>
               <th>Estado</th>
               <th>Fecha</th>
+              <th>Entrega estimada</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -162,6 +170,7 @@ export function Orders() {
                 <td>${order.total?.toFixed(2) ?? '0.00'}</td>
                 <td><span className="status-badge" style={{ background: statusColor(order.status) }}>{order.status}</span></td>
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                <td>{estimatedDelivery(order)}</td>
                 <td className="actions">
                   {order.status === 'CREATED' && (
                     <>
