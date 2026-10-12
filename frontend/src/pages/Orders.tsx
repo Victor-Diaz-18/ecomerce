@@ -172,10 +172,7 @@ export function Orders() {
                     </>
                   )}
                   {order.status === 'SHIPPED' && (
-                    <>
-                      <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'deliver')}>Entregar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Solicitar devolución</button>
-                    </>
+                    <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'deliver')}>Entregar</button>
                   )}
                   {order.status === 'DELIVERED' && (
                     <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Solicitar devolución</button>

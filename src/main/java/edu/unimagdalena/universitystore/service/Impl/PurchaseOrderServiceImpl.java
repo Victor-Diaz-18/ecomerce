@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -166,16 +165,21 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             return transitionStatusInternal(order, OrderStatus.RETURNED, reason);
         }
 
-        // Already out of the store: stock and refund wait until the product is back (confirmReturn)
-        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+        // In the customer's hands: stock and refund wait until the product is back (confirmReturn)
+        if (order.getStatus() == OrderStatus.DELIVERED) {
             return transitionStatusInternal(order, OrderStatus.RETURN_REQUESTED, reason);
+        }
+
+        // On its way: nothing to cancel or send back until it arrives
+        if (order.getStatus() == OrderStatus.SHIPPED) {
+            throw new BusinessException("Shipped orders cannot be returned until they are delivered");
         }
 
         if (order.getStatus() == OrderStatus.RETURN_REQUESTED) {
             throw new BusinessException("A return has already been requested for this order");
         }
 
-        throw new BusinessException("Only paid, shipped or delivered orders can be returned");
+        throw new BusinessException("Only paid or delivered orders can be returned");
     }
 
     @Override
@@ -192,7 +196,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     public OrderResponse rejectReturn(Long orderId, String reason) {
         PurchaseOrder order = findReturnRequested(orderId);
 
-        return transitionStatusInternal(order, statusBeforeReturnRequest(order), reason);
+        // Returns can only be requested on delivered orders, so that is where a rejected one goes back
+        return transitionStatusInternal(order, OrderStatus.DELIVERED, reason);
     }
 
     private PurchaseOrder findReturnRequested(Long orderId) {
@@ -203,15 +208,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             throw new BusinessException("Order has no pending return request");
         }
         return order;
-    }
-
-    // A rejected return puts the order back where it was (SHIPPED or DELIVERED)
-    private OrderStatus statusBeforeReturnRequest(PurchaseOrder order) {
-        return orderStatusHistoryRepository.findByOrderId(order.getId()).stream()
-                .filter(h -> h.getStatus() == OrderStatus.SHIPPED || h.getStatus() == OrderStatus.DELIVERED)
-                .max(Comparator.comparing(OrderStatusHistory::getChangedAt))
-                .map(OrderStatusHistory::getStatus)
-                .orElse(OrderStatus.DELIVERED);
     }
 
     private void restoreStock(PurchaseOrder order) {
