@@ -13,6 +13,8 @@ public interface PurchaseOrderService {
     OrderResponse deliverOrder(Long orderId);
     OrderResponse cancelOrder(Long orderId);
     OrderResponse returnOrder(Long orderId, String reason);
+    OrderResponse confirmReturn(Long orderId);
+    OrderResponse rejectReturn(Long orderId, String reason);
     List<OrderResponse> findAll();
     OrderResponse findById(Long id);
     List<OrderResponse> search(Long customerId, OrderStatus status);

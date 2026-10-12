@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Datos de prueba:
  * - Ana:  orden PAID (Camisa x3 = 300) y orden CANCELLED (Gorra x10 = 500)
  * - Luis: orden DELIVERED (Camisa x2 + Gorra x1 = 250)
+ * - Luis: orden RETURN_REQUESTED (Gorra x2 = 100): sigue contando como ingreso hasta aceptarse
  * - Ana:  orden PAID eliminada (soft delete, Camisa x50), que nunca debe contar
  */
 @DataJpaTest
@@ -65,6 +66,7 @@ class PurchaseOrderStatsRepositoryTest {
         saveOrder(ana, anaAddress, OrderStatus.PAID, false, item(shirt, 3));
         saveOrder(ana, anaAddress, OrderStatus.CANCELLED, false, item(cap, 10));
         saveOrder(luis, luisAddress, OrderStatus.DELIVERED, false, item(shirt, 2), item(cap, 1));
+        saveOrder(luis, luisAddress, OrderStatus.RETURN_REQUESTED, false, item(cap, 2));
         saveOrder(ana, anaAddress, OrderStatus.PAID, true, item(shirt, 50));
     }
 
@@ -76,7 +78,7 @@ class PurchaseOrderStatsRepositoryTest {
         assertEquals(1, rows.size());
         assertEquals(now.getYear(), ((Number) rows.get(0)[0]).intValue());
         assertEquals(now.getMonthValue(), ((Number) rows.get(0)[1]).intValue());
-        assertEquals(0, new BigDecimal("550").compareTo((BigDecimal) rows.get(0)[2]));
+        assertEquals(0, new BigDecimal("650").compareTo((BigDecimal) rows.get(0)[2]));
     }
 
     @Test
@@ -87,18 +89,15 @@ class PurchaseOrderStatsRepositoryTest {
         assertEquals("Camisa", rows.get(0)[0]);
         assertEquals(5L, ((Number) rows.get(0)[1]).longValue());
         assertEquals("Gorra", rows.get(1)[0]);
-        assertEquals(1L, ((Number) rows.get(1)[1]).longValue());
+        assertEquals(3L, ((Number) rows.get(1)[1]).longValue());
     }
 
     @Test
     void topCustomersShouldCountNonDeletedOrders() {
-        List<Object[]> rows = purchaseOrderRepository.findTopCustomers();
+        Map<String, Long> ordersByCustomer = purchaseOrderRepository.findTopCustomers().stream()
+                .collect(Collectors.toMap(row -> (String) row[0], row -> ((Number) row[1]).longValue()));
 
-        assertEquals(2, rows.size());
-        assertEquals("Ana", rows.get(0)[0]);
-        assertEquals(2L, ((Number) rows.get(0)[1]).longValue());
-        assertEquals("Luis", rows.get(1)[0]);
-        assertEquals(1L, ((Number) rows.get(1)[1]).longValue());
+        assertEquals(Map.of("Ana", 2L, "Luis", 2L), ordersByCustomer);
     }
 
     @Test
@@ -106,7 +105,8 @@ class PurchaseOrderStatsRepositoryTest {
         Map<String, BigDecimal> byStatus = purchaseOrderRepository.findIncomeByStatus().stream()
                 .collect(Collectors.toMap(row -> row[0].toString(), row -> (BigDecimal) row[1]));
 
-        assertEquals(3, byStatus.size());
+        assertEquals(4, byStatus.size());
+        assertEquals(0, new BigDecimal("100").compareTo(byStatus.get("RETURN_REQUESTED")));
         assertEquals(0, new BigDecimal("300").compareTo(byStatus.get("PAID")));
         assertEquals(0, new BigDecimal("250").compareTo(byStatus.get("DELIVERED")));
         assertEquals(0, new BigDecimal("500").compareTo(byStatus.get("CANCELLED")));

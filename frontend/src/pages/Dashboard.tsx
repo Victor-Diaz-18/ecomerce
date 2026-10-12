@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const MONTH_NAMES = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 // Mismos estados que el backend cuenta como ingreso real (ver PurchaseOrderRepository)
-const INCOME_STATUSES: OrderStatus[] = ['PAID', 'SHIPPED', 'DELIVERED'];
+const INCOME_STATUSES: OrderStatus[] = ['PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED'];
 const PIE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b'];
 
 export function Dashboard() {

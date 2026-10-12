@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -159,14 +160,58 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         PurchaseOrder order = purchaseOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (order.getStatus() != OrderStatus.PAID
-                && order.getStatus() != OrderStatus.SHIPPED
-                && order.getStatus() != OrderStatus.DELIVERED) {
-            throw new BusinessException("Only paid, shipped or delivered orders can be returned");
+        // Paid but not shipped: the product never left, so it is a plain refund
+        if (order.getStatus() == OrderStatus.PAID) {
+            restoreStock(order);
+            return transitionStatusInternal(order, OrderStatus.RETURNED, reason);
         }
 
+        // Already out of the store: stock and refund wait until the product is back (confirmReturn)
+        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+            return transitionStatusInternal(order, OrderStatus.RETURN_REQUESTED, reason);
+        }
+
+        if (order.getStatus() == OrderStatus.RETURN_REQUESTED) {
+            throw new BusinessException("A return has already been requested for this order");
+        }
+
+        throw new BusinessException("Only paid, shipped or delivered orders can be returned");
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse confirmReturn(Long orderId) {
+        PurchaseOrder order = findReturnRequested(orderId);
+
         restoreStock(order);
-        return transitionStatusInternal(order, OrderStatus.RETURNED, reason);
+        return transitionStatusInternal(order, OrderStatus.RETURNED, null);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse rejectReturn(Long orderId, String reason) {
+        PurchaseOrder order = findReturnRequested(orderId);
+
+        return transitionStatusInternal(order, statusBeforeReturnRequest(order), reason);
+    }
+
+    private PurchaseOrder findReturnRequested(Long orderId) {
+        PurchaseOrder order = purchaseOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.RETURN_REQUESTED) {
+            throw new BusinessException("Order has no pending return request");
+        }
+        return order;
+    }
+
+    // A rejected return puts the order back where it was (SHIPPED or DELIVERED)
+    private OrderStatus statusBeforeReturnRequest(PurchaseOrder order) {
+        return orderStatusHistoryRepository.findByOrderId(order.getId()).stream()
+                .filter(h -> h.getStatus() == OrderStatus.SHIPPED || h.getStatus() == OrderStatus.DELIVERED)
+                .max(Comparator.comparing(OrderStatusHistory::getChangedAt))
+                .map(OrderStatusHistory::getStatus)
+                .orElse(OrderStatus.DELIVERED);
     }
 
     private void restoreStock(PurchaseOrder order) {

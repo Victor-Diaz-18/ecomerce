@@ -94,6 +94,19 @@ public class OrderController {
         return ResponseEntity.ok(service.returnOrder(id, reason));
     }
 
+    @PatchMapping("/{id}/return/confirm")
+    public ResponseEntity<OrderResponse> confirmReturn(@PathVariable Long id) {
+        return ResponseEntity.ok(service.confirmReturn(id));
+    }
+
+    @PatchMapping("/{id}/return/reject")
+    public ResponseEntity<OrderResponse> rejectReturn(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : null;
+        return ResponseEntity.ok(service.rejectReturn(id, reason));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         service.softDelete(id);

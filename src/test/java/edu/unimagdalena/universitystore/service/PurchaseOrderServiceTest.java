@@ -1,6 +1,11 @@
 package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
+import edu.unimagdalena.universitystore.entity.Inventory;
+import edu.unimagdalena.universitystore.entity.OrderItem;
+import edu.unimagdalena.universitystore.entity.OrderStatusHistory;
+import edu.unimagdalena.universitystore.entity.Product;
+import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import edu.unimagdalena.universitystore.exception.BusinessException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
@@ -22,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -268,6 +274,105 @@ class PurchaseOrderServiceImplTest {
                 () -> purchaseOrderService.returnOrder(1L, null));
 
         assertEquals("Only paid, shipped or delivered orders can be returned", exception.getMessage());
+    }
+
+    private PurchaseOrder orderWithStatus(OrderStatus status) {
+        PurchaseOrder order = new PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(status);
+        when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(order));
+        return order;
+    }
+
+    private void stubSaveAndMapper() {
+        when(purchaseOrderRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(mapper.toResponse(any())).thenAnswer(inv -> {
+            PurchaseOrder o = inv.getArgument(0, PurchaseOrder.class);
+            return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(),
+                    null, "Customer", null, "Address", List.of(), o.getTotal());
+        });
+    }
+
+    private Inventory stubOneItemInStock(int availableStock, int quantity) {
+        Product product = Product.builder().id(5L).build();
+        Inventory inventory = Inventory.builder().availableStock(availableStock).product(product).build();
+        when(orderItemRepository.findByOrderId(1L))
+                .thenReturn(List.of(OrderItem.builder().product(product).quantity(quantity).build()));
+        when(inventoryRepository.findByProductIdForUpdate(5L)).thenReturn(Optional.of(inventory));
+        return inventory;
+    }
+
+    @Test
+    void returningShippedOrderOnlyRequestsReturnAndKeepsStock() {
+        orderWithStatus(OrderStatus.SHIPPED);
+        stubSaveAndMapper();
+
+        OrderResponse result = purchaseOrderService.returnOrder(1L, "Llego rota");
+
+        assertEquals("RETURN_REQUESTED", result.status());
+        verifyNoInteractions(inventoryRepository);
+    }
+
+    @Test
+    void returningPaidOrderRefundsAndRestoresStockImmediately() {
+        orderWithStatus(OrderStatus.PAID);
+        stubSaveAndMapper();
+        Inventory inventory = stubOneItemInStock(10, 2);
+
+        OrderResponse result = purchaseOrderService.returnOrder(1L, null);
+
+        assertEquals("RETURNED", result.status());
+        assertEquals(12, inventory.getAvailableStock());
+    }
+
+    @Test
+    void shouldRejectSecondReturnRequest() {
+        orderWithStatus(OrderStatus.RETURN_REQUESTED);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.returnOrder(1L, null));
+
+        assertEquals("A return has already been requested for this order", exception.getMessage());
+    }
+
+    @Test
+    void confirmingReturnRestoresStockAndMarksReturned() {
+        orderWithStatus(OrderStatus.RETURN_REQUESTED);
+        stubSaveAndMapper();
+        Inventory inventory = stubOneItemInStock(10, 3);
+
+        OrderResponse result = purchaseOrderService.confirmReturn(1L);
+
+        assertEquals("RETURNED", result.status());
+        assertEquals(13, inventory.getAvailableStock());
+    }
+
+    @Test
+    void shouldNotConfirmReturnThatWasNeverRequested() {
+        orderWithStatus(OrderStatus.DELIVERED);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.confirmReturn(1L));
+
+        assertEquals("Order has no pending return request", exception.getMessage());
+        verifyNoInteractions(inventoryRepository);
+    }
+
+    @Test
+    void rejectingReturnPutsOrderBackInItsPreviousStatus() {
+        orderWithStatus(OrderStatus.RETURN_REQUESTED);
+        stubSaveAndMapper();
+        LocalDateTime base = LocalDateTime.of(2026, 10, 1, 10, 0);
+        when(orderStatusHistoryRepository.findByOrderId(1L)).thenReturn(List.of(
+                OrderStatusHistory.builder().status(OrderStatus.PAID).changedAt(base).build(),
+                OrderStatusHistory.builder().status(OrderStatus.SHIPPED).changedAt(base.plusDays(1)).build(),
+                OrderStatusHistory.builder().status(OrderStatus.RETURN_REQUESTED).changedAt(base.plusDays(2)).build()
+        ));
+
+        OrderResponse result = purchaseOrderService.rejectReturn(1L, "El paquete nunca llego");
+
+        assertEquals("SHIPPED", result.status());
+        verifyNoInteractions(inventoryRepository);
     }
 
     @Test
