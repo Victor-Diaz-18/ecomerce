@@ -160,7 +160,7 @@ export function Orders() {
                   {order.status === 'PAID' && (
                     <>
                       <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'ship')}>Enviar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'cancel')}>Cancelar</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Devolver</button>
                     </>
                   )}
                   {order.status === 'SHIPPED' && (

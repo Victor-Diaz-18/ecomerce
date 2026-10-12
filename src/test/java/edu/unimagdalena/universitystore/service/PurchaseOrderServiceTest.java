@@ -215,7 +215,59 @@ class PurchaseOrderServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> purchaseOrderService.cancelOrder(1L));
 
-        assertEquals("Shipped or delivered orders cannot be cancelled. Use return process instead.", exception.getMessage());
+        assertEquals("Paid, shipped or delivered orders cannot be cancelled. Use return process instead.", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCancelPaidOrder() {
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.PAID);
+
+        when(purchaseOrderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.cancelOrder(1L));
+
+        assertEquals("Paid, shipped or delivered orders cannot be cancelled. Use return process instead.", exception.getMessage());
+        verify(purchaseOrderRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldReturnPaidOrder() {
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.PAID);
+
+        when(purchaseOrderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+        when(purchaseOrderRepository.save(any()))
+                .thenAnswer(i -> i.getArgument(0));
+        when(mapper.toResponse(any())).thenAnswer(inv -> {
+            var o = inv.getArgument(0, edu.unimagdalena.universitystore.entity.PurchaseOrder.class);
+            return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(),
+                    null, "Customer", null, "Address", List.of(), o.getTotal());
+        });
+
+        OrderResponse result = purchaseOrderService.returnOrder(1L, "Cliente se arrepintio");
+
+        assertEquals(OrderStatus.RETURNED, OrderStatus.valueOf(result.status()));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenReturnCreatedOrder() {
+        var order = new edu.unimagdalena.universitystore.entity.PurchaseOrder();
+        order.setId(1L);
+        order.setStatus(OrderStatus.CREATED);
+
+        when(purchaseOrderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.returnOrder(1L, null));
+
+        assertEquals("Only paid, shipped or delivered orders can be returned", exception.getMessage());
     }
 
     @Test

@@ -139,12 +139,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         PurchaseOrder order = purchaseOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
-            throw new BusinessException("Shipped or delivered orders cannot be cancelled. Use return process instead.");
-        }
-
         if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.RETURNED) {
             throw new BusinessException("Order is already " + order.getStatus());
+        }
+
+        // Once paid there is money involved: undoing the order goes through the return process
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new BusinessException("Paid, shipped or delivered orders cannot be cancelled. Use return process instead.");
         }
 
         restoreStock(order);
@@ -158,8 +159,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         PurchaseOrder order = purchaseOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (order.getStatus() != OrderStatus.SHIPPED && order.getStatus() != OrderStatus.DELIVERED) {
-            throw new BusinessException("Only shipped or delivered orders can be returned");
+        if (order.getStatus() != OrderStatus.PAID
+                && order.getStatus() != OrderStatus.SHIPPED
+                && order.getStatus() != OrderStatus.DELIVERED) {
+            throw new BusinessException("Only paid, shipped or delivered orders can be returned");
         }
 
         restoreStock(order);
