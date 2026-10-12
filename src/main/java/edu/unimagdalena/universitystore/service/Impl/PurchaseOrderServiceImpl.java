@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,6 +65,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         PurchaseOrder order = PurchaseOrder.builder()
                 .status(OrderStatus.CREATED)
+                .statusChangedOn(LocalDate.now())
                 .customer(customer)
                 .address(address)
                 .total(BigDecimal.ZERO)
@@ -234,6 +236,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private OrderResponse transitionStatusInternal(PurchaseOrder order, OrderStatus newStatus, String reason) {
         OrderStatus oldStatus = order.getStatus();
         order.setStatus(newStatus);
+        order.setStatusChangedOn(LocalDate.now());
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)

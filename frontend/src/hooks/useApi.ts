@@ -18,11 +18,20 @@ export function useApi<T>(apiCall: () => Promise<T>, deps: unknown[] = []) {
     }
   }, [apiCall]);
 
+  // Same as refetch but without the "loading" state, for background updates
+  const refresh = useCallback(async () => {
+    try {
+      setData(await apiCall());
+    } catch {
+      // keep showing the last data; the next refresh will try again
+    }
+  }, [apiCall]);
+
   useEffect(() => {
     fetch();
   }, deps);
 
-  return { data, loading, error, refetch: fetch };
+  return { data, loading, error, refetch: fetch, refresh };
 }
 
 export function useMutation<T, A extends unknown[]>(mutationFn: (...args: A) => Promise<T>) {
