@@ -494,3 +494,4 @@ modal-content h3 {
   .dashboard-grid { grid-template-columns: 1fr; }
   modal-content { min-width: auto; width: 95%; }
 }
+.auto-hint { color: #6c757d; font-size: 0.8rem; font-style: italic; }

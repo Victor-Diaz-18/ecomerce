@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { orderApi, customerApi, productApi } from '../services/api';
 import { Address, CreateOrderRequest } from '../types';
 import { Modal } from '../components/Modal';
 
 export function Orders() {
-  const { data: orders, loading, refetch } = useApi(() => orderApi.getAll(), []);
+  const { data: orders, loading, refetch, refresh } = useApi(() => orderApi.getAll(), []);
   const { data: customers } = useApi(() => customerApi.getAll(), []);
   const { data: products } = useApi(() => productApi.getAllList(), []);
 
@@ -19,7 +19,13 @@ export function Orders() {
   const [searchCustomer, setSearchCustomer] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
 
-  const activeCustomers = customers?.filter(c => c.status === 'ACTIVE') ?? [];
+  // The backend ships and delivers orders on its own, so keep the table up to date
+  useEffect(() => {
+    const timer = setInterval(refresh, 30000);
+    return () => clearInterval(timer);
+  }, [refresh]);
+
+  const activeCustomers =customers?.filter(c => c.status === 'ACTIVE') ?? [];
   const activeProducts = products?.filter(p => p.active) ?? [];
 
   const loadAddresses = async (customerId: number) => {
@@ -77,8 +83,6 @@ export function Orders() {
   const handleStatus = async (id: number, action: string) => {
     switch (action) {
       case 'pay': await orderApi.pay(id); break;
-      case 'ship': await orderApi.ship(id); break;
-      case 'deliver': await orderApi.deliver(id); break;
       case 'cancel': await orderApi.cancel(id); break;
       case 'return': {
         const r = prompt('Motivo de la devolución (opcional):');
@@ -166,14 +170,9 @@ export function Orders() {
                     </>
                   )}
                   {order.status === 'PAID' && (
-                    <>
-                      <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'ship')}>Enviar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Devolver</button>
-                    </>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Devolver</button>
                   )}
-                  {order.status === 'SHIPPED' && (
-                    <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'deliver')}>Entregar</button>
-                  )}
+                  {order.status === 'SHIPPED' && <span className="auto-hint">En camino</span>}
                   {order.status === 'DELIVERED' && (
                     <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Solicitar devolución</button>
                   )}
