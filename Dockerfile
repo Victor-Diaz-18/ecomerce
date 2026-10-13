@@ -23,6 +23,8 @@ COPY --from=build /app/target/university-store-0.0.1-SNAPSHOT.jar app.jar
 ENV TZ=America/Bogota
 # Ajustes para servidores con poca memoria (512 MB en el plan gratuito)
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+UseSerialGC -Xss512k"
+# En la nube no se aceptan las claves de desarrollo: hay que definir JWT_SECRET y ADMIN_PASSWORD
+ENV SECURITY_REQUIRE_SECRETS=true
 # En la nube no hace falta imprimir cada consulta SQL
 ENV SPRING_JPA_SHOW_SQL=false
 

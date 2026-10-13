@@ -18,11 +18,14 @@ public class AuthDtos {
             @NotBlank String password
     ) implements Serializable {}
 
+    /**
+     * @param customerId ficha de cliente de la cuenta; null para el administrador
+     */
     public record AuthResponse(
             String token,
             String email,
-            java.util.Set<String> roles
-    ) implements Serializable {
-
-    }
+            String role,
+            String name,
+            Long customerId
+    ) implements Serializable {}
 }

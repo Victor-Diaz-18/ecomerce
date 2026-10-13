@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.security.service;
 
-import edu.unimagdalena.universitystore.dto.AuthDtos.*;
+import edu.unimagdalena.universitystore.dto.AuthDtos.AuthResponse;
+import edu.unimagdalena.universitystore.dto.AuthDtos.LoginRequest;
+import edu.unimagdalena.universitystore.dto.AuthDtos.RegisterRequest;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.entity.User;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
@@ -17,60 +19,61 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    /** Registro público: siempre crea un cliente, nunca un administrador. */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByCustomerEmail(request.email())) {
-            throw new ConflictException("Email already registered: " + request.email());
+        String email = request.email().trim().toLowerCase();
+
+        // Also taken if a customer file already uses it: letting someone claim it just by knowing
+        // the email would hand them that customer's orders and addresses
+        if (userRepository.existsByEmailIgnoreCase(email) || customerRepository.findByEmail(email).isPresent()) {
+            throw new ConflictException("Email already registered: " + email);
         }
 
-        Customer customer = Customer.builder()
-                .name(request.name())
-                .email(request.email())
+        Customer customer = customerRepository.save(Customer.builder()
+                .name(request.name().trim())
+                .email(email)
                 .status(CustomerStatus.ACTIVE)
-                .build();
-        customerRepository.save(customer);
+                .build());
 
-        User user = User.builder()
+        User user = userRepository.save(User.builder()
+                .email(email)
                 .password(passwordEncoder.encode(request.password()))
-                .roles(Set.of(Role.USER))
+                .role(Role.CUSTOMER)
                 .customer(customer)
-                .build();
-
-        userRepository.save(user);
+                .build());
 
         return buildResponse(user);
     }
 
+    /** Lanza AuthenticationException si el correo o la contraseña no coinciden. */
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
-        );
+        String email = request.email().trim().toLowerCase();
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.password()));
 
-        User user = userRepository.findByCustomerEmail(request.email()).orElseThrow();
-        return buildResponse(user);
+        return buildResponse(userRepository.findByEmailIgnoreCase(email).orElseThrow());
     }
 
     private AuthResponse buildResponse(User user) {
-        String token = jwtService.generateToken(user, Map.of("roles", getRoleNames(user)));
-        return new AuthResponse(token, user.getUsername(), getRoleNames(user));
-    }
+        Customer customer = user.getCustomer();
+        String token = jwtService.generateToken(user, Map.of("role", user.getRole().name()));
 
-    private Set<String> getRoleNames(User user) {
-        return user.getRoles().stream()
-                .map(Role::name)
-                .collect(Collectors.toSet());
+        return new AuthResponse(
+                token,
+                user.getEmail(),
+                user.getRole().name(),
+                customer != null ? customer.getName() : "Administrador",
+                customer != null ? customer.getId() : null);
     }
 }
