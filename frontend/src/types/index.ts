@@ -101,6 +101,12 @@ export interface CreateAddressRequest {
   neighborhood?: string;
 }
 
+export interface UpdateAddressRequest {
+  street: string;
+  city: string;
+  neighborhood?: string;
+}
+
 export interface CreateProductRequest {
   name: string;
   sku: string;

@@ -15,6 +15,12 @@ public class AddressDtos {
             String neighborhood
     ) implements Serializable {}
 
+    public record UpdateAddressRequest(
+            @NotBlank String street,
+            @NotBlank String city,
+            String neighborhood
+    ) implements Serializable {}
+
     public record AddressResponse(
             Long id,
             String street,

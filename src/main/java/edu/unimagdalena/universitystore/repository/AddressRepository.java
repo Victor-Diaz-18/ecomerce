@@ -21,6 +21,10 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
     @Query("UPDATE Address a SET a.deletedAt = :now WHERE a.id = :id")
     void softDelete(Long id, LocalDateTime now);
 
+    // Includes deleted ones on purpose: old orders still show them
+    @Query("SELECT a FROM Address a WHERE a.department IS NULL")
+    List<Address> findWithoutDepartment();
+
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Address a WHERE a.deletedAt IS NULL AND a.id = :id")
     boolean existsByIdNotDeleted(Long id);
 

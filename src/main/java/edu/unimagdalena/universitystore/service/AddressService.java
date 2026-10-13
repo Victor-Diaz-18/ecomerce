@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface AddressService {
     Address create(Address address);
+    Address update(Long id, String street, String neighborhood, String city);
     List<Address> findByCustomer(Long customerId);
     Address findById(Long id);
     void delete(Long id);

@@ -500,3 +500,4 @@ modal-content h3 {
 .address-row { display: flex; gap: 8px; align-items: center; width: 100%; }
 .address-row select { flex: 1; }
 .address-row input { flex: 0 0 70px; width: 70px; }
+.address-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }

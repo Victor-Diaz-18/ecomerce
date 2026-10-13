@@ -76,6 +76,21 @@ class AddressControllerTest {
     }
 
     @Test
+    void shouldUpdateAddress() throws Exception {
+        Address address = Address.builder().id(1L).build();
+        AddressDtos.AddressResponse response = new AddressDtos.AddressResponse(1L, "Carrera 7 # 45-10", "Bogotá",
+                "Colombia", 1L, "Customer", "Carrera 7 # 45-10, Bogotá, Colombia", "Chapinero", "Bogotá D.C.");
+        when(service.update(1L, "Carrera 7 # 45-10", "Chapinero", "Bogotá")).thenReturn(address);
+        when(mapper.toResponse(address)).thenReturn(response);
+
+        mockMvc.perform(put("/api/v1/addresses/1")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"street\":\"Carrera 7 # 45-10\",\"neighborhood\":\"Chapinero\",\"city\":\"Bogotá\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.department").value("Bogotá D.C."));
+    }
+
+    @Test
     void shouldFindAddressById() throws Exception {
         Address address = Address.builder()
                 .id(1L)

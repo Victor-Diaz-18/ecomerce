@@ -47,6 +47,15 @@ public class AddressController {
                 .body(mapper.toResponse(created));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<AddressResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateAddressRequest req) {
+        var updated = service.update(id, req.street(), req.neighborhood(), req.city());
+
+        return ResponseEntity.ok(mapper.toResponse(updated));
+    }
+
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<AddressResponse>> findByCustomer(
             @PathVariable Long customerId) {

@@ -32,6 +32,24 @@ const toRequest = (a: AddressForm, customerId: number) => ({
   street: streetLine(a), neighborhood: a.neighborhood.trim(), city: a.city, country: SHIPPING_COUNTRY, customerId,
 });
 
+// Puts a saved address back into the form. Old addresses may lack cross number, plate or
+// neighbourhood: whatever is missing is left blank for the user to complete
+function toForm(address: Address): AddressForm {
+  const full = address.street.match(/^(.+?)\s+(\w+)\s*#\s*(\w+)\s*-\s*(\w+)$/);
+  const partial = address.street.match(/^(.+?)\s+(\w+)$/);
+  const [streetType, streetNumber, crossNumber, plateNumber] = full
+    ? full.slice(1)
+    : partial ? [partial[1], partial[2], '', ''] : ['', '', '', ''];
+  const knownType = STREET_TYPES.find(t => t.toLowerCase() === streetType.toLowerCase());
+  return {
+    streetType: knownType ?? STREET_TYPES[0],
+    streetNumber, crossNumber, plateNumber,
+    neighborhood: address.neighborhood ?? '',
+    department: address.department ?? '',
+    city: address.city,
+  };
+}
+
 export function Customers() {
   const { data: customers, loading, refetch } = useApi(() => customerApi.getAll(), []);
   const { data: departments } = useApi(() => locationApi.getAll(), []);
@@ -42,12 +60,14 @@ export function Customers() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [newAddress, setNewAddress] = useState<AddressForm>(EMPTY_ADDRESS);
   const [pendingAddresses, setPendingAddresses] = useState<AddressForm[]>([]);
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   const { execute: createCustomer } = useMutation(customerApi.create);
   const { execute: updateCustomer } = useMutation(customerApi.update);
   const { execute: deleteCustomer } = useMutation(customerApi.delete);
   const { execute: createAddress } = useMutation(addressApi.create);
+  const { execute: updateAddress } = useMutation(addressApi.update);
 
   const citiesOfDepartment = departments?.find(d => d.name === newAddress.department)?.cities ?? [];
 
@@ -56,6 +76,7 @@ export function Customers() {
     setFormData({ name: '', email: '' });
     setAddresses([]);
     setPendingAddresses([]);
+    setEditingAddressId(null);
     setNewAddress(EMPTY_ADDRESS);
     setIsModalOpen(true);
   };
@@ -66,6 +87,7 @@ export function Customers() {
     const addrs = await customerApi.getAddresses(customer.id);
     setAddresses(addrs);
     setPendingAddresses([]);
+    setEditingAddressId(null);
     setNewAddress(EMPTY_ADDRESS);
     setIsModalOpen(true);
   };
@@ -76,14 +98,32 @@ export function Customers() {
       alert('Completa todos los campos de la dirección');
       return;
     }
-    if (editingCustomer) {
+    if (editingAddressId !== null) {
+      const { street, neighborhood, city } = toRequest(a, 0);
+      const addr = await updateAddress(editingAddressId, { street, neighborhood, city });
+      if (!addr) {
+        showToast('No se pudo guardar la dirección', 'error');
+        return;
+      }
+      setAddresses(prev => prev.map(x => (x.id === addr.id ? addr : x)));
+    } else if (editingCustomer) {
       const addr = await createAddress(toRequest(a, editingCustomer.id));
       if (addr) setAddresses(prev => [...prev, addr]);
       else showToast('No se pudo guardar la dirección', 'error');
     } else {
       setPendingAddresses(prev => [...prev, a]);
     }
+    resetAddressForm();
+  };
+
+  const resetAddressForm = () => {
+    setEditingAddressId(null);
     setNewAddress(EMPTY_ADDRESS);
+  };
+
+  const startEditingAddress = (address: Address) => {
+    setEditingAddressId(address.id);
+    setNewAddress(toForm(address));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -190,6 +230,7 @@ export function Customers() {
               {addresses.map(addr => (
                 <div key={addr.id} className="address-item">
                   <span>{[addr.street, addr.neighborhood, addr.city, addr.department].filter(Boolean).join(', ')}</span>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEditingAddress(addr)}>Editar</button>
                 </div>
               ))}
               {pendingAddresses.map((addr, i) => (
@@ -201,7 +242,7 @@ export function Customers() {
             </div>
           </div>
           <div className="form-group">
-            <label>Nueva dirección (solo envíos dentro de {SHIPPING_COUNTRY})</label>
+            <label>{editingAddressId !== null ? 'Editar dirección' : 'Nueva dirección'} (solo envíos dentro de {SHIPPING_COUNTRY})</label>
             <div className="address-form">
               <div className="address-row">
                 <select aria-label="Tipo de vía" value={newAddress.streetType} onChange={e => setNewAddress({ ...newAddress, streetType: e.target.value })}>
@@ -224,7 +265,14 @@ export function Customers() {
                   {citiesOfDepartment.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={addAddress}>Agregar dirección</button>
+              <div className="address-row">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={addAddress}>
+                  {editingAddressId !== null ? 'Guardar dirección' : 'Agregar dirección'}
+                </button>
+                {editingAddressId !== null && (
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={resetAddressForm}>Cancelar edición</button>
+                )}
+              </div>
             </div>
           </div>
           <div className="modal-footer">
