@@ -44,6 +44,7 @@ public class SimulationService {
 
     public synchronized void advanceOrders() {
         LocalDate today = LocalDate.now(clock);
+        boolean carrierWorksToday = shippingEstimator.isBusinessDay(today);
 
         // Read every list before changing anything, so an order moves at most one step per run
         List<PurchaseOrder> paid = ordersIn(OrderStatus.PAID);
@@ -52,12 +53,12 @@ public class SimulationService {
         List<PurchaseOrder> returnRequested = ordersIn(OrderStatus.RETURN_REQUESTED);
 
         paid.forEach(order -> process(order, () -> {
-            if (daysInStatus(order, today) >= shippingEstimator.preparationDays(order.getAddress())) {
+            if (carrierWorksToday && !today.isBefore(shipDate(order))) {
                 orderService.shipOrder(order.getId());
             }
         }));
         shipped.forEach(order -> process(order, () -> {
-            if (!today.isBefore(arrivalDate(order))) {
+            if (carrierWorksToday && !today.isBefore(arrivalDate(order))) {
                 orderService.deliverOrder(order.getId());
             }
         }));
@@ -102,7 +103,12 @@ public class SimulationService {
         if (order.getArrivalDate() != null) {
             return order.getArrivalDate();
         }
-        return statusDate(order).plusDays(shippingEstimator.transitDays(order.getAddress()));
+        return shippingEstimator.estimatedDelivery(statusDate(order), order.getAddress());
+    }
+
+    // Orders paid before ship dates existed are ready to go
+    private LocalDate shipDate(PurchaseOrder order) {
+        return order.getShipDate() != null ? order.getShipDate() : statusDate(order);
     }
 
     private List<PurchaseOrder> ordersIn(OrderStatus status) {

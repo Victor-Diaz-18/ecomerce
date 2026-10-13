@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.service;
 
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
+import edu.unimagdalena.universitystore.entity.Address;
+import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.OrderItem;
 import edu.unimagdalena.universitystore.entity.Product;
@@ -8,6 +10,7 @@ import edu.unimagdalena.universitystore.entity.PurchaseOrder;
 import edu.unimagdalena.universitystore.enums.OrderStatus;
 import edu.unimagdalena.universitystore.exception.BusinessException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.mapper.OrderMapper;
 import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
@@ -18,6 +21,7 @@ import edu.unimagdalena.universitystore.repository.ProductPriceHistoryRepository
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.repository.PurchaseOrderRepository;
 import edu.unimagdalena.universitystore.service.Impl.PurchaseOrderServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -70,6 +74,27 @@ class PurchaseOrderServiceImplTest {
 
     @InjectMocks
     private PurchaseOrderServiceImpl purchaseOrderService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(shippingEstimator.deliversTo(any())).thenReturn(true);
+    }
+
+    @Test
+    void shouldNotCreateOrderForAddressAbroad() {
+        when(customerRepository.existsByIdNotDeleted(1L)).thenReturn(true);
+        when(addressRepository.existsByIdNotDeleted(1L)).thenReturn(true);
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(new Customer()));
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(new Address()));
+        when(shippingEstimator.deliversTo(any())).thenReturn(false);
+        CreateOrderRequest request = new CreateOrderRequest(1L, 1L, List.of(new CreateOrderItemRequest(5L, 1)));
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> purchaseOrderService.create(request));
+
+        assertEquals("Orders can only be shipped to addresses in Colombia", exception.getMessage());
+        verifyNoInteractions(inventoryRepository);
+    }
 
     @Test
     void shouldThrowExceptionWhenCreateOrderWithInvalidCustomer() {
@@ -344,10 +369,12 @@ class PurchaseOrderServiceImplTest {
         PurchaseOrder order = orderWithStatus(OrderStatus.CREATED);
         stubSaveAndMapper();
         LocalDate today = LocalDate.now();
-        when(shippingEstimator.estimatedDelivery(eq(today), any())).thenReturn(today.plusDays(4));
+        when(shippingEstimator.shipDate(any())).thenReturn(today.plusDays(1));
+        when(shippingEstimator.estimatedDelivery(eq(today.plusDays(1)), any())).thenReturn(today.plusDays(4));
         when(shippingEstimator.actualArrival(eq(today), any())).thenReturn(today.plusDays(5));
 
         assertEquals(today.plusDays(4), purchaseOrderService.payOrder(1L).estimatedDelivery());
+        assertEquals(today.plusDays(1), order.getShipDate());
 
         purchaseOrderService.shipOrder(1L);
         assertEquals(today.plusDays(5), order.getArrivalDate());

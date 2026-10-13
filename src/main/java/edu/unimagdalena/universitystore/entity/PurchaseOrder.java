@@ -34,6 +34,10 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "status_changed_on")
     private LocalDate statusChangedOn;
 
+    // Day the order leaves the store: payment day, or the next working day if paid after the cut-off hour
+    @Column(name = "ship_date")
+    private LocalDate shipDate;
+
     // Date promised to the customer at payment, worked out from how far the shipping address is
     @Column(name = "estimated_delivery")
     private LocalDate estimatedDelivery;

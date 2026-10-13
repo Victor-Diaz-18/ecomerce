@@ -65,6 +65,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         Address address = addressRepository.findById(req.addressId())
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
+        if (!shippingEstimator.deliversTo(address)) {
+            throw new ValidationException("Orders can only be shipped to addresses in Colombia");
+        }
+
         PurchaseOrder order = PurchaseOrder.builder()
                 .status(OrderStatus.CREATED)
                 .statusChangedOn(LocalDate.now())
@@ -242,7 +246,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         // The estimate is the promise made at payment; the real arrival is settled when the order ships
         if (newStatus == OrderStatus.PAID) {
-            order.setEstimatedDelivery(shippingEstimator.estimatedDelivery(LocalDate.now(), order.getAddress()));
+            order.setShipDate(shippingEstimator.shipDate(LocalDateTime.now()));
+            order.setEstimatedDelivery(shippingEstimator.estimatedDelivery(order.getShipDate(), order.getAddress()));
         } else if (newStatus == OrderStatus.SHIPPED) {
             order.setArrivalDate(shippingEstimator.actualArrival(LocalDate.now(), order.getAddress()));
         } else if (newStatus == OrderStatus.DELIVERED && oldStatus == OrderStatus.SHIPPED) {
