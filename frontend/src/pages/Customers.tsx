@@ -95,7 +95,7 @@ export function Customers() {
   const addAddress = async () => {
     const a = newAddress;
     if (!a.streetNumber.trim() || !a.crossNumber.trim() || !a.plateNumber.trim() || !a.neighborhood.trim() || !a.department || !a.city) {
-      alert('Completa todos los campos de la dirección');
+      showToast('Completa todos los campos de la dirección', 'error');
       return;
     }
     if (editingAddressId !== null) {

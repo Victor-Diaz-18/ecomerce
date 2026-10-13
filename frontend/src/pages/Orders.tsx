@@ -3,12 +3,14 @@ import { useApi } from '../hooks/useApi';
 import { orderApi, customerApi, productApi } from '../services/api';
 import { Address, CreateOrderRequest, Order } from '../types';
 import { Modal } from '../components/Modal';
+import { useToast } from '../context/ToastContext';
 
 export function Orders() {
   const { data: orders, loading, refetch, refresh } = useApi(() => orderApi.getAll(), []);
   const { data: customers } = useApi(() => customerApi.getAll(), []);
   const { data: products } = useApi(() => productApi.getAllList(), []);
 
+  const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedAddress, setSelectedAddress] = useState('');
@@ -56,8 +58,11 @@ export function Orders() {
   const addressLabel = (a: Address) => [a.street, a.neighborhood, a.city, a.department].filter(Boolean).join(', ');
 
   const openAddressModal = async (order: Order) => {
-    setAddressOptions(await customerApi.getAddresses(order.customerId));
-    setNewAddressId(String(order.addressId));
+    const options = await customerApi.getAddresses(order.customerId);
+    setAddressOptions(options);
+    // Some old orders point to an address their customer no longer has: start on the first one offered
+    const current = options.find(a => a.id === order.addressId) ?? options[0];
+    setNewAddressId(current ? String(current.id) : '');
     setAddressOrder(order);
   };
 
@@ -69,7 +74,7 @@ export function Orders() {
       setAddressOrder(null);
       refetch();
     } catch {
-      alert('No se pudo cambiar la dirección. Si la orden ya fue enviada, la dirección no se puede cambiar.');
+      showToast('No se pudo cambiar la dirección. Si la orden ya fue enviada, ya no se puede cambiar.', 'error');
     }
   };
 
