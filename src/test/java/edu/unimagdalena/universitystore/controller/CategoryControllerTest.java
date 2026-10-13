@@ -4,13 +4,11 @@ import edu.unimagdalena.universitystore.dto.CategoryDtos;
 import edu.unimagdalena.universitystore.entity.Category;
 import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.mapper.CategoryMapper;
-import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.CategoryService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
-import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import edu.unimagdalena.universitystore.ControllerTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,11 +18,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CategoryController.class)
-@Import({
-        GlobalExceptionHandler.class,
-        SecurityConfig.class
-})
+@ControllerTest(CategoryController.class)
 class CategoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -50,13 +44,12 @@ class CategoryControllerTest {
         CategoryDtos.CategoryResponse response =
                 new CategoryDtos.CategoryResponse(1L, "Electronics");
 
-        when(mapper.toEntity(request)).thenReturn(category);
-        when(service.create(category)).thenReturn(category);
+        when(service.create(any(Category.class))).thenReturn(category);
         when(mapper.toResponse(category)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/categories")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Electronics"));
     }
@@ -88,15 +81,13 @@ class CategoryControllerTest {
                 .name("Electronics")
                 .build();
 
-        when(mapper.toEntity(request)).thenReturn(category);
-
-        when(service.create(category))
+        when(service.create(any(Category.class)))
                 .thenThrow(new ConflictException("Category already exists"));
 
         mockMvc.perform(post("/api/v1/categories")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Category already exists"));
+                .andExpect(jsonPath("$.message").value("Category already exists"));
     }
 }

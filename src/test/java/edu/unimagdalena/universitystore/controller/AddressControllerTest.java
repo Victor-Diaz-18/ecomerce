@@ -4,13 +4,11 @@ import edu.unimagdalena.universitystore.dto.AddressDtos;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.mapper.AddressMapper;
-import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.AddressService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
-import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import edu.unimagdalena.universitystore.ControllerTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,11 +18,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AddressController.class)
-@Import({
-        GlobalExceptionHandler.class,
-        SecurityConfig.class
-})
+@ControllerTest(AddressController.class)
 class AddressControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -44,7 +38,8 @@ class AddressControllerTest {
                         "Street 10",
                         "Santa Marta",
                         "Colombia",
-                        1L
+                        1L,
+                        "Centro"
                 );
 
         Address address = Address.builder()
@@ -61,18 +56,36 @@ class AddressControllerTest {
                         "Street 10",
                         "Santa Marta",
                         "Colombia",
-                        1L
+                        1L,
+                        "Customer",
+                        "Street 10, Santa Marta, Colombia",
+                        "Centro",
+                        "Magdalena"
                 );
 
-        when(mapper.toEntity(request)).thenReturn(address);
-        when(service.create(address)).thenReturn(address);
+        when(service.create(any(Address.class))).thenReturn(address);
         when(mapper.toResponse(address)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/addresses")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.street").value("Street 10"));
+    }
+
+    @Test
+    void shouldUpdateAddress() throws Exception {
+        Address address = Address.builder().id(1L).build();
+        AddressDtos.AddressResponse response = new AddressDtos.AddressResponse(1L, "Carrera 7 # 45-10", "Bogotá",
+                "Colombia", 1L, "Customer", "Carrera 7 # 45-10, Bogotá, Colombia", "Chapinero", "Bogotá D.C.");
+        when(service.update(1L, "Carrera 7 # 45-10", "Chapinero", "Bogotá")).thenReturn(address);
+        when(mapper.toResponse(address)).thenReturn(response);
+
+        mockMvc.perform(put("/api/v1/addresses/1")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"street\":\"Carrera 7 # 45-10\",\"neighborhood\":\"Chapinero\",\"city\":\"Bogotá\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.department").value("Bogotá D.C."));
     }
 
     @Test
@@ -80,6 +93,9 @@ class AddressControllerTest {
         Address address = Address.builder()
                 .id(1L)
                 .street("Street 10")
+                .city("Santa Marta")
+                .country("Colombia")
+                .customer(Customer.builder().id(1L).build())
                 .build();
 
         AddressDtos.AddressResponse response =
@@ -88,7 +104,11 @@ class AddressControllerTest {
                         "Street 10",
                         "Santa Marta",
                         "Colombia",
-                        1L
+                        1L,
+                        "Customer",
+                        "Street 10, Santa Marta, Colombia",
+                        "Centro",
+                        "Magdalena"
                 );
 
         when(service.findById(1L)).thenReturn(address);

@@ -6,6 +6,7 @@ import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.CategoryRepository;
+import edu.unimagdalena.universitystore.repository.ProductPriceHistoryRepository;
 import edu.unimagdalena.universitystore.repository.ProductRepository;
 import edu.unimagdalena.universitystore.service.Impl.ProductServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class ProductServiceImplTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private ProductPriceHistoryRepository priceHistoryRepository;
+
     @InjectMocks
     private ProductServiceImpl productService;
 
@@ -48,8 +52,8 @@ class ProductServiceImplTest {
         when(productRepository.findBySku("SKU001"))
                 .thenReturn(Optional.empty());
 
-        when(categoryRepository.existsById(1L))
-                .thenReturn(true);
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.of(category));
 
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(i -> i.getArgument(0));
@@ -112,8 +116,8 @@ class ProductServiceImplTest {
         when(productRepository.findBySku("SKU001"))
                 .thenReturn(Optional.empty());
 
-        when(categoryRepository.existsById(1L))
-                .thenReturn(false);
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> productService.create(product));
@@ -176,18 +180,25 @@ class ProductServiceImplTest {
                 .sku("SKU001")
                 .name("Mouse")
                 .price(new BigDecimal("50000"))
+                .active(true)
                 .category(category)
                 .build();
         Product updated = Product.builder()
                 .sku("SKU002")
                 .name("Keyboard")
                 .price(new BigDecimal("80000"))
+                .active(true)
                 .build();
 
         when(productRepository.findById(1L))
                 .thenReturn(Optional.of(product));
 
+        when(productRepository.findBySku("SKU002"))
+                .thenReturn(Optional.empty());
+
         when(productRepository.save(any(Product.class)))
+                .thenAnswer(i -> i.getArgument(0));
+        when(priceHistoryRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
 
         Product result = productService.update(1L, updated);
@@ -195,6 +206,7 @@ class ProductServiceImplTest {
         assertEquals("Keyboard", result.getName());
         assertEquals("SKU002", result.getSku());
         assertEquals(new BigDecimal("80000"), result.getPrice());
+        assertTrue(result.getActive());
         assertEquals(1L, result.getId());
     }
 }
