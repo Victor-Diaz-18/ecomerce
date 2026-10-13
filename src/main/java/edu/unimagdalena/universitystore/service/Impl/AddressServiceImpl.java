@@ -1,5 +1,8 @@
 package edu.unimagdalena.universitystore.service.Impl;
 
+import edu.unimagdalena.universitystore.exception.ValidationException;
+import edu.unimagdalena.universitystore.service.ColombiaLocations;
+import edu.unimagdalena.universitystore.service.ColombiaLocations.City;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
@@ -28,6 +31,14 @@ public class AddressServiceImpl implements AddressService {
         Customer customer = customerRepository.findById(address.getCustomer().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         address.setCustomer(customer);
+
+        // The city must be one the store ships to; its official spelling and department come from the list
+        City city = ColombiaLocations.find(address.getCity())
+                .orElseThrow(() -> new ValidationException("City is not in the list of shipping destinations"));
+        address.setCity(city.name());
+        address.setDepartment(city.department());
+        address.setCountry(ColombiaLocations.COUNTRY);
+
         return addressRepository.save(address);
     }
 

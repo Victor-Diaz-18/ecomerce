@@ -31,6 +31,7 @@ public class AddressController {
         address.setStreet(req.street());
         address.setCity(req.city());
         address.setCountry(req.country());
+        address.setNeighborhood(req.neighborhood());
         Customer customer = new Customer();
         customer.setId(req.customerId());
         address.setCustomer(customer);

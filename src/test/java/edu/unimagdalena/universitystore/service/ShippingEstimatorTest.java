@@ -75,7 +75,7 @@ class ShippingEstimatorTest {
 
     @Test
     void cityThatIsNotOnTheMapCountsAsNational() {
-        assertEquals(3, estimator().transitDays(address("Aracataca", "Colombia")));
+        assertEquals(3, estimator().transitDays(address("Macondo", "Colombia")));
         assertEquals(3, estimator().transitDays(null));
     }
 

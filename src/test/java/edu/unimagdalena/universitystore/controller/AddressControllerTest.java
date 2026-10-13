@@ -40,7 +40,8 @@ class AddressControllerTest {
                         "Street 10",
                         "Santa Marta",
                         "Colombia",
-                        1L
+                        1L,
+                        "Centro"
                 );
 
         Address address = Address.builder()
@@ -59,7 +60,9 @@ class AddressControllerTest {
                         "Colombia",
                         1L,
                         "Customer",
-                        "Street 10, Santa Marta, Colombia"
+                        "Street 10, Santa Marta, Colombia",
+                        "Centro",
+                        "Magdalena"
                 );
 
         when(service.create(any(Address.class))).thenReturn(address);
@@ -90,7 +93,9 @@ class AddressControllerTest {
                         "Colombia",
                         1L,
                         "Customer",
-                        "Street 10, Santa Marta, Colombia"
+                        "Street 10, Santa Marta, Colombia",
+                        "Centro",
+                        "Magdalena"
                 );
 
         when(service.findById(1L)).thenReturn(address);
