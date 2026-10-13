@@ -47,14 +47,15 @@ class SimulationServiceTest {
     void setUp() {
         // return spin 2 days after delivery (20%), returns resolved after 3 days (70% accepted)
         SimulationProperties properties = properties(true);
-        lenient().when(shippingEstimator.preparationDays(any())).thenReturn(1);
-        lenient().when(shippingEstimator.transitDays(any())).thenReturn(3);
+        lenient().when(shippingEstimator.isBusinessDay(any())).thenReturn(true);
+        lenient().when(shippingEstimator.estimatedDelivery(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(0, LocalDate.class).plusDays(3));
         Clock clock = Clock.fixed(TODAY.atTime(9, 0).atZone(ZONE).toInstant(), ZONE);
         simulationService = new SimulationService(properties, orderService, purchaseOrderRepository, shippingEstimator, clock, random);
     }
 
     private static SimulationProperties properties(boolean enabled) {
-        return new SimulationProperties(enabled, "Santa Marta", "Colombia", 1, 350, 1, 3, 8, 0.2, 0.2, 2, 0.2, 3, 0.7);
+        return new SimulationProperties(enabled, "Santa Marta", "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 2, 0.2, 3, 0.7);
     }
 
     private PurchaseOrder order(Long id, OrderStatus status, int daysAgo) {
@@ -68,8 +69,8 @@ class SimulationServiceTest {
     }
 
     @Test
-    void shouldShipPaidOrderOnceTheShippingDaysHavePassed() {
-        order(1L, OrderStatus.PAID, 1);
+    void shouldShipPaidOrderWhoseShipDateHasPassed() {
+        order(1L, OrderStatus.PAID, 1).setShipDate(TODAY.minusDays(1));
 
         simulationService.advanceOrders();
 
@@ -77,9 +78,8 @@ class SimulationServiceTest {
     }
 
     @Test
-    void shouldShipTheSameDayWhenNoPreparationIsNeeded() {
-        order(1L, OrderStatus.PAID, 0);
-        when(shippingEstimator.preparationDays(any())).thenReturn(0);
+    void shouldShipTheSameDayWhenPaidBeforeTheCutOff() {
+        order(1L, OrderStatus.PAID, 0).setShipDate(TODAY);
 
         simulationService.advanceOrders();
 
@@ -87,8 +87,19 @@ class SimulationServiceTest {
     }
 
     @Test
-    void shouldNotShipOrderPaidToday() {
-        order(1L, OrderStatus.PAID, 0);
+    void shouldWaitForTheShipDateWhenPaidAfterTheCutOff() {
+        order(1L, OrderStatus.PAID, 0).setShipDate(TODAY.plusDays(1));
+
+        simulationService.advanceOrders();
+
+        verifyNoInteractions(orderService);
+    }
+
+    @Test
+    void nothingShipsOrArrivesWhenTheCarrierIsNotWorking() {
+        order(1L, OrderStatus.PAID, 3).setShipDate(TODAY.minusDays(3));
+        order(2L, OrderStatus.SHIPPED, 9).setArrivalDate(TODAY.minusDays(1));
+        when(shippingEstimator.isBusinessDay(TODAY)).thenReturn(false);
 
         simulationService.advanceOrders();
 

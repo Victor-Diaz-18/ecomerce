@@ -6,13 +6,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.text.Normalizer;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
- * Calcula los plazos de un envío según la distancia real entre la tienda y la dirección:
- * cuándo sale, cuándo se le promete al cliente y cuándo llega de verdad.
+ * Calcula los plazos de un envío como lo hacen las transportadoras: por zonas (urbano, regional,
+ * nacional, difícil acceso), en días hábiles y con hora de corte. La zona sale de la distancia real
+ * entre la tienda y la ciudad de destino.
  */
 @Component
 @RequiredArgsConstructor
@@ -52,36 +56,59 @@ public class ShippingEstimator {
             Map.entry("san andres", new double[]{12.58, -81.70})
     );
 
+    // Destinos a los que solo se llega por avión o río
+    private static final Set<String> REMOTE_CITIES = Set.of("leticia", "san andres", "quibdo");
+
     private final SimulationProperties properties;
     private final Random random;
 
-    /** Días que la orden espera en la tienda después del pago: ninguno si va a la misma ciudad. */
-    public int preparationDays(Address address) {
-        return isOriginCity(address) ? 0 : properties.daysToShip();
+    /** Solo se hacen envíos dentro del país de la tienda. */
+    public boolean deliversTo(Address address) {
+        return address != null && sameText(address.getCountry(), properties.originCountry());
     }
 
-    /** Días de viaje previstos desde que la orden sale de la tienda. */
+    /** Las transportadoras no recogen ni entregan los domingos. */
+    public boolean isBusinessDay(LocalDate date) {
+        return date.getDayOfWeek() != DayOfWeek.SUNDAY;
+    }
+
+    /** Día en que sale la orden: el del pago si fue antes de la hora de corte; si no, el siguiente día hábil. */
+    public LocalDate shipDate(LocalDateTime paidAt) {
+        LocalDate date = paidAt.toLocalDate();
+        if (paidAt.getHour() >= properties.cutoffHour()) {
+            date = date.plusDays(1);
+        }
+        while (!isBusinessDay(date)) {
+            date = date.plusDays(1);
+        }
+        return date;
+    }
+
+    /** Días hábiles de viaje previstos desde que la orden sale de la tienda. */
     public int transitDays(Address address) {
         if (address == null) {
-            return properties.transitDaysUnknownCity();
-        }
-        if (!sameText(address.getCountry(), properties.originCountry())) {
-            return properties.transitDaysInternational();
+            return properties.transitDaysNational();
         }
         if (isOriginCity(address)) {
             return properties.transitDaysSameCity();
         }
+        if (REMOTE_CITIES.contains(normalize(address.getCity()))) {
+            return properties.transitDaysRemote();
+        }
         double[] origin = CITY_COORDINATES.get(normalize(properties.originCity()));
         double[] destination = CITY_COORDINATES.get(normalize(address.getCity()));
+        // A city we cannot place on the map is treated as a regular national shipment
         if (origin == null || destination == null) {
-            return properties.transitDaysUnknownCity();
+            return properties.transitDaysNational();
         }
-        return Math.max(1, (int) Math.ceil(distanceKm(origin, destination) / properties.kmPerDay()));
+        return distanceKm(origin, destination) <= properties.regionalMaxKm()
+                ? properties.transitDaysRegional()
+                : properties.transitDaysNational();
     }
 
-    /** La fecha que se le promete al cliente cuando paga. */
-    public LocalDate estimatedDelivery(LocalDate paidOn, Address address) {
-        return paidOn.plusDays(preparationDays(address) + transitDays(address));
+    /** La fecha que se le promete al cliente: el plazo máximo de la zona contado desde el día de salida. */
+    public LocalDate estimatedDelivery(LocalDate shipDate, Address address) {
+        return addBusinessDays(shipDate, transitDays(address));
     }
 
     /**
@@ -96,7 +123,18 @@ public class ShippingEstimator {
         } else if (spin < properties.earlyDeliveryChance() + properties.lateDeliveryChance()) {
             days += 1 + random.nextInt(2);
         }
-        return shippedOn.plusDays(Math.max(1, days));
+        return addBusinessDays(shippedOn, Math.max(1, days));
+    }
+
+    private LocalDate addBusinessDays(LocalDate from, int days) {
+        LocalDate date = from;
+        for (int added = 0; added < days; ) {
+            date = date.plusDays(1);
+            if (isBusinessDay(date)) {
+                added++;
+            }
+        }
+        return date;
     }
 
     // Straight-line (great-circle) distance between two points given as {latitude, longitude}
@@ -110,8 +148,7 @@ public class ShippingEstimator {
     }
 
     private boolean isOriginCity(Address address) {
-        return address != null
-                && sameText(address.getCountry(), properties.originCountry())
+        return deliversTo(address)
                 && sameText(address.getCity(), properties.originCity());
     }
 
