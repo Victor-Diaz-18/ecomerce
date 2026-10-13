@@ -9,6 +9,10 @@ public class CategoryDtos {
             @NotBlank String name
     ) implements Serializable {}
 
+    public record UpdateCategoryRequest(
+            @NotBlank String name
+    ) implements Serializable {}
+
     public record CategoryResponse(
             Long id,
             String name

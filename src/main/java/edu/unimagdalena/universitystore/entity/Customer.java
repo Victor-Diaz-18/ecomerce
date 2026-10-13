@@ -1,8 +1,11 @@
 package edu.unimagdalena.universitystore.entity;
 
-import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "customers")
@@ -10,21 +13,22 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Customer {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class Customer extends BaseEntity {
+    @NotBlank
+    @Size(max = 100)
     @Column(nullable = false)
     private String name;
 
+    @NotBlank
+    @Email
+    @Size(max = 100)
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private CustomerStatus status;
+    private edu.unimagdalena.universitystore.enums.CustomerStatus status;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private User user;

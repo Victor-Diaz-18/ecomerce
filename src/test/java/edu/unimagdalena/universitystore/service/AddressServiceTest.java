@@ -3,6 +3,7 @@ package edu.unimagdalena.universitystore.service;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.Impl.AddressServiceImpl;
@@ -26,6 +27,9 @@ class AddressServiceImplTest {
     @Mock
     private CustomerRepository customerRepository;
 
+    @Mock
+    private PurchaseOrderService purchaseOrderService;
+
     @InjectMocks
     private AddressServiceImpl addressService;
 
@@ -42,13 +46,14 @@ class AddressServiceImplTest {
                 .customer(customer)
                 .build();
 
-        when(customerRepository.existsById(1L)).thenReturn(true);
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(addressRepository.save(address)).thenReturn(address);
 
         Address result = addressService.create(address);
 
         assertNotNull(result);
         assertEquals("Street 10", result.getStreet());
+        assertEquals("Magdalena", result.getDepartment());
         verify(addressRepository).save(address);
     }
 
@@ -62,12 +67,67 @@ class AddressServiceImplTest {
                 .customer(customer)
                 .build();
 
-        when(customerRepository.existsById(1L)).thenReturn(false);
+        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> addressService.create(address));
 
         assertEquals("Customer not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldUseTheOfficialCityNameAndFillInItsDepartment() {
+        Customer customer = Customer.builder().id(1L).build();
+        Address address = Address.builder().street("Calle 13 # 3-84").city(" bogota ").country("colombia")
+                .customer(customer).build();
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(addressRepository.save(address)).thenReturn(address);
+
+        Address result = addressService.create(address);
+
+        assertEquals("Bogotá", result.getCity());
+        assertEquals("Bogotá D.C.", result.getDepartment());
+        assertEquals("Colombia", result.getCountry());
+    }
+
+    @Test
+    void shouldRejectCityOutsideTheShippingList() {
+        Customer customer = Customer.builder().id(1L).build();
+        Address address = Address.builder().street("Calle 1").city("Caracas").country("Venezuela")
+                .customer(customer).build();
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> addressService.create(address));
+
+        assertEquals("City is not in the list of shipping destinations", exception.getMessage());
+        verify(addressRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldUpdateAddressAndRecalculateItsDepartment() {
+        Address address = Address.builder().id(1L).street("Calle 30").city("Santa Marta")
+                .department("Magdalena").country("Colombia").build();
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+        when(addressRepository.save(address)).thenReturn(address);
+
+        Address result = addressService.update(1L, "Carrera 7 # 45-10", "Chapinero", "bogota");
+
+        assertEquals("Carrera 7 # 45-10", result.getStreet());
+        assertEquals("Chapinero", result.getNeighborhood());
+        assertEquals("Bogotá", result.getCity());
+        assertEquals("Bogotá D.C.", result.getDepartment());
+        verify(purchaseOrderService).refreshEstimatedDelivery(1L);
+    }
+
+    @Test
+    void shouldNotUpdateAddressToAnUnknownCity() {
+        Address address = Address.builder().id(1L).street("Calle 30").city("Santa Marta").build();
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+
+        assertThrows(ValidationException.class, () -> addressService.update(1L, "Calle 1", "Centro", "Macondo"));
+
+        verify(addressRepository, never()).save(any());
     }
 
     @Test
@@ -102,5 +162,19 @@ class AddressServiceImplTest {
                 () -> addressService.findById(1L));
 
         assertEquals("Address not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldSoftDeleteAddress() {
+        Address address = new Address();
+        address.setId(1L);
+
+        when(addressRepository.findById(1L))
+                .thenReturn(Optional.of(address));
+
+        addressService.delete(1L);
+
+        assertTrue(address.isDeleted());
+        verify(addressRepository).save(address);
     }
 }

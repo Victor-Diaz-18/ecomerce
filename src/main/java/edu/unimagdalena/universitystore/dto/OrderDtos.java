@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class OrderDtos {
     public record OrderItemResponse(
             Long id,
             Long productId,
+            String productName,
             Integer quantity,
             BigDecimal unitPrice,
             BigDecimal subtotal
@@ -38,8 +40,19 @@ public class OrderDtos {
             String status,
             LocalDateTime createdAt,
             Long customerId,
+            String customerName,
+            Long addressId,
+            String addressLine,
             List<OrderItemResponse> items,
-            BigDecimal total
+            BigDecimal total,
+            LocalDate estimatedDelivery,
+            LocalDate deliveredOn
+    ) implements Serializable {}
+
+    public record OrderStatusHistoryResponse(
+            Long id,
+            String status,
+            LocalDateTime changedAt
     ) implements Serializable {}
 
     public record BestSellingProductResponse(
@@ -48,6 +61,7 @@ public class OrderDtos {
     ) implements Serializable {}
 
     public record MonthlyIncomeResponse(
+            Integer year,
             Integer month,
             BigDecimal totalIncome
     ) implements Serializable {}
@@ -55,5 +69,10 @@ public class OrderDtos {
     public record TopCustomerResponse(
             String customerName,
             Long totalOrders
+    ) implements Serializable {}
+
+    public record IncomeByStatusResponse(
+            String status,
+            BigDecimal totalIncome
     ) implements Serializable {}
 }

@@ -1,13 +1,29 @@
 package edu.unimagdalena.universitystore.service;
 
-import edu.unimagdalena.universitystore.entity.PurchaseOrder;
+import edu.unimagdalena.universitystore.dto.OrderDtos.*;
+import edu.unimagdalena.universitystore.enums.OrderStatus;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PurchaseOrderService {
-    PurchaseOrder create(PurchaseOrder order);
-    PurchaseOrder payOrder(Long orderId);
-    PurchaseOrder cancelOrder(Long orderId);
-    List<PurchaseOrder> findAll();
-    PurchaseOrder findById(Long id);
+    OrderResponse create(CreateOrderRequest req);
+    OrderResponse payOrder(Long orderId);
+    OrderResponse shipOrder(Long orderId);
+    OrderResponse deliverOrder(Long orderId);
+    OrderResponse cancelOrder(Long orderId);
+    OrderResponse returnOrder(Long orderId, String reason);
+    OrderResponse confirmReturn(Long orderId);
+    OrderResponse changeAddress(Long orderId, Long addressId);
+    void refreshEstimatedDelivery(Long addressId);
+    OrderResponse rejectReturn(Long orderId, String reason);
+    List<OrderResponse> findAll();
+    OrderResponse findById(Long id);
+    List<OrderResponse> search(Long customerId, OrderStatus status);
+    List<OrderStatusHistoryResponse> getHistory(Long orderId);
+    void softDelete(Long orderId);
+    List<MonthlyIncomeResponse> getMonthlyIncome();
+    List<BestSellingProductResponse> getBestSellingProducts();
+    List<TopCustomerResponse> getTopCustomers();
+    List<IncomeByStatusResponse> getIncomeByStatus();
 }

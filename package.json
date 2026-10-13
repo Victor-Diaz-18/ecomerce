@@ -1,0 +1,18 @@
+{
+  "name": "university-store",
+  "private": true,
+  "description": "Arranca base de datos, backend y frontend con un solo comando",
+  "scripts": {
+    "postinstall": "npm --prefix frontend install",
+    "db": "docker compose up -d --wait",
+    "backend": "node scripts/mvnw.js spring-boot:run",
+    "frontend": "npm --prefix frontend run dev",
+    "dev": "npm run db && concurrently -k -n API,WEB -c blue,green --teardown \"docker compose stop\" \"npm run backend\" \"npm run frontend\"",
+    "stop": "docker compose stop",
+    "build": "node scripts/mvnw.js -DskipTests package",
+    "test": "node scripts/mvnw.js test"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

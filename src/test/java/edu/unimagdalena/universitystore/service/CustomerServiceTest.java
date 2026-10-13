@@ -112,6 +112,7 @@ class CustomerServiceImplTest {
         Customer updated = Customer.builder()
                 .name("Pedro Alvarez")
                 .email("pedro@test.com")
+                .status(CustomerStatus.INACTIVE)
                 .build();
 
         when(customerRepository.findById(1L))
@@ -124,5 +125,6 @@ class CustomerServiceImplTest {
 
         assertEquals("Pedro Alvarez", result.getName());
         assertEquals("pedro@test.com", result.getEmail());
+        assertEquals(CustomerStatus.INACTIVE, result.getStatus());
     }
 }

@@ -4,16 +4,14 @@ import edu.unimagdalena.universitystore.dto.CustomerDtos;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import edu.unimagdalena.universitystore.mapper.CustomerMapper;
-import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.CustomerService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import edu.unimagdalena.universitystore.ControllerTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
@@ -22,11 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CustomerController.class)
-@Import({
-        GlobalExceptionHandler.class,
-        SecurityConfig.class
-})
+@ControllerTest(CustomerController.class)
 class CustomerControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -62,13 +56,12 @@ class CustomerControllerTest {
                         CustomerStatus.ACTIVE
                 );
 
-        when(mapper.toEntity(request)).thenReturn(customer);
-        when(service.create(customer)).thenReturn(customer);
+        when(service.create(any(Customer.class))).thenReturn(customer);
         when(mapper.toResponse(customer)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/customers")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("juan@test.com"));
     }
@@ -128,7 +121,8 @@ class CustomerControllerTest {
         CustomerDtos.UpdateCustomerRequest request =
                 new CustomerDtos.UpdateCustomerRequest(
                         "Pedro Alvarez",
-                        "pedro@test.com"
+                        "pedro@test.com",
+                        CustomerStatus.ACTIVE
                 );
 
         Customer updated = Customer.builder()
@@ -146,13 +140,13 @@ class CustomerControllerTest {
                         CustomerStatus.ACTIVE
                 );
 
-        when(mapper.toEntity(request)).thenReturn(updated);
+        when(service.findById(1L)).thenReturn(updated);
         when(service.update(1L, updated)).thenReturn(updated);
         when(mapper.toResponse(updated)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/customers/1")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Pedro Alvarez"));
     }
@@ -166,8 +160,8 @@ class CustomerControllerTest {
                 );
 
         mockMvc.perform(post("/api/v1/customers")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }

@@ -17,9 +17,10 @@ public class ProductDtos {
 
     public record UpdateProductRequest(
             @NotBlank String name,
+            @NotBlank String sku,
             @NotNull @DecimalMin("0.01") BigDecimal price,
-            @NotNull Boolean active
-
+            @NotNull Boolean active,
+            Long categoryId
     ) implements Serializable {}
 
     public record ProductResponse(
@@ -28,6 +29,7 @@ public class ProductDtos {
             String sku,
             BigDecimal price,
             Boolean active,
-            Long categoryId
+            Long categoryId,
+            String categoryName
     ) implements Serializable {}
 }

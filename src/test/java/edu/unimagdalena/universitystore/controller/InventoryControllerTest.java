@@ -4,13 +4,11 @@ import edu.unimagdalena.universitystore.dto.InventoryDtos;
 import edu.unimagdalena.universitystore.entity.Inventory;
 import edu.unimagdalena.universitystore.entity.Product;
 import edu.unimagdalena.universitystore.mapper.InventoryMapper;
-import edu.unimagdalena.universitystore.security.config.SecurityConfig;
 import edu.unimagdalena.universitystore.service.InventoryService;
 import edu.unimagdalena.universitystore.exception.GlobalExceptionHandler;
-import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import edu.unimagdalena.universitystore.ControllerTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(InventoryController.class)
-@Import({
-        GlobalExceptionHandler.class,
-        SecurityConfig.class
-})
+@ControllerTest(InventoryController.class)
 class InventoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -53,7 +47,8 @@ class InventoryControllerTest {
                         1L,
                         10,
                         5,
-                        1L
+                        1L,
+                        "Product"
                 );
 
         InventoryDtos.CreateInventoryRequest request =
@@ -63,13 +58,12 @@ class InventoryControllerTest {
                         1L
                 );
 
-        when(mapper.toEntity(request)).thenReturn(inventory);
-        when(service.create(inventory)).thenReturn(inventory);
+        when(service.create(any(Inventory.class))).thenReturn(inventory);
         when(mapper.toResponse(inventory)).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/inventories")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.availableStock").value(10));
     }
@@ -88,7 +82,8 @@ class InventoryControllerTest {
                         1L,
                         20,
                         5,
-                        1L
+                        1L,
+                        "Product"
                 );
 
         InventoryDtos.UpdateInventoryRequest request =
@@ -97,12 +92,12 @@ class InventoryControllerTest {
                         5
                 );
 
-        when(service.updateStock(1L, 20)).thenReturn(updated);
+        when(service.updateStock(1L, 20, 5)).thenReturn(updated);
         when(mapper.toResponse(updated)).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/inventories/1")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.availableStock").value(20));
     }
