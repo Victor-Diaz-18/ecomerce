@@ -3,6 +3,7 @@ package edu.unimagdalena.universitystore.service;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.Impl.AddressServiceImpl;
@@ -49,6 +50,7 @@ class AddressServiceImplTest {
 
         assertNotNull(result);
         assertEquals("Street 10", result.getStreet());
+        assertEquals("Magdalena", result.getDepartment());
         verify(addressRepository).save(address);
     }
 
@@ -68,6 +70,35 @@ class AddressServiceImplTest {
                 () -> addressService.create(address));
 
         assertEquals("Customer not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldUseTheOfficialCityNameAndFillInItsDepartment() {
+        Customer customer = Customer.builder().id(1L).build();
+        Address address = Address.builder().street("Calle 13 # 3-84").city(" bogota ").country("colombia")
+                .customer(customer).build();
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(addressRepository.save(address)).thenReturn(address);
+
+        Address result = addressService.create(address);
+
+        assertEquals("Bogotá", result.getCity());
+        assertEquals("Bogotá D.C.", result.getDepartment());
+        assertEquals("Colombia", result.getCountry());
+    }
+
+    @Test
+    void shouldRejectCityOutsideTheShippingList() {
+        Customer customer = Customer.builder().id(1L).build();
+        Address address = Address.builder().street("Calle 1").city("Caracas").country("Venezuela")
+                .customer(customer).build();
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> addressService.create(address));
+
+        assertEquals("City is not in the list of shipping destinations", exception.getMessage());
+        verify(addressRepository, never()).save(any());
     }
 
     @Test

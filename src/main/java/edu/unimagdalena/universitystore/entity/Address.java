@@ -29,6 +29,13 @@ public class Address extends BaseEntity {
     @Column(nullable = false)
     private String country;
 
+    // Barrio y departamento: las direcciones anteriores al formulario por partes no los tienen
+    @Size(max = 100)
+    private String neighborhood;
+
+    @Size(max = 100)
+    private String department;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;

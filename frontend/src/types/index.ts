@@ -18,6 +18,13 @@ export interface Address {
   customerId: number;
   customerName?: string;
   addressLine?: string;
+  neighborhood?: string;
+  department?: string;
+}
+
+export interface Department {
+  name: string;
+  cities: string[];
 }
 
 export interface Product {
@@ -91,6 +98,7 @@ export interface CreateAddressRequest {
   city: string;
   country: string;
   customerId: number;
+  neighborhood?: string;
 }
 
 export interface CreateProductRequest {
