@@ -7,12 +7,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Los plazos son días reales del calendario.
  *
  * @param enabled                  si es false, las órdenes no avanzan solas
- * @param daysToShip               días que pasa una orden pagada antes de enviarse
  * @param originCity               ciudad desde la que despacha la tienda
  * @param originCountry            país desde el que despacha la tienda
- * @param transitDaysSameCity      días de viaje si la dirección está en la misma ciudad
- * @param transitDaysSameCountry   días de viaje a otra ciudad del mismo país
+ * @param daysToShip               días de preparación antes de enviar fuera de la ciudad de la tienda
+ *                                 (dentro de ella se envía el mismo día del pago)
+ * @param kmPerDay                 kilómetros que recorre un envío por día
+ * @param transitDaysSameCity      días de viaje dentro de la ciudad de la tienda
+ * @param transitDaysUnknownCity   días de viaje a una ciudad del país cuya ubicación no se conoce
  * @param transitDaysInternational días de viaje a otro país
+ * @param earlyDeliveryChance      probabilidad (0 a 1) de que el paquete llegue un día antes de lo estimado
+ * @param lateDeliveryChance       probabilidad (0 a 1) de que llegue uno o dos días después
  * @param daysToRequestReturn      días después de la entrega en que el cliente decide si pide devolución
  * @param returnRequestChance      probabilidad (0 a 1) de que el cliente pida la devolución
  * @param daysToResolveReturn      días que tarda la bodega en recibir y revisar el producto devuelto
@@ -21,12 +25,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "simulation")
 public record SimulationProperties(
         boolean enabled,
-        int daysToShip,
         String originCity,
         String originCountry,
+        int daysToShip,
+        int kmPerDay,
         int transitDaysSameCity,
-        int transitDaysSameCountry,
+        int transitDaysUnknownCity,
         int transitDaysInternational,
+        double earlyDeliveryChance,
+        double lateDeliveryChance,
         int daysToRequestReturn,
         double returnRequestChance,
         int daysToResolveReturn,

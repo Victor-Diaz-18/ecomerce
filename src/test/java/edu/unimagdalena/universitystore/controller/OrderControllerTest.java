@@ -70,7 +70,7 @@ class OrderControllerTest {
                         1L,
                         "Street, City, Country",
                         List.of(),
-                        new BigDecimal("100000"), null
+                        new BigDecimal("100000"), null, null
                 );
 
         when(service.create(any(OrderDtos.CreateOrderRequest.class))).thenReturn(response);
@@ -101,7 +101,7 @@ class OrderControllerTest {
                         1L,
                         "Street, City, Country",
                         List.of(),
-                        new BigDecimal("100000"), null
+                        new BigDecimal("100000"), null, null
                 );
 
         when(service.findAll()).thenReturn(List.of(response));
@@ -131,7 +131,7 @@ class OrderControllerTest {
                         1L,
                         "Street, City, Country",
                         List.of(),
-                        new BigDecimal("100000"), null
+                        new BigDecimal("100000"), null, null
                 );
 
         when(service.findById(1L)).thenReturn(response);
@@ -154,7 +154,7 @@ class OrderControllerTest {
                         1L,
                         "Street, City, Country",
                         List.of(),
-                        new BigDecimal("100000"), null
+                        new BigDecimal("100000"), null, null
                 );
 
         when(service.payOrder(1L)).thenReturn(response);
@@ -176,7 +176,7 @@ class OrderControllerTest {
                         1L,
                         "Street, City, Country",
                         List.of(),
-                        new BigDecimal("100000"), null
+                        new BigDecimal("100000"), null, null
                 );
 
         when(service.cancelOrder(1L)).thenReturn(response);
@@ -188,7 +188,7 @@ class OrderControllerTest {
 
     private static OrderDtos.OrderResponse responseWithStatus(String status) {
         return new OrderDtos.OrderResponse(1L, status, LocalDateTime.now(), 1L, "Customer Name",
-                1L, "Street, City, Country", List.of(), new BigDecimal("100000"), null);
+                1L, "Street, City, Country", List.of(), new BigDecimal("100000"), null, null);
     }
 
     @Test

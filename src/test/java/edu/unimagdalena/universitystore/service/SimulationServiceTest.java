@@ -36,16 +36,25 @@ class SimulationServiceTest {
     private PurchaseOrderRepository purchaseOrderRepository;
 
     @Mock
+    private ShippingEstimator shippingEstimator;
+
+    @Mock
     private Random random;
 
     private SimulationService simulationService;
 
     @BeforeEach
     void setUp() {
-        // ship after 1 day, deliver on the estimated date (3 days when there is none), return spin after 2 (20%), resolve after 3 (70% accepted)
-        SimulationProperties properties = new SimulationProperties(true, 1, "Santa Marta", "Colombia", 1, 3, 8, 2, 0.2, 3, 0.7);
+        // return spin 2 days after delivery (20%), returns resolved after 3 days (70% accepted)
+        SimulationProperties properties = properties(true);
+        lenient().when(shippingEstimator.preparationDays(any())).thenReturn(1);
+        lenient().when(shippingEstimator.transitDays(any())).thenReturn(3);
         Clock clock = Clock.fixed(TODAY.atTime(9, 0).atZone(ZONE).toInstant(), ZONE);
-        simulationService = new SimulationService(properties, orderService, purchaseOrderRepository, clock, random);
+        simulationService = new SimulationService(properties, orderService, purchaseOrderRepository, shippingEstimator, clock, random);
+    }
+
+    private static SimulationProperties properties(boolean enabled) {
+        return new SimulationProperties(enabled, "Santa Marta", "Colombia", 1, 350, 1, 3, 8, 0.2, 0.2, 2, 0.2, 3, 0.7);
     }
 
     private PurchaseOrder order(Long id, OrderStatus status, int daysAgo) {
@@ -54,13 +63,23 @@ class SimulationServiceTest {
                 .status(status)
                 .statusChangedOn(TODAY.minusDays(daysAgo))
                 .build();
-        lenient().when(purchaseOrderRepository.searchOrders(null, status)).thenReturn(List.of(order));
+        lenient().when(purchaseOrderRepository.findByStatusWithAddress(status)).thenReturn(List.of(order));
         return order;
     }
 
     @Test
     void shouldShipPaidOrderOnceTheShippingDaysHavePassed() {
         order(1L, OrderStatus.PAID, 1);
+
+        simulationService.advanceOrders();
+
+        verify(orderService).shipOrder(1L);
+    }
+
+    @Test
+    void shouldShipTheSameDayWhenNoPreparationIsNeeded() {
+        order(1L, OrderStatus.PAID, 0);
+        when(shippingEstimator.preparationDays(any())).thenReturn(0);
 
         simulationService.advanceOrders();
 
@@ -88,13 +107,14 @@ class SimulationServiceTest {
     }
 
     @Test
-    void shouldDeliverOnTheEstimatedDateWhenTheOrderHasOne() {
+    void shouldDeliverOnTheRealArrivalDateEvenIfItDiffersFromTheEstimate() {
         PurchaseOrder order = order(1L, OrderStatus.SHIPPED, 5);
-        order.setEstimatedDelivery(TODAY.plusDays(1));
+        order.setEstimatedDelivery(TODAY.minusDays(1));
+        order.setArrivalDate(TODAY.plusDays(1));
         simulationService.advanceOrders();
         verify(orderService, never()).deliverOrder(anyLong());
 
-        order.setEstimatedDelivery(TODAY);
+        order.setArrivalDate(TODAY);
         simulationService.advanceOrders();
         verify(orderService).deliverOrder(1L);
     }
@@ -181,7 +201,7 @@ class SimulationServiceTest {
                 .statusChangedOn(TODAY.minusDays(5)).build();
         PurchaseOrder fine = PurchaseOrder.builder().id(2L).status(OrderStatus.PAID)
                 .statusChangedOn(TODAY.minusDays(5)).build();
-        when(purchaseOrderRepository.searchOrders(null, OrderStatus.PAID)).thenReturn(List.of(failing, fine));
+        when(purchaseOrderRepository.findByStatusWithAddress(OrderStatus.PAID)).thenReturn(List.of(failing, fine));
         when(orderService.shipOrder(1L)).thenThrow(new BusinessException("boom"));
 
         simulationService.advanceOrders();
@@ -191,9 +211,8 @@ class SimulationServiceTest {
 
     @Test
     void scheduledRunDoesNothingWhenDisabled() {
-        SimulationProperties disabled = new SimulationProperties(false, 1, "Santa Marta", "Colombia", 1, 3, 8, 2, 0.2, 3, 0.7);
-        SimulationService service = new SimulationService(disabled, orderService, purchaseOrderRepository,
-                Clock.systemDefaultZone(), random);
+        SimulationService service = new SimulationService(properties(false), orderService, purchaseOrderRepository,
+                shippingEstimator, Clock.systemDefaultZone(), random);
 
         service.scheduledRun();
 

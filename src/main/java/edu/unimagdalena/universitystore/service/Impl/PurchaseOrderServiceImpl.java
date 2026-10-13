@@ -240,11 +240,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         order.setStatus(newStatus);
         order.setStatusChangedOn(LocalDate.now());
 
-        // The promise made at payment is corrected with the real departure date once it ships
+        // The estimate is the promise made at payment; the real arrival is settled when the order ships
         if (newStatus == OrderStatus.PAID) {
-            order.setEstimatedDelivery(LocalDate.now().plusDays(shippingEstimator.daysFromPaymentToDelivery(order.getAddress())));
+            order.setEstimatedDelivery(shippingEstimator.estimatedDelivery(LocalDate.now(), order.getAddress()));
         } else if (newStatus == OrderStatus.SHIPPED) {
-            order.setEstimatedDelivery(LocalDate.now().plusDays(shippingEstimator.transitDays(order.getAddress())));
+            order.setArrivalDate(shippingEstimator.actualArrival(LocalDate.now(), order.getAddress()));
+        } else if (newStatus == OrderStatus.DELIVERED && oldStatus == OrderStatus.SHIPPED) {
+            order.setDeliveredOn(LocalDate.now());
         }
 
         OrderStatusHistory history = OrderStatusHistory.builder()
