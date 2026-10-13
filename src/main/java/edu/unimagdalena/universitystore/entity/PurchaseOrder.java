@@ -34,9 +34,17 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "status_changed_on")
     private LocalDate statusChangedOn;
 
-    // Promised arrival date, worked out from how far the shipping address is
+    // Date promised to the customer at payment, worked out from how far the shipping address is
     @Column(name = "estimated_delivery")
     private LocalDate estimatedDelivery;
+
+    // Day the package will really arrive (may be earlier or later than promised); decided when it ships
+    @Column(name = "arrival_date")
+    private LocalDate arrivalDate;
+
+    // Day it was actually delivered
+    @Column(name = "delivered_on")
+    private LocalDate deliveredOn;
 
     // The automatic flow decides only once per order whether the customer asks for a return
     @Builder.Default

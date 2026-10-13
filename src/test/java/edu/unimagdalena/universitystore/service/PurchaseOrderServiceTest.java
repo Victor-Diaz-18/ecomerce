@@ -100,7 +100,7 @@ class PurchaseOrderServiceImplTest {
             return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
                     o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
                     o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
-                    List.of(), o.getTotal(), o.getEstimatedDelivery());
+                    List.of(), o.getTotal(), o.getEstimatedDelivery(), o.getDeliveredOn());
         });
 
         OrderResponse result = purchaseOrderService.payOrder(1L);
@@ -148,7 +148,7 @@ class PurchaseOrderServiceImplTest {
             return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
                     o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
                     o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
-                    List.of(), o.getTotal(), o.getEstimatedDelivery());
+                    List.of(), o.getTotal(), o.getEstimatedDelivery(), o.getDeliveredOn());
         });
 
         List<OrderResponse> result = purchaseOrderService.findAll();
@@ -169,7 +169,7 @@ class PurchaseOrderServiceImplTest {
             return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
                     o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
                     o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
-                    List.of(), o.getTotal(), o.getEstimatedDelivery());
+                    List.of(), o.getTotal(), o.getEstimatedDelivery(), o.getDeliveredOn());
         });
 
         OrderResponse result = purchaseOrderService.findById(1L);
@@ -203,7 +203,7 @@ class PurchaseOrderServiceImplTest {
             return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), 
                     o.getCustomer() != null ? o.getCustomer().getId() : null, "Customer", 
                     o.getAddress() != null ? o.getAddress().getId() : null, "Address", 
-                    List.of(), o.getTotal(), o.getEstimatedDelivery());
+                    List.of(), o.getTotal(), o.getEstimatedDelivery(), o.getDeliveredOn());
         });
 
         OrderResponse result = purchaseOrderService.cancelOrder(1L);
@@ -255,7 +255,7 @@ class PurchaseOrderServiceImplTest {
         when(mapper.toResponse(any())).thenAnswer(inv -> {
             var o = inv.getArgument(0, edu.unimagdalena.universitystore.entity.PurchaseOrder.class);
             return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(),
-                    null, "Customer", null, "Address", List.of(), o.getTotal(), o.getEstimatedDelivery());
+                    null, "Customer", null, "Address", List.of(), o.getTotal(), o.getEstimatedDelivery(), o.getDeliveredOn());
         });
 
         OrderResponse result = purchaseOrderService.returnOrder(1L, "Cliente se arrepintio");
@@ -291,7 +291,7 @@ class PurchaseOrderServiceImplTest {
         when(mapper.toResponse(any())).thenAnswer(inv -> {
             PurchaseOrder o = inv.getArgument(0, PurchaseOrder.class);
             return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(),
-                    null, "Customer", null, "Address", List.of(), o.getTotal(), o.getEstimatedDelivery());
+                    null, "Customer", null, "Address", List.of(), o.getTotal(), o.getEstimatedDelivery(), o.getDeliveredOn());
         });
     }
 
@@ -340,15 +340,21 @@ class PurchaseOrderServiceImplTest {
     }
 
     @Test
-    void payingAndShippingSetTheEstimatedDeliveryDate() {
+    void estimateIsSetAtPaymentAndRealDeliveryDateIsKeptSeparately() {
         PurchaseOrder order = orderWithStatus(OrderStatus.CREATED);
         stubSaveAndMapper();
-        when(shippingEstimator.daysFromPaymentToDelivery(any())).thenReturn(4);
-        when(shippingEstimator.transitDays(any())).thenReturn(3);
+        LocalDate today = LocalDate.now();
+        when(shippingEstimator.estimatedDelivery(eq(today), any())).thenReturn(today.plusDays(4));
+        when(shippingEstimator.actualArrival(eq(today), any())).thenReturn(today.plusDays(5));
 
-        assertEquals(LocalDate.now().plusDays(4), purchaseOrderService.payOrder(1L).estimatedDelivery());
-        assertEquals(LocalDate.now().plusDays(3), purchaseOrderService.shipOrder(1L).estimatedDelivery());
-        assertEquals(LocalDate.now(), order.getStatusChangedOn());
+        assertEquals(today.plusDays(4), purchaseOrderService.payOrder(1L).estimatedDelivery());
+
+        purchaseOrderService.shipOrder(1L);
+        assertEquals(today.plusDays(5), order.getArrivalDate());
+
+        OrderResponse delivered = purchaseOrderService.deliverOrder(1L);
+        assertEquals(today.plusDays(4), delivered.estimatedDelivery());
+        assertEquals(today, delivered.deliveredOn());
     }
 
     @Test

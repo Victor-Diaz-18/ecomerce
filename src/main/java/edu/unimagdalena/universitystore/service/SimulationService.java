@@ -31,6 +31,7 @@ public class SimulationService {
     private final SimulationProperties properties;
     private final PurchaseOrderService orderService;
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final ShippingEstimator shippingEstimator;
     private final Clock clock;
     private final Random random;
 
@@ -51,12 +52,12 @@ public class SimulationService {
         List<PurchaseOrder> returnRequested = ordersIn(OrderStatus.RETURN_REQUESTED);
 
         paid.forEach(order -> process(order, () -> {
-            if (daysInStatus(order, today) >= properties.daysToShip()) {
+            if (daysInStatus(order, today) >= shippingEstimator.preparationDays(order.getAddress())) {
                 orderService.shipOrder(order.getId());
             }
         }));
         shipped.forEach(order -> process(order, () -> {
-            if (!today.isBefore(deliveryDate(order))) {
+            if (!today.isBefore(arrivalDate(order))) {
                 orderService.deliverOrder(order.getId());
             }
         }));
@@ -86,26 +87,26 @@ public class SimulationService {
     }
 
     // Orders from before this feature have no status date: their last modification is the best guess
-    private long daysInStatus(PurchaseOrder order, LocalDate today) {
-        LocalDate since = order.getStatusChangedOn() != null
+    private LocalDate statusDate(PurchaseOrder order) {
+        return order.getStatusChangedOn() != null
                 ? order.getStatusChangedOn()
                 : order.getUpdatedAt().toLocalDate();
-        return ChronoUnit.DAYS.between(since, today);
     }
 
-    // Orders shipped before estimates existed travel the standard same-country time
-    private LocalDate deliveryDate(PurchaseOrder order) {
-        if (order.getEstimatedDelivery() != null) {
-            return order.getEstimatedDelivery();
+    private long daysInStatus(PurchaseOrder order, LocalDate today) {
+        return ChronoUnit.DAYS.between(statusDate(order), today);
+    }
+
+    // The real arrival was decided when the order shipped; older shipments fall back to the planned trip
+    private LocalDate arrivalDate(PurchaseOrder order) {
+        if (order.getArrivalDate() != null) {
+            return order.getArrivalDate();
         }
-        LocalDate shippedOn = order.getStatusChangedOn() != null
-                ? order.getStatusChangedOn()
-                : order.getUpdatedAt().toLocalDate();
-        return shippedOn.plusDays(properties.transitDaysSameCountry());
+        return statusDate(order).plusDays(shippingEstimator.transitDays(order.getAddress()));
     }
 
     private List<PurchaseOrder> ordersIn(OrderStatus status) {
-        return purchaseOrderRepository.searchOrders(null, status);
+        return purchaseOrderRepository.findByStatusWithAddress(status);
     }
 
     // One order failing (e.g. someone changed it at the same moment) must not stop the rest

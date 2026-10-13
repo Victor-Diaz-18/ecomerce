@@ -45,7 +45,8 @@ public class OrderDtos {
             String addressLine,
             List<OrderItemResponse> items,
             BigDecimal total,
-            LocalDate estimatedDelivery
+            LocalDate estimatedDelivery,
+            LocalDate deliveredOn
     ) implements Serializable {}
 
     public record OrderStatusHistoryResponse(

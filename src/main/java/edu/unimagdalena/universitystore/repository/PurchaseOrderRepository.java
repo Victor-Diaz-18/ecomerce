@@ -23,6 +23,10 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     """)
     List<PurchaseOrder> searchOrders(Long customerId, OrderStatus status);
 
+    // With the address already loaded, for the automatic flow that works out shipping times
+    @Query("SELECT o FROM PurchaseOrder o JOIN FETCH o.address WHERE o.deletedAt IS NULL AND o.status = :status")
+    List<PurchaseOrder> findByStatusWithAddress(OrderStatus status);
+
     @Modifying
     @Transactional
     @Query("UPDATE PurchaseOrder o SET o.deletedAt = :now WHERE o.id = :id")

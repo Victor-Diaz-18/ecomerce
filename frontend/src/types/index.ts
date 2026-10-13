@@ -58,6 +58,7 @@ export interface Order {
   items: OrderItem[];
   total?: number;
   estimatedDelivery?: string;
+  deliveredOn?: string;
 }
 
 export type OrderStatus = 'CREATED' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'RETURN_REQUESTED' | 'CANCELLED' | 'RETURNED';

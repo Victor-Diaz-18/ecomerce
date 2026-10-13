@@ -109,14 +109,28 @@ export function Orders() {
     return colors[status] || '#6b7280';
   };
 
-  // Only orders that are still on their way to the customer have a pending delivery date
-  const estimatedDelivery = (order: Order) => {
-    if (!order.estimatedDelivery || (order.status !== 'PAID' && order.status !== 'SHIPPED')) return '—';
-    // "T00:00" keeps the date in local time; a bare "2026-10-16" would be read as UTC and show the day before
-    return new Date(`${order.estimatedDelivery}T00:00`).toLocaleDateString();
+  // "T00:00" keeps the date in local time; a bare "2026-10-16" would be read as UTC and show the day before
+  const toDate = (day: string) => new Date(`${day}T00:00`);
+
+  // On its way: the date promised to the customer. Once delivered: the real date and how it compares
+  const deliveryInfo = (order: Order) => {
+    if (order.deliveredOn) {
+      const delivered = toDate(order.deliveredOn);
+      let note = '';
+      if (order.estimatedDelivery) {
+        const diff = Math.round((delivered.getTime() - toDate(order.estimatedDelivery).getTime()) / 86400000);
+        const days = `${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'día' : 'días'}`;
+        note = diff === 0 ? ' (a tiempo)' : diff < 0 ? ` (${days} antes)` : ` (${days} tarde)`;
+      }
+      return `Entregada el ${delivered.toLocaleDateString()}${note}`;
+    }
+    if (order.estimatedDelivery && (order.status === 'PAID' || order.status === 'SHIPPED')) {
+      return `Estimada: ${toDate(order.estimatedDelivery).toLocaleDateString()}`;
+    }
+    return '—';
   };
 
-  const filteredOrders =orders?.filter(o => {
+  const filteredOrders = orders?.filter(o => {
     if (searchCustomer && o.customerId !== Number(searchCustomer)) return false;
     if (searchStatus && o.status !== searchStatus) return false;
     return true;
@@ -156,7 +170,7 @@ export function Orders() {
               <th>Total</th>
               <th>Estado</th>
               <th>Fecha</th>
-              <th>Entrega estimada</th>
+              <th>Entrega</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -170,7 +184,7 @@ export function Orders() {
                 <td>${order.total?.toFixed(2) ?? '0.00'}</td>
                 <td><span className="status-badge" style={{ background: statusColor(order.status) }}>{order.status}</span></td>
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                <td>{estimatedDelivery(order)}</td>
+                <td>{deliveryInfo(order)}</td>
                 <td className="actions">
                   {order.status === 'CREATED' && (
                     <>
