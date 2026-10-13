@@ -102,6 +102,31 @@ class AddressServiceImplTest {
     }
 
     @Test
+    void shouldUpdateAddressAndRecalculateItsDepartment() {
+        Address address = Address.builder().id(1L).street("Calle 30").city("Santa Marta")
+                .department("Magdalena").country("Colombia").build();
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+        when(addressRepository.save(address)).thenReturn(address);
+
+        Address result = addressService.update(1L, "Carrera 7 # 45-10", "Chapinero", "bogota");
+
+        assertEquals("Carrera 7 # 45-10", result.getStreet());
+        assertEquals("Chapinero", result.getNeighborhood());
+        assertEquals("Bogotá", result.getCity());
+        assertEquals("Bogotá D.C.", result.getDepartment());
+    }
+
+    @Test
+    void shouldNotUpdateAddressToAnUnknownCity() {
+        Address address = Address.builder().id(1L).street("Calle 30").city("Santa Marta").build();
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+
+        assertThrows(ValidationException.class, () -> addressService.update(1L, "Calle 1", "Centro", "Macondo"));
+
+        verify(addressRepository, never()).save(any());
+    }
+
+    @Test
     void shouldFindAddressesByCustomer() {
         when(addressRepository.findByCustomerId(1L))
                 .thenReturn(List.of(new Address()));

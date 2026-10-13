@@ -1,6 +1,6 @@
 import type {
   Category, Customer, Address, Department, Product, Inventory, Order, OrderStatus, OrderStatusHistory,
-  CreateCategoryRequest, CreateCustomerRequest, UpdateCustomerRequest, CreateAddressRequest,
+  CreateCategoryRequest, CreateCustomerRequest, UpdateCustomerRequest, CreateAddressRequest, UpdateAddressRequest,
   CreateProductRequest, UpdateProductRequest, CreateInventoryRequest, UpdateInventoryRequest,
   CreateOrderRequest, PageResponse, MonthlyIncomeResponse, BestSellingProductResponse,
   TopCustomerResponse, IncomeByStatusResponse,
@@ -46,6 +46,7 @@ export const customerApi = {
 
 export const addressApi = {
   create: (data: CreateAddressRequest) => request<Address>('/addresses', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: UpdateAddressRequest) => request<Address>(`/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/addresses/${id}`, { method: 'DELETE' }),
 };
 
