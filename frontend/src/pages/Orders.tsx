@@ -18,6 +18,10 @@ export function Orders() {
   const [selQty, setSelQty] = useState(1);
   const [searchCustomer, setSearchCustomer] = useState('');
   const [searchStatus, setSearchStatus] = useState('');
+  // Order whose delivery address is being changed, with the addresses its customer can choose from
+  const [addressOrder, setAddressOrder] = useState<Order | null>(null);
+  const [addressOptions, setAddressOptions] = useState<Address[]>([]);
+  const [newAddressId, setNewAddressId] = useState('');
 
   // The backend ships and delivers orders on its own, so keep the table up to date
   useEffect(() => {
@@ -47,6 +51,26 @@ export function Orders() {
     setSelectedAddress('');
     if (customerId) loadAddresses(Number(customerId));
     else setAddresses([]);
+  };
+
+  const addressLabel = (a: Address) => [a.street, a.neighborhood, a.city, a.department].filter(Boolean).join(', ');
+
+  const openAddressModal = async (order: Order) => {
+    setAddressOptions(await customerApi.getAddresses(order.customerId));
+    setNewAddressId(String(order.addressId));
+    setAddressOrder(order);
+  };
+
+  const handleChangeAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addressOrder) return;
+    try {
+      await orderApi.changeAddress(addressOrder.id, Number(newAddressId));
+      setAddressOrder(null);
+      refetch();
+    } catch {
+      alert('No se pudo cambiar la dirección. Si la orden ya fue enviada, la dirección no se puede cambiar.');
+    }
   };
 
   const addItem = () => {
@@ -192,6 +216,9 @@ export function Orders() {
                       <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'cancel')}>Cancelar</button>
                     </>
                   )}
+                  {(order.status === 'CREATED' || order.status === 'PAID') && (
+                    <button className="btn btn-sm btn-secondary" onClick={() => openAddressModal(order)}>Cambiar dirección</button>
+                  )}
                   {order.status === 'PAID' && (
                     <button className="btn btn-sm btn-danger" onClick={() => handleStatus(order.id, 'return')}>Devolver</button>
                   )}
@@ -226,7 +253,7 @@ export function Orders() {
             <select value={selectedAddress} onChange={e => setSelectedAddress(e.target.value)} required>
               <option value="">Selecciona</option>
               {addresses.map(a => (
-                <option key={a.id} value={a.id}>{a.street}, {a.city}, {a.country}</option>
+                <option key={a.id} value={a.id}>{addressLabel(a)}</option>
               ))}
             </select>
           </div>
@@ -258,6 +285,22 @@ export function Orders() {
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
             <button type="submit" className="btn btn-primary" disabled={orderItems.length === 0}>Crear orden</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={addressOrder !== null} onClose={() => setAddressOrder(null)} title={`Cambiar dirección de la orden #${addressOrder?.id ?? ''}`}>
+        <form onSubmit={handleChangeAddress}>
+          <div className="form-group">
+            <label>Dirección de entrega</label>
+            <select value={newAddressId} onChange={e => setNewAddressId(e.target.value)} required>
+              {addressOptions.map(a => <option key={a.id} value={a.id}>{addressLabel(a)}</option>)}
+            </select>
+          </div>
+          <p className="auto-hint">Solo se puede cambiar antes de que la orden sea enviada. Las direcciones se agregan o editan en Clientes.</p>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={() => setAddressOrder(null)}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Guardar</button>
           </div>
         </form>
       </Modal>

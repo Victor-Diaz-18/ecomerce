@@ -64,6 +64,10 @@ public class PurchaseOrder extends BaseEntity {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
+    // Copy of the address taken when the order ships: from then on, editing the address no longer changes it
+    @Column(name = "shipping_address", length = 500)
+    private String shippingAddress;
+
     @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items = new ArrayList<>();

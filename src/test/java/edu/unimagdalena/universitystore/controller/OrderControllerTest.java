@@ -192,6 +192,17 @@ class OrderControllerTest {
     }
 
     @Test
+    void shouldChangeAddress() throws Exception {
+        when(service.changeAddress(1L, 8L)).thenReturn(responseWithStatus("PAID"));
+
+        mockMvc.perform(patch("/api/v1/orders/1/address")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"addressId\":8}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PAID"));
+    }
+
+    @Test
     void shouldConfirmReturn() throws Exception {
         when(service.confirmReturn(1L)).thenReturn(responseWithStatus("RETURNED"));
 

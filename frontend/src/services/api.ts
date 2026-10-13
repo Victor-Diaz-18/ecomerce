@@ -87,6 +87,7 @@ export const orderApi = {
   ship: (id: number) => request<Order>(`/orders/${id}/ship`, { method: 'PATCH' }),
   deliver: (id: number) => request<Order>(`/orders/${id}/deliver`, { method: 'PATCH' }),
   cancel: (id: number) => request<Order>(`/orders/${id}/cancel`, { method: 'PATCH' }),
+  changeAddress: (id: number, addressId: number) => request<Order>(`/orders/${id}/address`, { method: 'PATCH', body: JSON.stringify({ addressId }) }),
   return: (id: number, reason?: string) => request<Order>(`/orders/${id}/return`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
   confirmReturn: (id: number) => request<Order>(`/orders/${id}/return/confirm`, { method: 'PATCH' }),
   rejectReturn: (id: number, reason?: string) => request<Order>(`/orders/${id}/return/reject`, { method: 'PATCH', body: JSON.stringify({ reason }) }),

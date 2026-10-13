@@ -27,6 +27,9 @@ class AddressServiceImplTest {
     @Mock
     private CustomerRepository customerRepository;
 
+    @Mock
+    private PurchaseOrderService purchaseOrderService;
+
     @InjectMocks
     private AddressServiceImpl addressService;
 
@@ -114,6 +117,7 @@ class AddressServiceImplTest {
         assertEquals("Chapinero", result.getNeighborhood());
         assertEquals("Bogotá", result.getCity());
         assertEquals("Bogotá D.C.", result.getDepartment());
+        verify(purchaseOrderService).refreshEstimatedDelivery(1L);
     }
 
     @Test
