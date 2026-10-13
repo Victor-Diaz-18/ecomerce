@@ -5,6 +5,18 @@ import { Customer, Address } from '../types';
 import { Modal } from '../components/Modal';
 import { useToast } from '../context/ToastContext';
 
+// The store only ships inside the country, so the country is not something the user types
+const SHIPPING_COUNTRY = 'Colombia';
+
+// "Calle 30 #3-90, Santa Marta" -> street and city; the city is whatever follows the last comma
+function parseAddress(text: string): { street: string; city: string } | null {
+  const parts = text.split(',').map(p => p.trim()).filter(Boolean);
+  // Out of habit people still end with the country: drop it
+  if (parts.length > 2 && parts[parts.length - 1].toLowerCase() === SHIPPING_COUNTRY.toLowerCase()) parts.pop();
+  if (parts.length < 2) return null;
+  return { street: parts.slice(0, -1).join(', '), city: parts[parts.length - 1] };
+}
+
 export function Customers() {
   const { data: customers, loading, refetch } = useApi(() => customerApi.getAll(), []);
   const { showToast } = useToast();
@@ -42,17 +54,16 @@ export function Customers() {
 
   const addAddress = async () => {
     if (!newAddress.trim()) return;
-    const parts = newAddress.split(',').map(p => p.trim()).filter(Boolean);
-    if (parts.length < 3) {
-      alert('Formato: Calle, Ciudad, País');
+    const parsed = parseAddress(newAddress);
+    if (!parsed) {
+      alert('Formato: Calle, Ciudad');
       return;
     }
-    const [street, city, country] = parts;
     if (editingCustomer) {
-      const addr = await createAddress({ street, city, country, customerId: editingCustomer.id });
+      const addr = await createAddress({ ...parsed, country: SHIPPING_COUNTRY, customerId: editingCustomer.id });
       if (addr) setAddresses(prev => [...prev, addr]);
     } else {
-      setPendingAddresses(prev => [...prev, newAddress]);
+      setPendingAddresses(prev => [...prev, `${parsed.street}, ${parsed.city}`]);
     }
     setNewAddress('');
   };
@@ -76,9 +87,9 @@ export function Customers() {
       }
       if (customerId) {
         for (const addr of pendingAddresses) {
-          const parts = addr.split(',').map(p => p.trim()).filter(Boolean);
-          if (parts.length === 3) {
-            await createAddress({ street: parts[0], city: parts[1], country: parts[2], customerId: customerId! });
+          const parsed = parseAddress(addr);
+          if (parsed) {
+            await createAddress({ ...parsed, country: SHIPPING_COUNTRY, customerId: customerId! });
           }
         }
       }
@@ -168,19 +179,19 @@ export function Customers() {
               ))}
               {pendingAddresses.map((addr, i) => (
                 <div key={i} className="address-item pending">
-                  <span>{addr}</span>
+                  <span>{addr}, {SHIPPING_COUNTRY}</span>
                   <span className="pending-badge">Pendiente</span>
                 </div>
               ))}
             </div>
           </div>
           <div className="form-group">
-            <label>Nueva dirección</label>
+            <label>Nueva dirección (solo envíos dentro de {SHIPPING_COUNTRY})</label>
             <input
               type="text"
               value={newAddress}
               onChange={e => setNewAddress(e.target.value)}
-              placeholder="Calle 30 #3-90, Santa Marta, Colombia"
+              placeholder="Calle 30 #3-90, Santa Marta"
             />
             <button type="button" className="btn btn-secondary btn-sm" onClick={addAddress}>Agregar dirección</button>
           </div>
