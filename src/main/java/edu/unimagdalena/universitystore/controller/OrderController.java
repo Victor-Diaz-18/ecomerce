@@ -81,6 +81,13 @@ public class OrderController {
         return ResponseEntity.ok(service.deliverOrder(id));
     }
 
+    @PatchMapping("/{id}/address")
+    public ResponseEntity<OrderResponse> changeAddress(
+            @PathVariable Long id,
+            @RequestBody Map<String, Long> body) {
+        return ResponseEntity.ok(service.changeAddress(id, body.get("addressId")));
+    }
+
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<OrderResponse> cancel(@PathVariable Long id) {
         return ResponseEntity.ok(service.cancelOrder(id));

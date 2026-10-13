@@ -14,6 +14,8 @@ public interface PurchaseOrderService {
     OrderResponse cancelOrder(Long orderId);
     OrderResponse returnOrder(Long orderId, String reason);
     OrderResponse confirmReturn(Long orderId);
+    OrderResponse changeAddress(Long orderId, Long addressId);
+    void refreshEstimatedDelivery(Long addressId);
     OrderResponse rejectReturn(Long orderId, String reason);
     List<OrderResponse> findAll();
     OrderResponse findById(Long id);

@@ -208,6 +208,47 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return transitionStatusInternal(order, OrderStatus.DELIVERED, reason);
     }
 
+    @Override
+    @Transactional
+    public OrderResponse changeAddress(Long orderId, Long addressId) {
+        PurchaseOrder order = purchaseOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.PAID) {
+            throw new BusinessException("The delivery address can only be changed before the order is shipped");
+        }
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
+        if (!address.getCustomer().getId().equals(order.getCustomer().getId())) {
+            throw new ValidationException("The address does not belong to the customer of the order");
+        }
+        if (!shippingEstimator.deliversTo(address)) {
+            throw new ValidationException("Orders can only be shipped to addresses in Colombia");
+        }
+
+        order.setAddress(address);
+        refreshEstimate(order);
+
+        return mapper.toResponse(purchaseOrderRepository.save(order));
+    }
+
+    // An edited address may now be in another city: paid orders waiting to ship get a new promise
+    @Override
+    @Transactional
+    public void refreshEstimatedDelivery(Long addressId) {
+        for (PurchaseOrder order : purchaseOrderRepository.findByAddressIdAndStatus(addressId, OrderStatus.PAID)) {
+            refreshEstimate(order);
+            purchaseOrderRepository.save(order);
+        }
+    }
+
+    private void refreshEstimate(PurchaseOrder order) {
+        if (order.getStatus() == OrderStatus.PAID && order.getShipDate() != null) {
+            order.setEstimatedDelivery(shippingEstimator.estimatedDelivery(order.getShipDate(), order.getAddress()));
+        }
+    }
+
     private PurchaseOrder findReturnRequested(Long orderId) {
         PurchaseOrder order = purchaseOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
@@ -250,6 +291,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             order.setEstimatedDelivery(shippingEstimator.estimatedDelivery(order.getShipDate(), order.getAddress()));
         } else if (newStatus == OrderStatus.SHIPPED) {
             order.setArrivalDate(shippingEstimator.actualArrival(LocalDate.now(), order.getAddress()));
+            // The package is on its way to this address: later edits must not change where it went
+            if (order.getAddress() != null) {
+                order.setShippingAddress(order.getAddress().toLine());
+            }
         } else if (newStatus == OrderStatus.DELIVERED && oldStatus == OrderStatus.SHIPPED) {
             order.setDeliveredOn(LocalDate.now());
         }

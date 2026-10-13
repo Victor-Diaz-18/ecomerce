@@ -23,6 +23,14 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     """)
     List<PurchaseOrder> searchOrders(Long customerId, OrderStatus status);
 
+    @Query("SELECT o FROM PurchaseOrder o JOIN FETCH o.address WHERE o.deletedAt IS NULL AND o.status = :status AND o.address.id = :addressId")
+    List<PurchaseOrder> findByAddressIdAndStatus(Long addressId, OrderStatus status);
+
+    // Orders that already left the store without a frozen copy of their address (deleted ones too)
+    @Query("SELECT o FROM PurchaseOrder o JOIN FETCH o.address WHERE o.shippingAddress IS NULL "
+            + "AND o.status IN ('SHIPPED', 'DELIVERED', 'RETURN_REQUESTED', 'RETURNED')")
+    List<PurchaseOrder> findShippedWithoutAddressCopy();
+
     // With the address already loaded, for the automatic flow that works out shipping times
     @Query("SELECT o FROM PurchaseOrder o JOIN FETCH o.address WHERE o.deletedAt IS NULL AND o.status = :status")
     List<PurchaseOrder> findByStatusWithAddress(OrderStatus status);

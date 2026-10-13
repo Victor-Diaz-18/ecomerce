@@ -15,7 +15,7 @@ public interface OrderMapper {
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.name")
     @Mapping(target = "addressId", source = "address.id")
-    @Mapping(target = "addressLine", expression = "java(order.getAddress() != null ? order.getAddress().getStreet() + \", \" + order.getAddress().getCity() + \", \" + order.getAddress().getCountry() : null)")
+    @Mapping(target = "addressLine", expression = "java(order.getShippingAddress() != null ? order.getShippingAddress() : order.getAddress() != null ? order.getAddress().toLine() : null)")
     @Mapping(target = "status", expression = "java(order.getStatus() != null ? order.getStatus().name() : null)")
     @Mapping(target = "items", expression = "java(order.getItems() != null ? order.getItems().stream().map(this::toItemResponse).toList() : java.util.List.of())")
     OrderDtos.OrderResponse toResponse(PurchaseOrder order);

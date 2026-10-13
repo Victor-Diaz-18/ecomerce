@@ -384,6 +384,73 @@ class PurchaseOrderServiceImplTest {
         assertEquals(today, delivered.deliveredOn());
     }
 
+    private Address addressOf(Long id, Long customerId, String city) {
+        return Address.builder().id(id).street("Calle 1 # 2-3").city(city).country("Colombia")
+                .customer(Customer.builder().id(customerId).build()).build();
+    }
+
+    @Test
+    void shippingFreezesTheDeliveryAddress() {
+        PurchaseOrder order = orderWithStatus(OrderStatus.PAID);
+        Address address = addressOf(7L, 1L, "Santa Marta");
+        order.setAddress(address);
+        stubSaveAndMapper();
+
+        purchaseOrderService.shipOrder(1L);
+        address.setCity("Bogotá");
+
+        assertEquals("Calle 1 # 2-3, Santa Marta, Colombia", order.getShippingAddress());
+    }
+
+    @Test
+    void paidOrderCanMoveToAnotherAddressOfTheSameCustomer() {
+        PurchaseOrder order = orderWithStatus(OrderStatus.PAID);
+        order.setCustomer(Customer.builder().id(1L).build());
+        order.setShipDate(LocalDate.of(2026, 10, 13));
+        Address bogota = addressOf(8L, 1L, "Bogotá");
+        when(addressRepository.findById(8L)).thenReturn(Optional.of(bogota));
+        when(shippingEstimator.estimatedDelivery(LocalDate.of(2026, 10, 13), bogota)).thenReturn(LocalDate.of(2026, 10, 16));
+        stubSaveAndMapper();
+
+        OrderResponse result = purchaseOrderService.changeAddress(1L, 8L);
+
+        assertSame(bogota, order.getAddress());
+        assertEquals(LocalDate.of(2026, 10, 16), result.estimatedDelivery());
+    }
+
+    @Test
+    void shippedOrderCannotChangeAddress() {
+        orderWithStatus(OrderStatus.SHIPPED);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.changeAddress(1L, 8L));
+
+        assertEquals("The delivery address can only be changed before the order is shipped", exception.getMessage());
+        verifyNoInteractions(addressRepository);
+    }
+
+    @Test
+    void orderCannotUseAnAddressOfAnotherCustomer() {
+        PurchaseOrder order = orderWithStatus(OrderStatus.CREATED);
+        order.setCustomer(Customer.builder().id(1L).build());
+        when(addressRepository.findById(8L)).thenReturn(Optional.of(addressOf(8L, 2L, "Bogotá")));
+
+        assertThrows(ValidationException.class, () -> purchaseOrderService.changeAddress(1L, 8L));
+    }
+
+    @Test
+    void editingAnAddressRefreshesTheEstimateOfPaidOrders() {
+        PurchaseOrder order = PurchaseOrder.builder().id(1L).status(OrderStatus.PAID)
+                .shipDate(LocalDate.of(2026, 10, 13)).address(addressOf(8L, 1L, "Bogotá")).build();
+        when(purchaseOrderRepository.findByAddressIdAndStatus(8L, OrderStatus.PAID)).thenReturn(List.of(order));
+        when(shippingEstimator.estimatedDelivery(eq(LocalDate.of(2026, 10, 13)), any())).thenReturn(LocalDate.of(2026, 10, 16));
+
+        purchaseOrderService.refreshEstimatedDelivery(8L);
+
+        assertEquals(LocalDate.of(2026, 10, 16), order.getEstimatedDelivery());
+        verify(purchaseOrderRepository).save(order);
+    }
+
     @Test
     void shouldRejectSecondReturnRequest() {
         orderWithStatus(OrderStatus.RETURN_REQUESTED);

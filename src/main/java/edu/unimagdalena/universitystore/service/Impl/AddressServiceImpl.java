@@ -10,6 +10,7 @@ import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.AddressRepository;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.service.AddressService;
+import edu.unimagdalena.universitystore.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.List;
 public class AddressServiceImpl implements AddressService {
     private final AddressRepository addressRepository;
     private final CustomerRepository customerRepository;
+    private final PurchaseOrderService purchaseOrderService;
 
     @Override
     @Transactional
@@ -49,7 +51,9 @@ public class AddressServiceImpl implements AddressService {
         address.setNeighborhood(neighborhood);
         applyCity(address, city);
 
-        return addressRepository.save(address);
+        Address saved = addressRepository.save(address);
+        purchaseOrderService.refreshEstimatedDelivery(saved.getId());
+        return saved;
     }
 
     // The city must be one the store ships to; its official spelling and department come from the list
