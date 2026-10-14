@@ -6,7 +6,7 @@ import { Modal } from '../../components/Modal';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
 import { OrderStatusPill } from '../../components/StatusPill';
-import { day, money, paymentDeadline } from './shared';
+import { RETURN_DAYS, canStillReturn, day, money, paymentDeadline, returnDeadline } from './shared';
 
 // What the customer sees for each status (the admin uses shorter names)
 const CUSTOMER_LABEL: Partial<Record<OrderStatus, string>> = {
@@ -30,6 +30,7 @@ export function MyOrders() {
   // Order whose return is being requested, with the reason being typed
   const [returning, setReturning] = useState<Order | null>(null);
   const [reason, setReason] = useState('');
+  const [meetsConditions, setMeetsConditions] = useState(false);
   // Order whose delivery address is being changed
   const [moving, setMoving] = useState<Order | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -53,6 +54,7 @@ export function MyOrders() {
 
   const openReturn = (order: Order) => {
     setReason('');
+    setMeetsConditions(false);
     setReturning(order);
   };
 
@@ -110,6 +112,13 @@ export function MyOrders() {
             ))}
           </ul>
           <p>Enviar a: {order.addressLine}</p>
+          {order.status === 'DELIVERED' && returnDeadline(order) && (
+            <p className="auto-hint">
+              {canStillReturn(order)
+                ? `Puedes pedir una devolución hasta el ${returnDeadline(order)!.toLocaleDateString()}.`
+                : `El plazo de devolución terminó el ${returnDeadline(order)!.toLocaleDateString()}.`}
+            </p>
+          )}
           {order.status === 'CREATED' && (
             <p className="line-warning">Págala antes del {paymentDeadline(order)}; si no, se cancela y los productos vuelven a la tienda.</p>
           )}
@@ -128,7 +137,7 @@ export function MyOrders() {
               {order.status === 'PAID' && (
                 <button className="btn btn-sm btn-danger" onClick={() => openReturn(order)}>Devolver compra</button>
               )}
-              {order.status === 'DELIVERED' && (
+              {order.status === 'DELIVERED' && canStillReturn(order) && (
                 <button className="btn btn-sm btn-danger" onClick={() => openReturn(order)}>Solicitar devolución</button>
               )}
             </div>
@@ -143,13 +152,27 @@ export function MyOrders() {
               ? 'Tu orden aún no ha salido de la tienda: se cancela y te devolvemos el dinero.'
               : 'Revisaremos el producto cuando lo recibamos de vuelta; el reembolso se hace si se acepta la devolución.'}
           </p>
+          {returning?.status === 'DELIVERED' && (
+            <div className="return-policy">
+              <strong>Política de devoluciones</strong>
+              <ul>
+                <li>Tienes {RETURN_DAYS} días desde la entrega para pedirla.</li>
+                <li>El producto debe estar sin usar, con sus etiquetas y en su empaque original.</li>
+                <li>El reembolso se hace cuando recibamos el producto y confirmemos que cumple las condiciones.</li>
+              </ul>
+              <label className="checkbox">
+                <input type="checkbox" checked={meetsConditions} onChange={e => setMeetsConditions(e.target.checked)} />
+                El producto cumple estas condiciones
+              </label>
+            </div>
+          )}
           <div className="form-group">
             <label htmlFor="return-reason">Motivo (opcional)</label>
             <textarea id="return-reason" rows={3} maxLength={250} value={reason} onChange={e => setReason(e.target.value)} />
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setReturning(null)}>Volver</button>
-            <button type="submit" className="btn btn-danger">Confirmar devolución</button>
+            <button type="submit" className="btn btn-danger" disabled={returning?.status === 'DELIVERED' && !meetsConditions}>Confirmar devolución</button>
           </div>
         </form>
       </Modal>
