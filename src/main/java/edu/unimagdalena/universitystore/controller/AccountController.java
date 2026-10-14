@@ -7,6 +7,7 @@ import edu.unimagdalena.universitystore.dto.OrderDtos.OrderResponse;
 import edu.unimagdalena.universitystore.entity.User;
 import edu.unimagdalena.universitystore.mapper.AddressMapper;
 import edu.unimagdalena.universitystore.mapper.CustomerMapper;
+import edu.unimagdalena.universitystore.security.service.AuthService;
 import edu.unimagdalena.universitystore.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +28,26 @@ public class AccountController {
     private final AccountService service;
     private final CustomerMapper customerMapper;
     private final AddressMapper addressMapper;
+    private final AuthService authService;
 
     @GetMapping
     public ResponseEntity<CustomerResponse> profile(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(customerMapper.toResponse(service.profile(customerId(user))));
+    }
+
+    @PutMapping
+    public ResponseEntity<CustomerResponse> updateProfile(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody MyProfileRequest req) {
+        return ResponseEntity.ok(customerMapper.toResponse(service.updateName(customerId(user), req.name())));
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody ChangePasswordRequest req) {
+        authService.changePassword(user.getId(), req.currentPassword(), req.newPassword());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/addresses")

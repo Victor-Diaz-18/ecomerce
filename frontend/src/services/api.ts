@@ -53,6 +53,9 @@ export const authApi = {
 
 // The customer portal: everything refers to the customer who is logged in
 export const accountApi = {
+  updateProfile: (name: string) => request<Customer>('/me', { method: 'PUT', body: JSON.stringify({ name }) }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<void>('/me/password', { method: 'PATCH', body: JSON.stringify({ currentPassword, newPassword }) }),
   getAddresses: () => request<Address[]>('/me/addresses'),
   addAddress: (data: UpdateAddressRequest) => request<Address>('/me/addresses', { method: 'POST', body: JSON.stringify(data) }),
   updateAddress: (id: number, data: UpdateAddressRequest) => request<Address>(`/me/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

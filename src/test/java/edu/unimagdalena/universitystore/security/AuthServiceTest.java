@@ -7,6 +7,7 @@ import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.entity.User;
 import edu.unimagdalena.universitystore.enums.Role;
 import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.repository.UserRepository;
 import edu.unimagdalena.universitystore.security.jwt.JwtService;
@@ -96,6 +97,33 @@ class AuthServiceTest {
         AuthResponse response = authService.login(new LoginRequest("Admin@Tienda.com", "clave"));
 
         assertEquals(new AuthResponse("un-token", "admin@tienda.com", "ADMIN", "Administrador", null), response);
+    }
+
+    @Test
+    void changePasswordChecksTheCurrentOneFirst() {
+        User user = User.builder().id(2L).email("ana@correo.com").password("cifrada-vieja").role(Role.CUSTOMER).build();
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("clave-vieja", "cifrada-vieja")).thenReturn(true);
+        when(passwordEncoder.encode("clave-nueva-123")).thenReturn("cifrada-nueva");
+
+        authService.changePassword(2L, "clave-vieja", "clave-nueva-123");
+
+        assertEquals("cifrada-nueva", user.getPassword());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void changePasswordRejectsAWrongCurrentPassword() {
+        User user = User.builder().id(2L).email("ana@correo.com").password("cifrada-vieja").role(Role.CUSTOMER).build();
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("otra", "cifrada-vieja")).thenReturn(false);
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> authService.changePassword(2L, "otra", "clave-nueva-123"));
+
+        assertEquals("La contraseña actual no es correcta", exception.getMessage());
+        assertEquals("cifrada-vieja", user.getPassword());
+        verify(userRepository, never()).save(any());
     }
 
     @Test

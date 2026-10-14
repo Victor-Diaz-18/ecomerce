@@ -34,6 +34,12 @@ public class AccountService {
         return customerService.findById(customerId);
     }
 
+    public Customer updateName(Long customerId, String name) {
+        Customer changes = new Customer();
+        changes.setName(name.trim());
+        return customerService.update(customerId, changes);
+    }
+
     public List<Address> addresses(Long customerId) {
         return addressService.findByCustomer(customerId);
     }
