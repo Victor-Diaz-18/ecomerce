@@ -6,8 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import org.hibernate.annotations.ColumnDefault;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,12 +47,6 @@ public class PurchaseOrder extends BaseEntity {
     // Day it was actually delivered
     @Column(name = "delivered_on")
     private LocalDate deliveredOn;
-
-    // The automatic flow decides only once per order whether the customer asks for a return
-    @Builder.Default
-    @ColumnDefault("false")
-    @Column(name = "return_spin_done", nullable = false)
-    private boolean returnSpinDone = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)

@@ -17,8 +17,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param transitDaysRemote        días de viaje a destinos de difícil acceso
  * @param earlyDeliveryChance      probabilidad (0 a 1) de que el paquete llegue un día antes de lo estimado
  * @param lateDeliveryChance       probabilidad (0 a 1) de que llegue uno o dos días después
- * @param daysToRequestReturn      días después de la entrega en que el cliente decide si pide devolución
- * @param returnRequestChance      probabilidad (0 a 1) de que el cliente pida la devolución
  * @param daysToResolveReturn      días que tarda la bodega en recibir y revisar el producto devuelto
  * @param returnAcceptChance       probabilidad (0 a 1) de que la devolución se acepte
  */
@@ -35,8 +33,6 @@ public record SimulationProperties(
         int transitDaysRemote,
         double earlyDeliveryChance,
         double lateDeliveryChance,
-        int daysToRequestReturn,
-        double returnRequestChance,
         int daysToResolveReturn,
         double returnAcceptChance
 ) {
