@@ -17,7 +17,8 @@ import java.math.BigDecimal;
 public class Product extends BaseEntity {
     @NotBlank
     @Size(max = 50)
-    @Column(nullable = false, unique = true)
+    // Unique only among records that are not deleted: see config/SoftDeleteUniqueIndexes
+    @Column(nullable = false)
     private String sku;
 
     @NotBlank

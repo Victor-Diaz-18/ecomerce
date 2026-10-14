@@ -5,6 +5,7 @@ import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
+import edu.unimagdalena.universitystore.repository.UserRepository;
 import edu.unimagdalena.universitystore.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -55,6 +57,8 @@ public class CustomerServiceImpl implements CustomerService {
                 throw new ConflictException("Email already exists");
             }
             existing.setEmail(customer.getEmail());
+            // The customer logs in with this email, so their account follows the change
+            userRepository.findByCustomerId(id).ifPresent(user -> user.setEmail(customer.getEmail().trim().toLowerCase()));
         }
         if (customer.getStatus() != null) {
             existing.setStatus(customer.getStatus());
@@ -69,5 +73,10 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         customer.softDelete();
         customerRepository.save(customer);
+        // A deleted customer can no longer log in; the email becomes free for a new account
+        userRepository.findByCustomerId(id).ifPresent(user -> {
+            customer.setUser(null);
+            userRepository.delete(user);
+        });
     }
 }
