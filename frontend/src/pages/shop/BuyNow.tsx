@@ -33,7 +33,9 @@ export function BuyNow() {
     setPaying(true);
     try {
       const order = await accountApi.buyNow({ addressId: Number(addressId), productId: id, quantity });
-      showToast(`Pago recibido. Tu orden #${order.id} está confirmada.`, 'success');
+      // The order exists even if the charge did not go through: it waits in My orders to retry the payment
+      if (order.status === 'PAID') showToast(`Pago recibido. Tu orden #${order.id} está confirmada.`, 'success');
+      else showToast(`No se pudo procesar el pago. Tu orden #${order.id} quedó pendiente en Mis órdenes para que lo reintentes.`, 'error');
       navigate('/my-orders');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'No se pudo completar la compra', 'error');
