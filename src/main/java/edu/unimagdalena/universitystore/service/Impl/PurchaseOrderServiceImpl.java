@@ -1,5 +1,6 @@
 package edu.unimagdalena.universitystore.service.Impl;
 
+import edu.unimagdalena.universitystore.config.StorePolicy;
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +49,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final AddressRepository addressRepository;
     private final OrderMapper mapper;
     private final ShippingEstimator shippingEstimator;
+    private final StorePolicy storePolicy;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -188,6 +191,14 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         // In the customer's hands: stock and refund wait until the product is back (confirmReturn)
         if (order.getStatus() == OrderStatus.DELIVERED) {
+            // Return policy: only within the configured days after delivery
+            if (order.getDeliveredOn() != null) {
+                LocalDate lastDay = order.getDeliveredOn().plusDays(storePolicy.returnDays());
+                if (LocalDate.now().isAfter(lastDay)) {
+                    throw new BusinessException("El plazo para devolver esta compra terminó el "
+                            + lastDay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                }
+            }
             return transitionStatusInternal(order, OrderStatus.RETURN_REQUESTED, reason);
         }
 

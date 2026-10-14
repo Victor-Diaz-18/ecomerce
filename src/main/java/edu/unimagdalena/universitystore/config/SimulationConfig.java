@@ -10,7 +10,7 @@ import java.util.Random;
 
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties(SimulationProperties.class)
+@EnableConfigurationProperties({SimulationProperties.class, StorePolicy.class})
 public class SimulationConfig {
     // Reloj real del sistema y "ruleta" de las devoluciones; como beans para poder controlarlos en los tests
     @Bean

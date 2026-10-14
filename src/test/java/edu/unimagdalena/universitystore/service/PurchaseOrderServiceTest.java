@@ -1,5 +1,6 @@
 package edu.unimagdalena.universitystore.service;
 
+import edu.unimagdalena.universitystore.config.StorePolicy;
 import edu.unimagdalena.universitystore.dto.OrderDtos.*;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
@@ -59,6 +60,9 @@ class PurchaseOrderServiceImplTest {
 
     @Mock
     private ShippingEstimator shippingEstimator;
+
+    @Mock
+    private StorePolicy storePolicy;
 
     @Mock
     private CustomerRepository customerRepository;
@@ -461,6 +465,29 @@ class PurchaseOrderServiceImplTest {
         assertEquals(12, inventory.getAvailableStock());
         verify(orderStatusHistoryRepository).save(argThat(h ->
                 PurchaseOrderServiceImpl.UNPAID_CANCEL_REASON.equals(h.getReason())));
+    }
+
+    @Test
+    void deliveredOrderCanBeReturnedWithinThePolicyDays() {
+        PurchaseOrder order = orderWithStatus(OrderStatus.DELIVERED);
+        order.setDeliveredOn(LocalDate.now().minusDays(30));
+        when(storePolicy.returnDays()).thenReturn(30);
+        stubSaveAndMapper();
+
+        assertEquals("RETURN_REQUESTED", purchaseOrderService.returnOrder(1L, "No me quedó").status());
+    }
+
+    @Test
+    void deliveredOrderCannotBeReturnedAfterThePolicyDays() {
+        PurchaseOrder order = orderWithStatus(OrderStatus.DELIVERED);
+        order.setDeliveredOn(LocalDate.now().minusDays(31));
+        when(storePolicy.returnDays()).thenReturn(30);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> purchaseOrderService.returnOrder(1L, null));
+
+        assertTrue(exception.getMessage().startsWith("El plazo para devolver esta compra terminó el"));
+        assertEquals(OrderStatus.DELIVERED, order.getStatus());
     }
 
     @Test

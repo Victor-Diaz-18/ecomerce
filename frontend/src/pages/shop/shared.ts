@@ -16,6 +16,23 @@ export function paymentDeadline(order: Order) {
   return deadline.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+// Same value as store.return-days in the backend's application.properties
+export const RETURN_DAYS = 30;
+
+/** Last day to ask for a return, counted from the delivery; null if it has not been delivered. */
+export function returnDeadline(order: Order): Date | null {
+  if (!order.deliveredOn) return null;
+  const last = new Date(`${order.deliveredOn}T00:00`);
+  last.setDate(last.getDate() + RETURN_DAYS);
+  return last;
+}
+
+export const canStillReturn = (order: Order) => {
+  const last = returnDeadline(order);
+  // Orders delivered before delivery dates were recorded have no deadline to check
+  return !last || new Date().setHours(0, 0, 0, 0) <= last.getTime();
+};
+
 export interface StockInfo {
   available: number;
   // The minimum the store wants to keep, set by the admin in Inventory
