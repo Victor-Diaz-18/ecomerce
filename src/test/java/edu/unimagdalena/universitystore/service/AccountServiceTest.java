@@ -87,6 +87,21 @@ class AccountServiceTest {
     }
 
     @Test
+    void whenThePaymentFailsTheOrderStaysPendingForAnotherTry() {
+        addressBelongsTo(3L, ME);
+        OrderResponse pending = new OrderResponse(40L, "CREATED", null, ME,
+                "Cliente", 3L, "Calle 1", List.of(), BigDecimal.TEN, null, null);
+        when(orderService.create(any())).thenReturn(pending);
+        when(orderService.payOrder(40L)).thenThrow(new RuntimeException("Pago rechazado"));
+        when(orderService.findById(40L)).thenReturn(pending);
+
+        OrderResponse result = accountService.buyNow(ME, new BuyNowRequest(3L, 5L, 1));
+
+        assertEquals("CREATED", result.status());
+        verify(orderService, never()).cancelOrder(any());
+    }
+
+    @Test
     void buyNowRejectsAnAddressOfAnotherCustomer() {
         addressBelongsTo(3L, SOMEONE_ELSE);
 

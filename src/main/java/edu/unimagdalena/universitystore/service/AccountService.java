@@ -9,6 +9,8 @@ import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+
     private final CustomerService customerService;
     private final AddressService addressService;
     private final PurchaseOrderService orderService;
@@ -67,15 +71,21 @@ public class AccountService {
     }
 
     /**
-     * "Comprar ahora": crea la orden y la paga en una sola transacción, así que si el pago falla
-     * no queda ninguna orden ni se descuenta el inventario.
+     * "Comprar ahora": crea la orden y la paga de una vez. Son dos pasos separados a propósito: si el
+     * cobro falla, la orden ya creada queda pendiente de pago (con sus unidades separadas) para que el
+     * cliente reintente desde Mis órdenes, en vez de perder la compra. Si lo que falla es la creación
+     * (sin stock, dirección inválida), no queda nada y el error llega al cliente.
      */
-    @Transactional
     public OrderResponse buyNow(Long customerId, BuyNowRequest request) {
         ownedAddress(customerId, request.addressId());
         OrderResponse created = orderService.create(new CreateOrderRequest(customerId, request.addressId(),
                 List.of(new CreateOrderItemRequest(request.productId(), request.quantity()))));
-        return orderService.payOrder(created.id());
+        try {
+            return orderService.payOrder(created.id());
+        } catch (RuntimeException e) {
+            log.warn("No se pudo cobrar la orden {}; queda pendiente de pago: {}", created.id(), e.getMessage());
+            return orderService.findById(created.id());
+        }
     }
 
     @Transactional
