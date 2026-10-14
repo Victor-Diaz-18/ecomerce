@@ -59,6 +59,9 @@ export const accountApi = {
   getOrders: () => request<Order[]>('/me/orders'),
   createOrder: (data: { addressId: number; items: { productId: number; quantity: number }[] }) =>
     request<Order>('/me/orders', { method: 'POST', body: JSON.stringify(data) }),
+  getOrder: (id: number) => request<Order>(`/me/orders/${id}`),
+  buyNow: (data: { addressId: number; productId: number; quantity: number }) =>
+    request<Order>('/me/orders/buy-now', { method: 'POST', body: JSON.stringify(data) }),
   pay: (id: number) => request<Order>(`/me/orders/${id}/pay`, { method: 'PATCH' }),
   cancel: (id: number) => request<Order>(`/me/orders/${id}/cancel`, { method: 'PATCH' }),
   return: (id: number, reason: string) => request<Order>(`/me/orders/${id}/return`, { method: 'PATCH', body: JSON.stringify({ reason }) }),

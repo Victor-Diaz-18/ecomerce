@@ -2,6 +2,7 @@ package edu.unimagdalena.universitystore.dto;
 
 import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderItemRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,13 @@ public class AccountDtos {
     public record CreateMyOrderRequest(
             @NotNull Long addressId,
             @NotEmpty List<@Valid CreateOrderItemRequest> items
+    ) implements Serializable {}
+
+    /** "Comprar ahora": un solo producto, que se paga en el mismo paso. */
+    public record BuyNowRequest(
+            @NotNull Long addressId,
+            @NotNull Long productId,
+            @NotNull @Min(1) Integer quantity
     ) implements Serializable {}
 
     public record ChangeAddressRequest(

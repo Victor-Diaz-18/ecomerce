@@ -81,7 +81,7 @@ export function Products() {
                 <td>{product.id}</td>
                 <td>{product.name}</td>
                 <td>{product.sku}</td>
-                <td>${product.price.toFixed(2)}</td>
+                <td className="mono">${product.price.toLocaleString('es-CO')}</td>
                 <td>{product.categoryName}</td>
                 <td><span className={`status-badge ${product.active ? 'status-active' : 'status-inactive'}`}>
                   {product.active ? 'Activo' : 'Inactivo'}

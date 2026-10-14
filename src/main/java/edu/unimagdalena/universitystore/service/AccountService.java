@@ -1,6 +1,8 @@
 package edu.unimagdalena.universitystore.service;
 
+import edu.unimagdalena.universitystore.dto.AccountDtos.BuyNowRequest;
 import edu.unimagdalena.universitystore.dto.AccountDtos.CreateMyOrderRequest;
+import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderItemRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.OrderResponse;
 import edu.unimagdalena.universitystore.entity.Address;
@@ -62,6 +64,18 @@ public class AccountService {
     public OrderResponse createOrder(Long customerId, CreateMyOrderRequest request) {
         ownedAddress(customerId, request.addressId());
         return orderService.create(new CreateOrderRequest(customerId, request.addressId(), request.items()));
+    }
+
+    /**
+     * "Comprar ahora": crea la orden y la paga en una sola transacción, así que si el pago falla
+     * no queda ninguna orden ni se descuenta el inventario.
+     */
+    @Transactional
+    public OrderResponse buyNow(Long customerId, BuyNowRequest request) {
+        ownedAddress(customerId, request.addressId());
+        OrderResponse created = orderService.create(new CreateOrderRequest(customerId, request.addressId(),
+                List.of(new CreateOrderItemRequest(request.productId(), request.quantity()))));
+        return orderService.payOrder(created.id());
     }
 
     @Transactional

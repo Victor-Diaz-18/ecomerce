@@ -72,6 +72,13 @@ public class AccountController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createOrder(customerId(user), req));
     }
 
+    @PostMapping("/orders/buy-now")
+    public ResponseEntity<OrderResponse> buyNow(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody BuyNowRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.buyNow(customerId(user), req));
+    }
+
     @PatchMapping("/orders/{id}/pay")
     public ResponseEntity<OrderResponse> pay(@AuthenticationPrincipal User user, @PathVariable Long id) {
         return ResponseEntity.ok(service.payOrder(customerId(user), id));
