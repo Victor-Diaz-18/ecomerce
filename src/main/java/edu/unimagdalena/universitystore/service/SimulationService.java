@@ -17,15 +17,15 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Hace el papel de la transportadora, del cliente y de la bodega. Revisa cada cierto tiempo la fecha
- * real: envía las órdenes pagadas, entrega las enviadas y sortea las devoluciones cuando se cumplen los plazos.
+ * Hace el papel de la transportadora y de la bodega. Revisa cada cierto tiempo la fecha real: envía las
+ * órdenes pagadas, entrega las enviadas y resuelve las devoluciones cuando se cumplen los plazos.
+ * Pedir una devolución es decisión del cliente, desde su portal.
  */
 @Service
 @RequiredArgsConstructor
 public class SimulationService {
     private static final Logger log = LoggerFactory.getLogger(SimulationService.class);
 
-    static final String RETURN_REQUEST_REASON = "Automático: el cliente solicitó la devolución";
     static final String RETURN_REJECT_REASON = "Automático: el producto no cumple las condiciones de devolución";
 
     private final SimulationProperties properties;
@@ -49,7 +49,6 @@ public class SimulationService {
         // Read every list before changing anything, so an order moves at most one step per run
         List<PurchaseOrder> paid = ordersIn(OrderStatus.PAID);
         List<PurchaseOrder> shipped = ordersIn(OrderStatus.SHIPPED);
-        List<PurchaseOrder> delivered = ordersIn(OrderStatus.DELIVERED);
         List<PurchaseOrder> returnRequested = ordersIn(OrderStatus.RETURN_REQUESTED);
 
         paid.forEach(order -> process(order, () -> {
@@ -62,7 +61,6 @@ public class SimulationService {
                 orderService.deliverOrder(order.getId());
             }
         }));
-        delivered.forEach(order -> process(order, () -> spinReturnRequest(order, today)));
         returnRequested.forEach(order -> process(order, () -> {
             if (daysInStatus(order, today) >= properties.daysToResolveReturn()) {
                 if (random.nextDouble() < properties.returnAcceptChance()) {
@@ -72,19 +70,6 @@ public class SimulationService {
                 }
             }
         }));
-    }
-
-    // Each order gets a single spin, so a rejected return is not requested again and again
-    private void spinReturnRequest(PurchaseOrder order, LocalDate today) {
-        if (order.isReturnSpinDone() || daysInStatus(order, today) < properties.daysToRequestReturn()) {
-            return;
-        }
-        order.setReturnSpinDone(true);
-        purchaseOrderRepository.save(order);
-
-        if (random.nextDouble() < properties.returnRequestChance()) {
-            orderService.returnOrder(order.getId(), RETURN_REQUEST_REASON);
-        }
     }
 
     // Orders from before this feature have no status date: their last modification is the best guess

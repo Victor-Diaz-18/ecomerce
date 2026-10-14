@@ -45,7 +45,7 @@ class SimulationServiceTest {
 
     @BeforeEach
     void setUp() {
-        // return spin 2 days after delivery (20%), returns resolved after 3 days (70% accepted)
+        // returns resolved after 3 days (70% accepted)
         SimulationProperties properties = properties(true);
         lenient().when(shippingEstimator.isBusinessDay(any())).thenReturn(true);
         lenient().when(shippingEstimator.estimatedDelivery(any(), any()))
@@ -55,7 +55,7 @@ class SimulationServiceTest {
     }
 
     private static SimulationProperties properties(boolean enabled) {
-        return new SimulationProperties(enabled, "Santa Marta", "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 2, 0.2, 3, 0.7);
+        return new SimulationProperties(enabled, "Santa Marta", "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 3, 0.7);
     }
 
     private PurchaseOrder order(Long id, OrderStatus status, int daysAgo) {
@@ -142,45 +142,11 @@ class SimulationServiceTest {
     }
 
     @Test
-    void shouldRequestReturnWhenTheRouletteSaysSo() {
-        PurchaseOrder order = order(1L, OrderStatus.DELIVERED, 2);
-        when(random.nextDouble()).thenReturn(0.1);
+    void deliveredOrdersStayDeliveredUntilTheCustomerAsksForAReturn() {
+        order(1L, OrderStatus.DELIVERED, 30);
 
         simulationService.advanceOrders();
 
-        assertTrue(order.isReturnSpinDone());
-        verify(purchaseOrderRepository).save(order);
-        verify(orderService).returnOrder(1L, SimulationService.RETURN_REQUEST_REASON);
-    }
-
-    @Test
-    void shouldKeepOrderDeliveredWhenTheRouletteSaysNo() {
-        PurchaseOrder order = order(1L, OrderStatus.DELIVERED, 2);
-        when(random.nextDouble()).thenReturn(0.9);
-
-        simulationService.advanceOrders();
-
-        assertTrue(order.isReturnSpinDone());
-        verifyNoInteractions(orderService);
-    }
-
-    @Test
-    void shouldSpinTheReturnRouletteOnlyOncePerOrder() {
-        PurchaseOrder order = order(1L, OrderStatus.DELIVERED, 10);
-        order.setReturnSpinDone(true);
-
-        simulationService.advanceOrders();
-
-        verifyNoInteractions(random, orderService);
-    }
-
-    @Test
-    void shouldNotSpinBeforeTheCustomerHasHadTheProductLongEnough() {
-        PurchaseOrder order = order(1L, OrderStatus.DELIVERED, 1);
-
-        simulationService.advanceOrders();
-
-        assertFalse(order.isReturnSpinDone());
         verifyNoInteractions(random, orderService);
     }
 
