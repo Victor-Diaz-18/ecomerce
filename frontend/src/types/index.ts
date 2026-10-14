@@ -22,6 +22,15 @@ export interface Address {
   department?: string;
 }
 
+// What the server returns at login; customerId is missing for the administrator
+export interface Session {
+  token: string;
+  email: string;
+  role: 'ADMIN' | 'CUSTOMER';
+  name: string;
+  customerId?: number;
+}
+
 export interface Department {
   name: string;
   cities: string[];

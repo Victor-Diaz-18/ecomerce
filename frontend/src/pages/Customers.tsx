@@ -4,51 +4,11 @@ import { customerApi, addressApi, locationApi } from '../services/api';
 import { Customer, Address } from '../types';
 import { Modal } from '../components/Modal';
 import { useToast } from '../context/ToastContext';
-
-// The store only ships inside the country, so the country is not something the user types
-const SHIPPING_COUNTRY = 'Colombia';
-
-const STREET_TYPES = ['Calle', 'Carrera', 'Avenida', 'Avenida Calle', 'Avenida Carrera', 'Diagonal', 'Transversal', 'Circular', 'Autopista', 'Kilómetro', 'Manzana'];
-
-// The parts of a Colombian address: "Calle 13 # 3-84, Centro, Santa Marta, Magdalena"
-interface AddressForm {
-  streetType: string;
-  streetNumber: string;
-  crossNumber: string;
-  plateNumber: string;
-  neighborhood: string;
-  department: string;
-  city: string;
-}
-
-const EMPTY_ADDRESS: AddressForm = {
-  streetType: STREET_TYPES[0], streetNumber: '', crossNumber: '', plateNumber: '', neighborhood: '', department: '', city: '',
-};
-
-const streetLine = (a: AddressForm) =>
-  `${a.streetType} ${a.streetNumber.trim()} # ${a.crossNumber.trim()}-${a.plateNumber.trim()}`;
+import { AddressFields, AddressForm, EMPTY_ADDRESS, SHIPPING_COUNTRY, addressLabel, isComplete, streetLine, toForm } from '../components/AddressFields';
 
 const toRequest = (a: AddressForm, customerId: number) => ({
   street: streetLine(a), neighborhood: a.neighborhood.trim(), city: a.city, country: SHIPPING_COUNTRY, customerId,
 });
-
-// Puts a saved address back into the form. Old addresses may lack cross number, plate or
-// neighbourhood: whatever is missing is left blank for the user to complete
-function toForm(address: Address): AddressForm {
-  const full = address.street.match(/^(.+?)\s+(\w+)\s*#\s*(\w+)\s*-\s*(\w+)$/);
-  const partial = address.street.match(/^(.+?)\s+(\w+)$/);
-  const [streetType, streetNumber, crossNumber, plateNumber] = full
-    ? full.slice(1)
-    : partial ? [partial[1], partial[2], '', ''] : ['', '', '', ''];
-  const knownType = STREET_TYPES.find(t => t.toLowerCase() === streetType.toLowerCase());
-  return {
-    streetType: knownType ?? STREET_TYPES[0],
-    streetNumber, crossNumber, plateNumber,
-    neighborhood: address.neighborhood ?? '',
-    department: address.department ?? '',
-    city: address.city,
-  };
-}
 
 export function Customers() {
   const { data: customers, loading, refetch } = useApi(() => customerApi.getAll(), []);
@@ -68,8 +28,6 @@ export function Customers() {
   const { execute: deleteCustomer } = useMutation(customerApi.delete);
   const { execute: createAddress } = useMutation(addressApi.create);
   const { execute: updateAddress } = useMutation(addressApi.update);
-
-  const citiesOfDepartment = departments?.find(d => d.name === newAddress.department)?.cities ?? [];
 
   const openCreateModal = () => {
     setEditingCustomer(null);
@@ -94,7 +52,7 @@ export function Customers() {
 
   const addAddress = async () => {
     const a = newAddress;
-    if (!a.streetNumber.trim() || !a.crossNumber.trim() || !a.plateNumber.trim() || !a.neighborhood.trim() || !a.department || !a.city) {
+    if (!isComplete(a)) {
       showToast('Completa todos los campos de la dirección', 'error');
       return;
     }
@@ -229,7 +187,7 @@ export function Customers() {
             <div className="addresses-list">
               {addresses.map(addr => (
                 <div key={addr.id} className="address-item">
-                  <span>{[addr.street, addr.neighborhood, addr.city, addr.department].filter(Boolean).join(', ')}</span>
+                  <span>{addressLabel(addr)}</span>
                   <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEditingAddress(addr)}>Editar</button>
                 </div>
               ))}
@@ -244,27 +202,7 @@ export function Customers() {
           <div className="form-group">
             <label>{editingAddressId !== null ? 'Editar dirección' : 'Nueva dirección'} (solo envíos dentro de {SHIPPING_COUNTRY})</label>
             <div className="address-form">
-              <div className="address-row">
-                <select aria-label="Tipo de vía" value={newAddress.streetType} onChange={e => setNewAddress({ ...newAddress, streetType: e.target.value })}>
-                  {STREET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <input aria-label="Número de la vía" type="text" placeholder="13" maxLength={10} value={newAddress.streetNumber} onChange={e => setNewAddress({ ...newAddress, streetNumber: e.target.value })} />
-                <span>#</span>
-                <input aria-label="Número del cruce" type="text" placeholder="3" maxLength={10} value={newAddress.crossNumber} onChange={e => setNewAddress({ ...newAddress, crossNumber: e.target.value })} />
-                <span>-</span>
-                <input aria-label="Placa" type="text" placeholder="84" maxLength={10} value={newAddress.plateNumber} onChange={e => setNewAddress({ ...newAddress, plateNumber: e.target.value })} />
-              </div>
-              <input aria-label="Barrio" type="text" placeholder="Barrio" maxLength={100} value={newAddress.neighborhood} onChange={e => setNewAddress({ ...newAddress, neighborhood: e.target.value })} />
-              <div className="address-row">
-                <select aria-label="Departamento" value={newAddress.department} onChange={e => setNewAddress({ ...newAddress, department: e.target.value, city: '' })}>
-                  <option value="">Departamento</option>
-                  {departments?.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                </select>
-                <select aria-label="Ciudad" value={newAddress.city} disabled={!newAddress.department} onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}>
-                  <option value="">Ciudad</option>
-                  {citiesOfDepartment.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
+              <AddressFields value={newAddress} onChange={setNewAddress} departments={departments} />
               <div className="address-row">
                 <button type="button" className="btn btn-secondary btn-sm" onClick={addAddress}>
                   {editingAddressId !== null ? 'Guardar dirección' : 'Agregar dirección'}

@@ -4,6 +4,7 @@ import { orderApi, customerApi, productApi } from '../services/api';
 import { Address, CreateOrderRequest, Order } from '../types';
 import { Modal } from '../components/Modal';
 import { useToast } from '../context/ToastContext';
+import { addressLabel } from '../components/AddressFields';
 
 export function Orders() {
   const { data: orders, loading, refetch, refresh } = useApi(() => orderApi.getAll(), []);
@@ -54,8 +55,6 @@ export function Orders() {
     if (customerId) loadAddresses(Number(customerId));
     else setAddresses([]);
   };
-
-  const addressLabel = (a: Address) => [a.street, a.neighborhood, a.city, a.department].filter(Boolean).join(', ');
 
   const openAddressModal = async (order: Order) => {
     const options = await customerApi.getAddresses(order.customerId);
