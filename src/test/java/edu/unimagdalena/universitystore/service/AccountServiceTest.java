@@ -48,6 +48,17 @@ class AccountServiceTest {
     }
 
     @Test
+    void profileChangeOnlyTouchesTheName() {
+        accountService.updateName(ME, "  Ana María  ");
+
+        ArgumentCaptor<Customer> changes = ArgumentCaptor.forClass(Customer.class);
+        verify(customerService).update(eq(ME), changes.capture());
+        assertEquals("Ana María", changes.getValue().getName());
+        assertNull(changes.getValue().getEmail());
+        assertNull(changes.getValue().getStatus());
+    }
+
+    @Test
     void listsOnlyTheOrdersOfTheCustomer() {
         accountService.orders(ME);
 

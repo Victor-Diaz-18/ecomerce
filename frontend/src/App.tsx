@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Layers, MapPin, Package, ReceiptText, Store, Tag, Users } from 'lucide-react';
+import { LayoutDashboard, Layers, MapPin, Package, ReceiptText, Store, Tag, UserRound, Users } from 'lucide-react';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -21,6 +21,7 @@ const Checkout = lazy(() => import('./pages/shop/Checkout').then(m => ({ default
 const BuyNow = lazy(() => import('./pages/shop/BuyNow').then(m => ({ default: m.BuyNow })));
 const MyOrders = lazy(() => import('./pages/shop/MyOrders').then(m => ({ default: m.MyOrders })));
 const MyAddresses = lazy(() => import('./pages/shop/MyAddresses').then(m => ({ default: m.MyAddresses })));
+const Profile = lazy(() => import('./pages/shop/Profile').then(m => ({ default: m.Profile })));
 
 const ADMIN_MENU: NavSection[] = [
   { title: 'Operaciones', items: [{ name: 'Dashboard', href: '/', icon: LayoutDashboard }] },
@@ -41,6 +42,7 @@ const CUSTOMER_MENU: NavSection[] = [
     title: 'Mi cuenta', items: [
       { name: 'Mis órdenes', href: '/my-orders', icon: ReceiptText },
       { name: 'Mis direcciones', href: '/my-addresses', icon: MapPin },
+      { name: 'Mi perfil', href: '/profile', icon: UserRound },
     ],
   },
 ];
@@ -86,6 +88,7 @@ function AppRoutes() {
         <Route path="/buy/:productId" element={<BuyNow />} />
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/my-addresses" element={<MyAddresses />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

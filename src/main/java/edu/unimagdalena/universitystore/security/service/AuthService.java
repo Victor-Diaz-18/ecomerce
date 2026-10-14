@@ -8,6 +8,7 @@ import edu.unimagdalena.universitystore.entity.User;
 import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import edu.unimagdalena.universitystore.enums.Role;
 import edu.unimagdalena.universitystore.exception.ConflictException;
+import edu.unimagdalena.universitystore.exception.ValidationException;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
 import edu.unimagdalena.universitystore.repository.UserRepository;
 import edu.unimagdalena.universitystore.security.jwt.JwtService;
@@ -63,6 +64,17 @@ public class AuthService {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.password()));
 
         return buildResponse(userRepository.findByEmailIgnoreCase(email).orElseThrow());
+    }
+
+    /** Cambia la contraseña de una cuenta, comprobando primero la actual. */
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId).orElseThrow();
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new ValidationException("La contraseña actual no es correcta");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     private AuthResponse buildResponse(User user) {
