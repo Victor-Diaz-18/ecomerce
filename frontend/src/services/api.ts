@@ -3,14 +3,28 @@ import type {
   CreateCategoryRequest, CreateCustomerRequest, UpdateCustomerRequest, CreateAddressRequest, UpdateAddressRequest,
   CreateProductRequest, UpdateProductRequest, CreateInventoryRequest, UpdateInventoryRequest,
   CreateOrderRequest, PageResponse, MonthlyIncomeResponse, BestSellingProductResponse,
-  TopCustomerResponse, IncomeByStatusResponse,
+  TopCustomerResponse, IncomeByStatusResponse, Session,
 } from '../types';
+import { loadSession, saveSession } from './session';
 
 const API_BASE = '/api/v1';
 
+// The server answers errors as JSON with a "message"; show that instead of the raw body
+function errorMessage(status: number, body: string): string {
+  try {
+    const message = JSON.parse(body).message;
+    if (typeof message === 'string' && message) return message;
+  } catch {
+    // not JSON: fall through
+  }
+  return `${status}: ${body}`;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const session = loadSession();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...(session ? { Authorization: `Bearer ${session.token}` } : {}),
     ...options.headers,
   };
 
@@ -20,14 +34,36 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`${response.status}: ${errorText}`);
+    // The saved login expired or is no longer valid: forget it, which sends the user to the login page
+    if (response.status === 401 && session && !path.startsWith('/auth/')) saveSession(null);
+    throw new Error(errorMessage(response.status, await response.text()));
   }
 
   if (response.status === 204) return null as T;
 
   return response.json();
 }
+
+export const authApi = {
+  login: (data: { email: string; password: string }) =>
+    request<Session>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  register: (data: { name: string; email: string; password: string }) =>
+    request<Session>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// The customer portal: everything refers to the customer who is logged in
+export const accountApi = {
+  getAddresses: () => request<Address[]>('/me/addresses'),
+  addAddress: (data: UpdateAddressRequest) => request<Address>('/me/addresses', { method: 'POST', body: JSON.stringify(data) }),
+  updateAddress: (id: number, data: UpdateAddressRequest) => request<Address>(`/me/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  getOrders: () => request<Order[]>('/me/orders'),
+  createOrder: (data: { addressId: number; items: { productId: number; quantity: number }[] }) =>
+    request<Order>('/me/orders', { method: 'POST', body: JSON.stringify(data) }),
+  pay: (id: number) => request<Order>(`/me/orders/${id}/pay`, { method: 'PATCH' }),
+  cancel: (id: number) => request<Order>(`/me/orders/${id}/cancel`, { method: 'PATCH' }),
+  return: (id: number, reason: string) => request<Order>(`/me/orders/${id}/return`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
+  changeAddress: (id: number, addressId: number) => request<Order>(`/me/orders/${id}/address`, { method: 'PATCH', body: JSON.stringify({ addressId }) }),
+};
 
 export const categoryApi = {
   getAll: () => request<Category[]>('/categories'),
