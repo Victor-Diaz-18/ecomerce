@@ -5,7 +5,7 @@ import { useApi } from '../../hooks/useApi';
 import { accountApi, productApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
-import { money, useStock } from './shared';
+import { isLow, money, useStock } from './shared';
 
 /**
  * "Comprar ahora": straight to payment for a single product, without touching the cart.
@@ -23,7 +23,8 @@ export function BuyNow() {
   const [addressId, setAddressId] = useState('');
   const [paying, setPaying] = useState(false);
 
-  const units = stock[id];
+  const units = stock[id]?.available;
+  const low = isLow(stock[id]);
 
   useEffect(() => {
     if (addresses?.length && !addressId) setAddressId(String(addresses[0].id));
@@ -60,8 +61,8 @@ export function BuyNow() {
           <span className="product-category">{product.categoryName}</span>
           <h3 style={{ fontSize: '1.2rem', margin: '4px 0' }}>{product.name}</h3>
           <p className="product-price">{money(product.price)}</p>
-          <p className={units ? 'product-stock' : 'product-stock out'}>
-            {units === undefined ? '' : units > 0 ? `${units} disponibles` : 'Agotado'}
+          <p className={!units ? 'product-stock out' : low ? 'product-stock low' : 'product-stock'}>
+            {units === undefined ? '' : units === 0 ? 'Agotado' : low ? `¡Quedan pocas! Solo ${units}` : `${units} disponibles`}
           </p>
           <span className="field-label">Cantidad</span>
           <div className="quantity">

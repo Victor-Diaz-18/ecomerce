@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
@@ -47,10 +48,17 @@ public class SimulationService {
         boolean carrierWorksToday = shippingEstimator.isBusinessDay(today);
 
         // Read every list before changing anything, so an order moves at most one step per run
+        List<PurchaseOrder> unpaid = ordersIn(OrderStatus.CREATED);
         List<PurchaseOrder> paid = ordersIn(OrderStatus.PAID);
         List<PurchaseOrder> shipped = ordersIn(OrderStatus.SHIPPED);
         List<PurchaseOrder> returnRequested = ordersIn(OrderStatus.RETURN_REQUESTED);
 
+        LocalDateTime paymentDeadline = LocalDateTime.now(clock).minusHours(properties.unpaidOrderHours());
+        unpaid.forEach(order -> process(order, () -> {
+            if (order.getCreatedAt() != null && order.getCreatedAt().isBefore(paymentDeadline)) {
+                orderService.cancelUnpaidOrder(order.getId());
+            }
+        }));
         paid.forEach(order -> process(order, () -> {
             if (carrierWorksToday && !today.isBefore(shipDate(order))) {
                 orderService.shipOrder(order.getId());

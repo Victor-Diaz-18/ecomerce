@@ -6,7 +6,7 @@ import { accountApi, productApi } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
-import { money, useStock } from './shared';
+import { UNPAID_ORDER_HOURS, isLow, money, useStock } from './shared';
 
 /**
  * The cart: change quantities, choose where to send it and continue. Continuing creates the order
@@ -26,6 +26,8 @@ export function Cart() {
     .map(product => ({ product, quantity: cart[product.id] }));
   const stock = useStock(lines.map(l => l.product.id));
   const total = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  // Someone else may have bought units while they sat in this cart: the cart never reserves stock
+  const tooMany = lines.some(l => stock[l.product.id] && l.quantity > stock[l.product.id].available);
 
   useEffect(() => {
     if (addresses?.length && !addressId) setAddressId(String(addresses[0].id));
@@ -70,12 +72,19 @@ export function Cart() {
       <div className="two-columns">
         <div className="card">
           {lines.map(({ product, quantity }) => {
-            const units = stock[product.id];
+            const units = stock[product.id]?.available;
+            const low = isLow(stock[product.id]);
             return (
               <div key={product.id} className="cart-line">
                 <div className="cart-line-info">
                   <strong>{product.name}</strong>
                   <span className="mono">{money(product.price)} c/u</span>
+                  {units !== undefined && quantity > units && (
+                    <span className="line-warning error">{units === 0 ? 'Se agotó: quítalo para continuar' : units === 1 ? 'Solo queda 1 disponible' : `Solo quedan ${units} disponibles`}</span>
+                  )}
+                  {units !== undefined && quantity <= units && low && (
+                    <span className="line-warning">Quedan pocas unidades</span>
+                  )}
                 </div>
                 <div className="cart-line-controls">
                   <div className="quantity">
@@ -105,10 +114,13 @@ export function Cart() {
               <p className="auto-hint">Agrega una dirección en <Link to="/my-addresses">Mis direcciones</Link>; tu carrito te espera.</p>
             )}
           </div>
-          <button className="btn btn-primary btn-block" disabled={creating || !addressId} onClick={createOrder}>
+          {tooMany && <p className="alert alert-warning">Ajusta las cantidades marcadas: ya no hay tantas unidades.</p>}
+          <button className="btn btn-primary btn-block" disabled={creating || !addressId || tooMany} onClick={createOrder}>
             {creating ? 'Creando orden...' : 'Continuar con la compra'}
           </button>
-          <p className="auto-hint" style={{ marginTop: 10 }}>En el siguiente paso revisas tu orden y la pagas.</p>
+          <p className="auto-hint" style={{ marginTop: 10 }}>
+            Los productos se separan para ti al continuar; tendrás {UNPAID_ORDER_HOURS} horas para pagar la orden.
+          </p>
         </div>
       </div>
     </div>

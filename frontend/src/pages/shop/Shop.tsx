@@ -6,7 +6,7 @@ import { productApi } from '../../services/api';
 import { Product } from '../../types';
 import { Modal } from '../../components/Modal';
 import { useCart } from '../../context/CartContext';
-import { money, useStock } from './shared';
+import { isLow, money, useStock } from './shared';
 
 export function Shop() {
   const navigate = useNavigate();
@@ -37,7 +37,8 @@ export function Shop() {
 
       <div className="product-grid">
         {available.map(product => {
-          const units = stock[product.id] ?? 0;
+          const units = stock[product.id]?.available ?? 0;
+          const low = isLow(stock[product.id]);
           const inCart = cart[product.id] ?? 0;
           const soldOut = units === 0 || inCart >= units;
           return (
@@ -45,8 +46,9 @@ export function Shop() {
               <span className="product-category">{product.categoryName}</span>
               <h3>{product.name}</h3>
               <p className="product-price">{money(product.price)}</p>
-              <p className={units > 0 ? 'product-stock' : 'product-stock out'}>
-                {units > 0 ? `${units} disponibles${inCart ? ` · ${inCart} en tu carrito` : ''}` : 'Agotado'}
+              <p className={units === 0 ? 'product-stock out' : low ? 'product-stock low' : 'product-stock'}>
+                {units === 0 ? 'Agotado' : low ? `¡Quedan pocas! Solo ${units}` : `${units} disponibles`}
+                {units > 0 && inCart ? ` · ${inCart} en tu carrito` : ''}
               </p>
               <div className="product-actions">
                 <button className="btn btn-primary" disabled={units === 0} onClick={() => navigate(`/buy/${product.id}`)}>

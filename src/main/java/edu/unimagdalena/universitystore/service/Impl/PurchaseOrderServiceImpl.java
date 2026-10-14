@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PurchaseOrderServiceImpl implements PurchaseOrderService {
+    public static final String UNPAID_CANCEL_REASON = "Cancelada automáticamente: no se pagó dentro del plazo";
+
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final InventoryRepository inventoryRepository;
     private final OrderItemRepository orderItemRepository;
@@ -144,6 +146,17 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public OrderResponse cancelOrder(Long orderId) {
+        return cancel(orderId, null);
+    }
+
+    // Orders left unpaid past the deadline give their units back to the inventory
+    @Override
+    @Transactional
+    public OrderResponse cancelUnpaidOrder(Long orderId) {
+        return cancel(orderId, UNPAID_CANCEL_REASON);
+    }
+
+    private OrderResponse cancel(Long orderId, String reason) {
         PurchaseOrder order = purchaseOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
@@ -158,7 +171,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         restoreStock(order);
 
-        return transitionStatusInternal(order, OrderStatus.CANCELLED, null);
+        return transitionStatusInternal(order, OrderStatus.CANCELLED, reason);
     }
 
     @Override

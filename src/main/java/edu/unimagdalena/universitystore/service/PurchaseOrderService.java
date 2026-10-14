@@ -12,6 +12,7 @@ public interface PurchaseOrderService {
     OrderResponse shipOrder(Long orderId);
     OrderResponse deliverOrder(Long orderId);
     OrderResponse cancelOrder(Long orderId);
+    OrderResponse cancelUnpaidOrder(Long orderId);
     OrderResponse returnOrder(Long orderId, String reason);
     OrderResponse confirmReturn(Long orderId);
     OrderResponse changeAddress(Long orderId, Long addressId);
