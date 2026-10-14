@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Los plazos de envío son días hábiles (de lunes a sábado); los de devolución, días del calendario.
  *
  * @param enabled                  si es false, las órdenes no avanzan solas
+ * @param unpaidOrderHours         horas que tiene el cliente para pagar una orden; después se cancela sola
  * @param originCity               ciudad desde la que despacha la tienda
  * @param originCountry            país desde el que despacha la tienda (solo se envía dentro de él)
  * @param cutoffHour               hora de corte (0 a 23): lo pagado antes sale ese día; lo demás, el siguiente día hábil
@@ -23,6 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "simulation")
 public record SimulationProperties(
         boolean enabled,
+        int unpaidOrderHours,
         String originCity,
         String originCountry,
         int cutoffHour,

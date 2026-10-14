@@ -6,7 +6,7 @@ import { Modal } from '../../components/Modal';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
 import { OrderStatusPill } from '../../components/StatusPill';
-import { day, money } from './shared';
+import { day, money, paymentDeadline } from './shared';
 
 // What the customer sees for each status (the admin uses shorter names)
 const CUSTOMER_LABEL: Partial<Record<OrderStatus, string>> = {
@@ -110,6 +110,9 @@ export function MyOrders() {
             ))}
           </ul>
           <p>Enviar a: {order.addressLine}</p>
+          {order.status === 'CREATED' && (
+            <p className="line-warning">Págala antes del {paymentDeadline(order)}; si no, se cancela y los productos vuelven a la tienda.</p>
+          )}
           <div className="order-card-footer">
             <strong>{money(order.total ?? 0)}</strong>
             <div className="actions">

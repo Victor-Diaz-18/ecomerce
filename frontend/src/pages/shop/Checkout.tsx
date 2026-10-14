@@ -5,7 +5,7 @@ import { useApi } from '../../hooks/useApi';
 import { accountApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { OrderStatusPill } from '../../components/StatusPill';
-import { money } from './shared';
+import { money, paymentDeadline } from './shared';
 
 /** Review of an order created from the cart: the customer pays it, leaves it for later, or cancels it. */
 export function Checkout() {
@@ -66,7 +66,10 @@ export function Checkout() {
                 onClick={() => act(() => accountApi.pay(order.id), 'Pago recibido. Pronto despacharemos tu orden.', '/my-orders')}>
                 <CreditCard size={16} /> Pagar {money(order.total ?? 0)}
               </button>
-              <p className="auto-hint" style={{ margin: '10px 0' }}>Pago simulado: no se pide ni se guarda ningún dato de tarjeta.</p>
+              <p className="auto-hint" style={{ margin: '10px 0' }}>
+                Págala antes del {paymentDeadline(order)}; si no, se cancela y los productos vuelven a la tienda.
+                Pago simulado: no se pide ni se guarda ningún dato de tarjeta.
+              </p>
               <button className="btn btn-secondary btn-block" disabled={busy} onClick={() => navigate('/my-orders')}>Pagar después</button>
               <button className="btn btn-ghost btn-block" style={{ marginTop: 6 }} disabled={busy}
                 onClick={() => act(() => accountApi.cancel(order.id), 'Orden cancelada.', '/')}>Cancelar orden</button>

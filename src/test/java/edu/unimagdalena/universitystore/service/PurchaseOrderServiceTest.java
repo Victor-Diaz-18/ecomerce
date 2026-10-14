@@ -452,6 +452,18 @@ class PurchaseOrderServiceImplTest {
     }
 
     @Test
+    void unpaidOrderCancelledByTheDeadlineGivesItsUnitsBackAndSaysWhy() {
+        orderWithStatus(OrderStatus.CREATED);
+        stubSaveAndMapper();
+        Inventory inventory = stubOneItemInStock(10, 2);
+
+        assertEquals("CANCELLED", purchaseOrderService.cancelUnpaidOrder(1L).status());
+        assertEquals(12, inventory.getAvailableStock());
+        verify(orderStatusHistoryRepository).save(argThat(h ->
+                PurchaseOrderServiceImpl.UNPAID_CANCEL_REASON.equals(h.getReason())));
+    }
+
+    @Test
     void shouldRejectSecondReturnRequest() {
         orderWithStatus(OrderStatus.RETURN_REQUESTED);
 

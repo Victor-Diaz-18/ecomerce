@@ -27,7 +27,7 @@ class ShippingEstimatorTest {
     // 20% chance of arriving early and 20% of arriving late
     private ShippingEstimator estimatorFrom(String originCity) {
         return new ShippingEstimator(new SimulationProperties(
-                true, originCity, "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 3, 0.7), random);
+                true, 24, originCity, "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 3, 0.7), random);
     }
 
     private ShippingEstimator estimator() {

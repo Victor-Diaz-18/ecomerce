@@ -55,7 +55,7 @@ class SimulationServiceTest {
     }
 
     private static SimulationProperties properties(boolean enabled) {
-        return new SimulationProperties(enabled, "Santa Marta", "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 3, 0.7);
+        return new SimulationProperties(enabled, 24, "Santa Marta", "Colombia", 14, 300, 1, 2, 3, 6, 0.2, 0.2, 3, 0.7);
     }
 
     private PurchaseOrder order(Long id, OrderStatus status, int daysAgo) {
@@ -66,6 +66,25 @@ class SimulationServiceTest {
                 .build();
         lenient().when(purchaseOrderRepository.findByStatusWithAddress(status)).thenReturn(List.of(order));
         return order;
+    }
+
+    @Test
+    void unpaidOrderIsCancelledOnceThePaymentDeadlinePasses() {
+        // the clock says 09:00; the deadline is 24 hours
+        order(1L, OrderStatus.CREATED, 1).setCreatedAt(TODAY.minusDays(1).atTime(8, 59));
+
+        simulationService.advanceOrders();
+
+        verify(orderService).cancelUnpaidOrder(1L);
+    }
+
+    @Test
+    void unpaidOrderStillWithinTheDeadlineIsKept() {
+        order(1L, OrderStatus.CREATED, 1).setCreatedAt(TODAY.minusDays(1).atTime(9, 1));
+
+        simulationService.advanceOrders();
+
+        verifyNoInteractions(orderService);
     }
 
     @Test
@@ -178,7 +197,7 @@ class SimulationServiceTest {
                 .statusChangedOn(TODAY.minusDays(5)).build();
         PurchaseOrder fine = PurchaseOrder.builder().id(2L).status(OrderStatus.PAID)
                 .statusChangedOn(TODAY.minusDays(5)).build();
-        when(purchaseOrderRepository.findByStatusWithAddress(OrderStatus.PAID)).thenReturn(List.of(failing, fine));
+        lenient().when(purchaseOrderRepository.findByStatusWithAddress(OrderStatus.PAID)).thenReturn(List.of(failing, fine));
         when(orderService.shipOrder(1L)).thenThrow(new BusinessException("boom"));
 
         simulationService.advanceOrders();
