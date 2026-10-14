@@ -49,6 +49,12 @@ export function MyAddresses() {
 
   return (
     <div className="page">
+      <div className="page-header">
+        <div>
+          <h2>Mis direcciones</h2>
+          <p className="page-subtitle">A dónde te enviamos tus compras</p>
+        </div>
+      </div>
       <div className="card">
         <h3>Direcciones guardadas</h3>
         {addresses?.length === 0 && <p className="auto-hint">Aún no tienes direcciones. Agrega una para poder comprar.</p>}

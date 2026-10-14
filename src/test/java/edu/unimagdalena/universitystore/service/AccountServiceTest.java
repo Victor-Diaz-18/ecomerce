@@ -1,5 +1,6 @@
 package edu.unimagdalena.universitystore.service;
 
+import edu.unimagdalena.universitystore.dto.AccountDtos.BuyNowRequest;
 import edu.unimagdalena.universitystore.dto.AccountDtos.CreateMyOrderRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderItemRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderRequest;
@@ -71,6 +72,28 @@ class AccountServiceTest {
         accountService.createOrder(ME, new CreateMyOrderRequest(3L, items));
 
         verify(orderService).create(new CreateOrderRequest(ME, 3L, items));
+    }
+
+    @Test
+    void buyNowCreatesAndPaysASingleProductOrder() {
+        addressBelongsTo(3L, ME);
+        when(orderService.create(any())).thenReturn(new OrderResponse(40L, "CREATED", null, ME,
+                "Cliente", 3L, "Calle 1", List.of(), BigDecimal.TEN, null, null));
+
+        accountService.buyNow(ME, new BuyNowRequest(3L, 5L, 2));
+
+        verify(orderService).create(new CreateOrderRequest(ME, 3L, List.of(new CreateOrderItemRequest(5L, 2))));
+        verify(orderService).payOrder(40L);
+    }
+
+    @Test
+    void buyNowRejectsAnAddressOfAnotherCustomer() {
+        addressBelongsTo(3L, SOMEONE_ELSE);
+
+        assertThrows(ResourceNotFoundException.class, () -> accountService.buyNow(ME, new BuyNowRequest(3L, 5L, 1)));
+
+        verify(orderService, never()).create(any());
+        verify(orderService, never()).payOrder(any());
     }
 
     @Test

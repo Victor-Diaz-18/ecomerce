@@ -148,7 +148,7 @@ export function Customers() {
                 <td>{customer.id}</td>
                 <td>{customer.name}</td>
                 <td>{customer.email}</td>
-                <td><span className={`status-badge status-${customer.status.toLowerCase()}`}>{customer.status}</span></td>
+                <td><span className={`status-badge status-${customer.status.toLowerCase()}`}>{customer.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}</span></td>
                 <td className="actions">
                   <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(customer)}>Editar</button>
                   <button className="btn btn-danger btn-sm" onClick={() => handleDelete(customer.id)}>Eliminar</button>

@@ -31,6 +31,7 @@ export function Register() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
+        <div className="auth-brand"><div className="brand-logo">U</div></div>
         <h1>University Store</h1>
         <p className="auth-subtitle">Crea tu cuenta de cliente</p>
         {error && <div className="alert alert-warning">{error}</div>}

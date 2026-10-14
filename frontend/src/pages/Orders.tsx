@@ -5,6 +5,7 @@ import { Address, CreateOrderRequest, Order } from '../types';
 import { Modal } from '../components/Modal';
 import { useToast } from '../context/ToastContext';
 import { addressLabel } from '../components/AddressFields';
+import { OrderStatusPill, orderStatusLabel } from '../components/StatusPill';
 
 export function Orders() {
   const { data: orders, loading, refetch, refresh } = useApi(() => orderApi.getAll(), []);
@@ -129,18 +130,9 @@ export function Orders() {
     refetch();
   };
 
-  const statusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      CREATED: '#f59e0b', PAID: '#3b82f6', SHIPPED: '#8b5cf6',
-      DELIVERED: '#10b981', RETURN_REQUESTED: '#f97316', CANCELLED: '#ef4444', RETURNED: '#6b7280',
-    };
-    return colors[status] || '#6b7280';
-  };
-
   // "T00:00" keeps the date in local time; a bare "2026-10-16" would be read as UTC and show the day before
   const toDate = (day: string) => new Date(`${day}T00:00`);
 
-  // On its way: the date promised to the customer. Once delivered: the real date and how it compares
   const deliveryInfo = (order: Order) => {
     if (order.deliveredOn) {
       const delivered = toDate(order.deliveredOn);
@@ -178,8 +170,8 @@ export function Orders() {
         </select>
         <select value={searchStatus} onChange={e => setSearchStatus(e.target.value)}>
           <option value="">Estado</option>
-          {['CREATED', 'PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED', 'CANCELLED', 'RETURNED'].map(s => (
-            <option key={s} value={s}>{s}</option>
+          {(['CREATED', 'PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED', 'CANCELLED', 'RETURNED'] as const).map(s => (
+            <option key={s} value={s}>{orderStatusLabel(s)}</option>
           ))}
         </select>
         <button className="btn btn-secondary" onClick={refetch}>Actualizar</button>
@@ -208,9 +200,9 @@ export function Orders() {
                 <td>#{order.id}</td>
                 <td>{order.customerName}</td>
                 <td>{order.addressLine}</td>
-                <td>{order.items?.length ?? 0} items</td>
-                <td>${order.total?.toFixed(2) ?? '0.00'}</td>
-                <td><span className="status-badge" style={{ background: statusColor(order.status) }}>{order.status}</span></td>
+                <td className="mono">{order.items?.reduce((n, i) => n + i.quantity, 0) ?? 0} ud.</td>
+                <td className="mono">${(order.total ?? 0).toLocaleString('es-CO')}</td>
+                <td><OrderStatusPill status={order.status} /></td>
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td>{deliveryInfo(order)}</td>
                 <td className="actions">

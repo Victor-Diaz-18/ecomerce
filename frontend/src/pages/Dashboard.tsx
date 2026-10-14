@@ -1,12 +1,13 @@
 import { useApi } from '../hooks/useApi';
 import { orderApi, customerApi, productApi, inventoryApi, dashboardApi } from '../services/api';
 import type { OrderStatus } from '../types';
+import { OrderStatusPill, orderStatusLabel } from '../components/StatusPill';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 const MONTH_NAMES = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 // Mismos estados que el backend cuenta como ingreso real (ver PurchaseOrderRepository)
 const INCOME_STATUSES: OrderStatus[] = ['PAID', 'SHIPPED', 'DELIVERED', 'RETURN_REQUESTED'];
-const PIE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b'];
+const PIE_COLORS = ['#16a34a', '#2563eb', '#7c3aed', '#dc2626', '#d97706'];
 
 export function Dashboard() {
   const { data: orders, loading: ordersLoading } = useApi(() => orderApi.getAll(), []);
@@ -33,7 +34,7 @@ export function Dashboard() {
   })) ?? [];
 
   const pieData = incomeByStatus?.map(s => ({
-    name: s.status,
+    name: orderStatusLabel(s.status as OrderStatus),
     value: s.totalIncome,
   })) ?? [];
 
@@ -49,11 +50,11 @@ export function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Ventas del mes</h3>
-          <div className="value">${thisMonthIncome.toLocaleString()}</div>
+          <div className="value">${thisMonthIncome.toLocaleString('es-CO')}</div>
         </div>
         <div className="stat-card">
           <h3>Ingresos acumulados</h3>
-          <div className="value">${totalIncome.toLocaleString()}</div>
+          <div className="value">${totalIncome.toLocaleString('es-CO')}</div>
         </div>
         <div className="stat-card">
           <h3>Clientes activos</h3>
@@ -71,10 +72,10 @@ export function Dashboard() {
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Ingresos']} />
+                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString('es-CO')}`, 'Ingresos']} />
                 <Line type="monotone" dataKey="income" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
               </LineChart>
             </ResponsiveContainer>
@@ -98,7 +99,7 @@ export function Dashboard() {
                     <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Ingresos']} />
+                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString('es-CO')}`, 'Ingresos']} />
               </PieChart>
             </ResponsiveContainer>
           ) : <p className="loading-text">Sin datos de ingresos</p>}
@@ -109,7 +110,7 @@ export function Dashboard() {
           {bestSelling && bestSelling.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={bestSelling.slice(0, 6)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="productName" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(value) => [value, 'Unidades']} />
@@ -138,8 +139,8 @@ export function Dashboard() {
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>{order.customerName}</td>
-                    <td><span className={`status-badge status-${order.status.toLowerCase()}`}>{order.status}</span></td>
-                    <td>${order.total?.toLocaleString() ?? '0'}</td>
+                    <td><OrderStatusPill status={order.status} /></td>
+                    <td className="mono">${(order.total ?? 0).toLocaleString('es-CO')}</td>
                   </tr>
                 ))}
               </tbody>

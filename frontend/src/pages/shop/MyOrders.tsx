@@ -5,21 +5,15 @@ import { Address, Order, OrderStatus } from '../../types';
 import { Modal } from '../../components/Modal';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
+import { OrderStatusPill } from '../../components/StatusPill';
+import { day, money } from './shared';
 
-const STATUS: Record<OrderStatus, { label: string; color: string }> = {
-  CREATED: { label: 'Pendiente de pago', color: '#f59e0b' },
-  PAID: { label: 'Pagada', color: '#3b82f6' },
-  SHIPPED: { label: 'En camino', color: '#8b5cf6' },
-  DELIVERED: { label: 'Entregada', color: '#10b981' },
-  RETURN_REQUESTED: { label: 'Devolución en revisión', color: '#f97316' },
-  CANCELLED: { label: 'Cancelada', color: '#ef4444' },
-  RETURNED: { label: 'Devuelta', color: '#6b7280' },
+// What the customer sees for each status (the admin uses shorter names)
+const CUSTOMER_LABEL: Partial<Record<OrderStatus, string>> = {
+  CREATED: 'Pendiente de pago',
+  SHIPPED: 'En camino',
+  RETURN_REQUESTED: 'Devolución en revisión',
 };
-
-const money = (value: number) => `$${value.toLocaleString('es-CO')}`;
-
-// "T00:00" keeps the date in local time; a bare "2026-10-16" would be read as UTC and show the day before
-const day = (date: string) => new Date(`${date}T00:00`).toLocaleDateString();
 
 function deliveryInfo(order: Order) {
   if (order.deliveredOn) return `Entregada el ${day(order.deliveredOn)}`;
@@ -92,13 +86,19 @@ export function MyOrders() {
 
   return (
     <div className="page">
-      {sorted.length === 0 && <p>Todavía no has hecho ninguna compra.</p>}
+      <div className="page-header">
+        <div>
+          <h2>Mis órdenes</h2>
+          <p className="page-subtitle">Tus compras, su estado y la fecha de entrega</p>
+        </div>
+      </div>
+      {sorted.length === 0 && <div className="card empty-state"><p>Todavía no has hecho ninguna compra.</p></div>}
 
       {sorted.map(order => (
         <div key={order.id} className="order-card">
           <div className="order-card-header">
             <strong>Orden #{order.id}</strong>
-            <span className="status-badge" style={{ background: STATUS[order.status].color }}>{STATUS[order.status].label}</span>
+            <OrderStatusPill status={order.status} label={CUSTOMER_LABEL[order.status]} />
           </div>
           <p className="auto-hint">
             Comprada el {new Date(order.createdAt).toLocaleDateString()}
