@@ -17,6 +17,7 @@ import lombok.experimental.SuperBuilder;
 public class Category extends BaseEntity {
     @NotBlank
     @Size(max = 100)
-    @Column(nullable = false, unique = true)
+    // Unique only among records that are not deleted: see config/SoftDeleteUniqueIndexes
+    @Column(nullable = false)
     private String name;
 }

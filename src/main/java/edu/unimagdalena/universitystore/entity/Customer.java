@@ -23,13 +23,15 @@ public class Customer extends BaseEntity {
     @NotBlank
     @Email
     @Size(max = 100)
-    @Column(nullable = false, unique = true)
+    // Unique only among records that are not deleted: see config/SoftDeleteUniqueIndexes
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private edu.unimagdalena.universitystore.enums.CustomerStatus status;
 
-    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // The account is saved and deleted on its own (AuthService, CustomerService); no cascade from here
+    @OneToOne(mappedBy = "customer", fetch = FetchType.LAZY)
     private User user;
 }

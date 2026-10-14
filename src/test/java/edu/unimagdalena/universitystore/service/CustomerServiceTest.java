@@ -5,6 +5,8 @@ import edu.unimagdalena.universitystore.enums.CustomerStatus;
 import edu.unimagdalena.universitystore.exception.ConflictException;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
 import edu.unimagdalena.universitystore.repository.CustomerRepository;
+import edu.unimagdalena.universitystore.repository.UserRepository;
+import edu.unimagdalena.universitystore.entity.User;
 import edu.unimagdalena.universitystore.service.Impl.CustomerServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,9 @@ import static org.mockito.Mockito.*;
 class CustomerServiceImplTest {
     @Mock
     private CustomerRepository customerRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private CustomerServiceImpl customerService;
@@ -125,6 +130,21 @@ class CustomerServiceImplTest {
 
         assertEquals("Pedro Alvarez", result.getName());
         assertEquals("pedro@test.com", result.getEmail());
+        verify(userRepository).findByCustomerId(1L);
         assertEquals(CustomerStatus.INACTIVE, result.getStatus());
+    }
+
+    @Test
+    void deletingACustomerAlsoClosesTheirLogin() {
+        Customer customer = Customer.builder().id(1L).name("Juan Perez").email("juan@test.com").build();
+        User account = User.builder().id(5L).email("juan@test.com").customer(customer).build();
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(userRepository.findByCustomerId(1L)).thenReturn(Optional.of(account));
+
+        customerService.delete(1L);
+
+        assertTrue(customer.isDeleted());
+        verify(customerRepository).save(customer);
+        verify(userRepository).delete(account);
     }
 }
