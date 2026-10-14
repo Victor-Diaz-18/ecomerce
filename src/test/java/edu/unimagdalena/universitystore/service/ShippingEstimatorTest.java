@@ -15,9 +15,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ShippingEstimatorTest {
-    // 12 Oct 2026 is a Monday, so the 17th is a Saturday and the 18th a Sunday
-    private static final LocalDate MONDAY = LocalDate.of(2026, 10, 12);
-    private static final LocalDate SATURDAY = LocalDate.of(2026, 10, 17);
+    // A week without holidays: 19 Oct 2026 is a Monday, the 24th a Saturday and the 25th a Sunday
+    private static final LocalDate MONDAY = LocalDate.of(2026, 10, 19);
+    private static final LocalDate SATURDAY = LocalDate.of(2026, 10, 24);
 
     @Mock
     private Random random;
@@ -135,5 +135,16 @@ class ShippingEstimatorTest {
 
         assertEquals(MONDAY.plusDays(1), estimator().actualArrival(MONDAY, address("Santa Marta", "Colombia")));
         assertEquals(MONDAY.plusDays(7), estimator().actualArrival(SATURDAY, address("Santa Marta", "Colombia")));
+    }
+
+    @Test
+    void holidaysAreNotWorkingDays() {
+        // 12 Oct 2026 (Día de la Raza) is a Monday holiday: paid on Saturday evening it ships on Tuesday
+        LocalDate saturdayBeforeHoliday = LocalDate.of(2026, 10, 10);
+        assertFalse(estimator().isBusinessDay(LocalDate.of(2026, 10, 12)));
+        assertEquals(LocalDate.of(2026, 10, 13), estimator().shipDate(saturdayBeforeHoliday.atTime(18, 0)));
+        // Friday 13 Nov + 3 working days: Saturday 14, (Sunday 15 and holiday Monday 16 skipped), Tuesday 17, Wednesday 18
+        assertEquals(LocalDate.of(2026, 11, 18),
+                estimator().estimatedDelivery(LocalDate.of(2026, 11, 13), address("Bogotá", "Colombia")));
     }
 }

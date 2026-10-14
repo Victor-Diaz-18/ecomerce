@@ -30,9 +30,9 @@ public class ShippingEstimator {
         return address != null && sameText(address.getCountry(), properties.originCountry());
     }
 
-    /** Las transportadoras no recogen ni entregan los domingos. */
+    /** Las transportadoras no recogen ni entregan los domingos ni los festivos. */
     public boolean isBusinessDay(LocalDate date) {
-        return date.getDayOfWeek() != DayOfWeek.SUNDAY;
+        return date.getDayOfWeek() != DayOfWeek.SUNDAY && !ColombianHolidays.isHoliday(date);
     }
 
     /** Día en que sale la orden: el del pago si fue antes de la hora de corte; si no, el siguiente día hábil. */
