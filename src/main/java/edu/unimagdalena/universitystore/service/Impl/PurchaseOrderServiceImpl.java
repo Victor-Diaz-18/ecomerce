@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -367,8 +368,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional(readOnly = true)
     public List<OrderStatusHistoryResponse> getHistory(Long orderId) {
+        // Oldest first: it reads as the story of the order
         return orderStatusHistoryRepository.findByOrderId(orderId)
                 .stream()
+                .sorted(Comparator.comparing(OrderStatusHistory::getChangedAt))
                 .map(mapper::toHistoryResponse)
                 .toList();
     }

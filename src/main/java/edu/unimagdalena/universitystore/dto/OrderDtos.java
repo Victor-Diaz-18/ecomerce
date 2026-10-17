@@ -52,7 +52,8 @@ public class OrderDtos {
     public record OrderStatusHistoryResponse(
             Long id,
             String status,
-            LocalDateTime changedAt
+            LocalDateTime changedAt,
+            String reason
     ) implements Serializable {}
 
     public record BestSellingProductResponse(
