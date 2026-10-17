@@ -44,6 +44,8 @@ export interface Product {
   active: boolean;
   categoryId: number;
   categoryName?: string;
+  // Changes whenever the photo changes; missing or null when the product has no photo
+  imageVersion?: number | null;
 }
 
 export interface Inventory {

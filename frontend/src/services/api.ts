@@ -63,6 +63,7 @@ export const accountApi = {
   createOrder: (data: { addressId: number; items: { productId: number; quantity: number }[] }) =>
     request<Order>('/me/orders', { method: 'POST', body: JSON.stringify(data) }),
   getOrder: (id: number) => request<Order>(`/me/orders/${id}`),
+  getOrderHistory: (id: number) => request<OrderStatusHistory[]>(`/me/orders/${id}/history`),
   buyNow: (data: { addressId: number; productId: number; quantity: number }) =>
     request<Order>('/me/orders/buy-now', { method: 'POST', body: JSON.stringify(data) }),
   pay: (id: number) => request<Order>(`/me/orders/${id}/pay`, { method: 'PATCH' }),
@@ -96,6 +97,10 @@ export const locationApi = {
   getAll: () => request<Department[]>('/locations'),
 };
 
+/** Address of a product's photo; the version makes the browser fetch it again after it changes. */
+export const productImageUrl = (product: { id: number; imageVersion?: number | null }) =>
+  product.imageVersion ? `${API_BASE}/products/${product.id}/image?v=${product.imageVersion}` : null;
+
 export const productApi = {
   getAll: () => request<PageResponse<Product>>('/products'),
   getAllList: () => request<Product[]>('/products/all'),
@@ -103,6 +108,19 @@ export const productApi = {
   create: (data: CreateProductRequest) => request<Product>('/products', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: UpdateProductRequest) => request<Product>(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/products/${id}`, { method: 'DELETE' }),
+  // A file upload is not JSON: the browser sets the multipart Content-Type (with its boundary) itself
+  uploadImage: async (id: number, file: File) => {
+    const body = new FormData();
+    body.append('file', file);
+    const session = loadSession();
+    const response = await fetch(`${API_BASE}/products/${id}/image`, {
+      method: 'PUT',
+      body,
+      headers: session ? { Authorization: `Bearer ${session.token}` } : {},
+    });
+    if (!response.ok) throw new Error(errorMessage(response.status, await response.text()));
+  },
+  deleteImage: (id: number) => request<void>(`/products/${id}/image`, { method: 'DELETE' }),
   getByCategory: (categoryId: number) => request<Product[]>(`/products/category/${categoryId}`),
 };
 

@@ -20,6 +20,7 @@ const Cart = lazy(() => import('./pages/shop/Cart').then(m => ({ default: m.Cart
 const Checkout = lazy(() => import('./pages/shop/Checkout').then(m => ({ default: m.Checkout })));
 const BuyNow = lazy(() => import('./pages/shop/BuyNow').then(m => ({ default: m.BuyNow })));
 const MyOrders = lazy(() => import('./pages/shop/MyOrders').then(m => ({ default: m.MyOrders })));
+const OrderDetail = lazy(() => import('./pages/shop/OrderDetail').then(m => ({ default: m.OrderDetail })));
 const MyAddresses = lazy(() => import('./pages/shop/MyAddresses').then(m => ({ default: m.MyAddresses })));
 const Profile = lazy(() => import('./pages/shop/Profile').then(m => ({ default: m.Profile })));
 
@@ -87,6 +88,7 @@ function AppRoutes() {
         <Route path="/checkout/:orderId" element={<Checkout />} />
         <Route path="/buy/:productId" element={<BuyNow />} />
         <Route path="/my-orders" element={<MyOrders />} />
+        <Route path="/my-orders/:orderId" element={<OrderDetail />} />
         <Route path="/my-addresses" element={<MyAddresses />} />
         <Route path="/profile" element={<Profile />} />
       </Route>

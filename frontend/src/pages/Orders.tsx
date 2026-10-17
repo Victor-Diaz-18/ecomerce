@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { orderApi, customerApi, productApi } from '../services/api';
-import { Address, CreateOrderRequest, Order } from '../types';
+import { Address, CreateOrderRequest, Order, OrderStatusHistory } from '../types';
 import { Modal } from '../components/Modal';
 import { useToast } from '../context/ToastContext';
 import { addressLabel } from '../components/AddressFields';
 import { OrderStatusPill, orderStatusLabel } from '../components/StatusPill';
+import { OrderTimeline } from '../components/OrderTimeline';
 
 export function Orders() {
   const { data: orders, loading, refetch, refresh } = useApi(() => orderApi.getAll(), []);
@@ -24,6 +25,19 @@ export function Orders() {
   const [searchStatus, setSearchStatus] = useState('');
   // Order whose delivery address is being changed, with the addresses its customer can choose from
   const [addressOrder, setAddressOrder] = useState<Order | null>(null);
+  // Order shown in the detail window, with its history once it arrives
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
+  const [detailHistory, setDetailHistory] = useState<OrderStatusHistory[] | null>(null);
+
+  const openDetail = async (order: Order) => {
+    setDetailHistory(null);
+    setDetailOrder(order);
+    try {
+      setDetailHistory(await orderApi.getHistory(order.id));
+    } catch {
+      setDetailHistory([]);
+    }
+  };
   const [addressOptions, setAddressOptions] = useState<Address[]>([]);
   const [newAddressId, setNewAddressId] = useState('');
 
@@ -206,6 +220,7 @@ export function Orders() {
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td>{deliveryInfo(order)}</td>
                 <td className="actions">
+                  <button className="btn btn-sm btn-secondary" onClick={() => openDetail(order)}>Detalle</button>
                   {order.status === 'CREATED' && (
                     <>
                       <button className="btn btn-sm btn-primary" onClick={() => handleStatus(order.id, 'pay')}>Pagar</button>
@@ -283,6 +298,26 @@ export function Orders() {
             <button type="submit" className="btn btn-primary" disabled={orderItems.length === 0}>Crear orden</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={detailOrder !== null} onClose={() => setDetailOrder(null)} title={`Orden #${detailOrder?.id ?? ''}`}>
+        {detailOrder && (
+          <>
+            <p><strong>{detailOrder.customerName}</strong> · <OrderStatusPill status={detailOrder.status} /></p>
+            <p className="auto-hint">{detailOrder.addressLine}</p>
+            <div className="order-items-list">
+              {detailOrder.items.map(item => (
+                <div key={item.id} className="order-item">
+                  <span>{item.productName} × {item.quantity}</span>
+                  <span className="mono">${(item.subtotal ?? item.unitPrice * item.quantity).toLocaleString('es-CO')}</span>
+                </div>
+              ))}
+              <div className="order-item"><strong>Total</strong><strong className="mono">${(detailOrder.total ?? 0).toLocaleString('es-CO')}</strong></div>
+            </div>
+            <h4 style={{ marginBottom: 8 }}>Historial</h4>
+            <OrderTimeline history={detailHistory} />
+          </>
+        )}
       </Modal>
 
       <Modal isOpen={addressOrder !== null} onClose={() => setAddressOrder(null)} title={`Cambiar dirección de la orden #${addressOrder?.id ?? ''}`}>

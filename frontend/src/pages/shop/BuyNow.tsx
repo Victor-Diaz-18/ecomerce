@@ -5,6 +5,7 @@ import { useApi } from '../../hooks/useApi';
 import { accountApi, productApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
+import { ProductPhoto } from '../../components/ProductPhoto';
 import { isLow, money, useStock } from './shared';
 
 /**
@@ -57,7 +58,9 @@ export function BuyNow() {
       </div>
 
       <div className="two-columns">
-        <div className="card">
+        <div className="card buy-now-product">
+          <ProductPhoto product={product} />
+          <div>
           <span className="product-category">{product.categoryName}</span>
           <h3 style={{ fontSize: '1.2rem', margin: '4px 0' }}>{product.name}</h3>
           <p className="product-price">{money(product.price)}</p>
@@ -69,6 +72,7 @@ export function BuyNow() {
             <button className="btn btn-secondary btn-sm" aria-label="Quitar una unidad" disabled={quantity <= 1} onClick={() => setQuantity(quantity - 1)}><Minus size={14} /></button>
             <span>{quantity}</span>
             <button className="btn btn-secondary btn-sm" aria-label="Agregar una unidad" disabled={units !== undefined && quantity >= units} onClick={() => setQuantity(quantity + 1)}><Plus size={14} /></button>
+          </div>
           </div>
         </div>
 
