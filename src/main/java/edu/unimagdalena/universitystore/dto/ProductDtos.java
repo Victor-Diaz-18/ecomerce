@@ -30,6 +30,7 @@ public class ProductDtos {
             BigDecimal price,
             Boolean active,
             Long categoryId,
-            String categoryName
+            String categoryName,
+            Long imageVersion
     ) implements Serializable {}
 }

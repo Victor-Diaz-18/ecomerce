@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/products/**",
+                                "/api/v1/products/**",  // includes /products/{id}/image
                                 "/api/v1/categories/**",
                                 "/api/v1/inventories/product/**",
                                 "/api/v1/locations").permitAll()

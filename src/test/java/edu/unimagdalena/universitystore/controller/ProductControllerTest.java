@@ -66,7 +66,8 @@ class ProductControllerTest {
                         new BigDecimal("50000"),
                         true,
                         1L,
-                        "Category"
+                        "Category",
+                        null
                 );
 
         when(service.create(any(Product.class))).thenReturn(product);
@@ -98,7 +99,8 @@ class ProductControllerTest {
                         new BigDecimal("50000"),
                         true,
                         1L,
-                        "Category"
+                        "Category",
+                        null
                 );
 
         Page<Product> page = new PageImpl<>(List.of(product));
@@ -129,7 +131,8 @@ class ProductControllerTest {
                         new BigDecimal("50000"),
                         true,
                         1L,
-                        "Category"
+                        "Category",
+                        null
                 );
 
         when(service.findById(1L)).thenReturn(product);
@@ -167,7 +170,8 @@ class ProductControllerTest {
                         new BigDecimal("80000"),
                         true,
                         1L,
-                        "Category"
+                        "Category",
+                        null
                 );
 
         when(service.findById(1L)).thenReturn(updated);
@@ -200,7 +204,8 @@ class ProductControllerTest {
                         new BigDecimal("50000"),
                         true,
                         1L,
-                        "Category"
+                        "Category",
+                        null
                 );
 
         when(service.findByCategory(1L)).thenReturn(List.of(product));
