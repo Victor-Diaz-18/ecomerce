@@ -34,6 +34,10 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private Boolean active;
 
+    // Changes every time the photo changes (null: no photo); the photo itself lives in product_images
+    @Column(name = "image_version")
+    private Long imageVersion;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
