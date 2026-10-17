@@ -164,6 +164,17 @@ class AccountServiceTest {
     }
 
     @Test
+    void historyOnlyForTheCustomersOwnOrder() {
+        orderBelongsTo(15L, ME);
+        accountService.orderHistory(ME, 15L);
+        verify(orderService).getHistory(15L);
+
+        orderBelongsTo(16L, SOMEONE_ELSE);
+        assertThrows(ResourceNotFoundException.class, () -> accountService.orderHistory(ME, 16L));
+        verify(orderService, never()).getHistory(16L);
+    }
+
+    @Test
     void cannotEditAnAddressOfAnotherCustomer() {
         addressBelongsTo(3L, SOMEONE_ELSE);
 

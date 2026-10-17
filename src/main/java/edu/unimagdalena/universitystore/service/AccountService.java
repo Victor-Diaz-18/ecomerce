@@ -5,6 +5,7 @@ import edu.unimagdalena.universitystore.dto.AccountDtos.CreateMyOrderRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderItemRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.CreateOrderRequest;
 import edu.unimagdalena.universitystore.dto.OrderDtos.OrderResponse;
+import edu.unimagdalena.universitystore.dto.OrderDtos.OrderStatusHistoryResponse;
 import edu.unimagdalena.universitystore.entity.Address;
 import edu.unimagdalena.universitystore.entity.Customer;
 import edu.unimagdalena.universitystore.exception.ResourceNotFoundException;
@@ -68,6 +69,11 @@ public class AccountService {
 
     public OrderResponse order(Long customerId, Long orderId) {
         return ownedOrder(customerId, orderId);
+    }
+
+    public List<OrderStatusHistoryResponse> orderHistory(Long customerId, Long orderId) {
+        ownedOrder(customerId, orderId);
+        return orderService.getHistory(orderId);
     }
 
     @Transactional

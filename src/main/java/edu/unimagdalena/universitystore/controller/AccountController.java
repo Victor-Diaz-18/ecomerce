@@ -4,6 +4,7 @@ import edu.unimagdalena.universitystore.dto.AccountDtos.*;
 import edu.unimagdalena.universitystore.dto.AddressDtos.AddressResponse;
 import edu.unimagdalena.universitystore.dto.CustomerDtos.CustomerResponse;
 import edu.unimagdalena.universitystore.dto.OrderDtos.OrderResponse;
+import edu.unimagdalena.universitystore.dto.OrderDtos.OrderStatusHistoryResponse;
 import edu.unimagdalena.universitystore.entity.User;
 import edu.unimagdalena.universitystore.mapper.AddressMapper;
 import edu.unimagdalena.universitystore.mapper.CustomerMapper;
@@ -87,6 +88,12 @@ public class AccountController {
             @AuthenticationPrincipal User user,
             @Valid @RequestBody CreateMyOrderRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createOrder(customerId(user), req));
+    }
+
+    @GetMapping("/orders/{id}/history")
+    public ResponseEntity<List<OrderStatusHistoryResponse>> orderHistory(
+            @AuthenticationPrincipal User user, @PathVariable Long id) {
+        return ResponseEntity.ok(service.orderHistory(customerId(user), id));
     }
 
     @PostMapping("/orders/buy-now")
