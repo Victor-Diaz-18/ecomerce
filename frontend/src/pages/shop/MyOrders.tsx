@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { accountApi } from '../../services/api';
 import { Address, Order, OrderStatus } from '../../types';
@@ -99,7 +100,7 @@ export function MyOrders() {
       {sorted.map(order => (
         <div key={order.id} className="order-card">
           <div className="order-card-header">
-            <strong>Orden #{order.id}</strong>
+            <Link to={`/my-orders/${order.id}`} className="order-link"><strong>Orden #{order.id}</strong> · Ver detalle</Link>
             <OrderStatusPill status={order.status} label={CUSTOMER_LABEL[order.status]} />
           </div>
           <p className="auto-hint">

@@ -3,10 +3,36 @@ import { useApi, useMutation } from '../hooks/useApi';
 import { productApi, categoryApi } from '../services/api';
 import { Product, CreateProductRequest, UpdateProductRequest } from '../types';
 import { Modal } from '../components/Modal';
+import { ProductPhoto } from '../components/ProductPhoto';
+import { useToast } from '../context/ToastContext';
 
 export function Products() {
   const { data: productsPage, loading, refetch } = useApi(() => productApi.getAll(), []);
   const { data: categories } = useApi(() => categoryApi.getAll(), []);
+  const { showToast } = useToast();
+
+  const uploadPhoto = async (id: number, file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('La foto no puede pesar más de 2 MB', 'error');
+      return;
+    }
+    try {
+      await productApi.uploadImage(id, file);
+      showToast('Foto guardada', 'success');
+      refetch();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'No se pudo subir la foto', 'error');
+    }
+  };
+
+  const removePhoto = async (id: number) => {
+    try {
+      await productApi.deleteImage(id);
+      refetch();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'No se pudo quitar la foto', 'error');
+    }
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<CreateProductRequest>({
@@ -66,6 +92,7 @@ export function Products() {
         <table className="data-table">
           <thead>
             <tr>
+              <th>Foto</th>
               <th>ID</th>
               <th>Nombre</th>
               <th>SKU</th>
@@ -78,6 +105,19 @@ export function Products() {
           <tbody>
             {productsPage?.content.map(product => (
               <tr key={product.id}>
+                <td>
+                  <div className="photo-cell">
+                    <ProductPhoto product={product} size="thumb" />
+                    <label className="btn btn-secondary btn-sm">
+                      {product.imageVersion ? 'Cambiar' : 'Subir'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                        onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; if (file) uploadPhoto(product.id, file); }} />
+                    </label>
+                    {product.imageVersion && (
+                      <button className="btn btn-ghost btn-sm" onClick={() => removePhoto(product.id)}>Quitar</button>
+                    )}
+                  </div>
+                </td>
                 <td>{product.id}</td>
                 <td>{product.name}</td>
                 <td>{product.sku}</td>

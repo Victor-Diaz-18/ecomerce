@@ -8,6 +8,7 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { addressLabel } from '../../components/AddressFields';
 import { Pill } from '../../components/StatusPill';
+import { ProductPhoto } from '../../components/ProductPhoto';
 import { UNPAID_ORDER_HOURS, isLow, money, useStock } from './shared';
 
 interface Line {
@@ -114,6 +115,7 @@ export function Cart() {
               const left = stock[productId]?.available;
               return (
                 <div key={productId} className="cart-line">
+                  <ProductPhoto product={product!} size="thumb" />
                   <div className="cart-line-info">
                     <strong>{product!.name}</strong>
                     <span className="mono">{money(product!.price)} c/u</span>
