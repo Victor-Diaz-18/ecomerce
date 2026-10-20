@@ -66,15 +66,14 @@ Para empaquetar solo el backend: `./mvnw package -Dskip.frontend=true`.
 
 ### Migrar a otro PC
 
-```bash
-# En el PC origen (con datos reales):
-docker exec university-postgres pg_dump -U postgres --clean --if-exists university_store > respaldo.sql
-git add respaldo.sql
-git commit -m "actualizar dump"
-git push
+`respaldo.sql` no se sube a GitHub (está en `.gitignore`) porque tiene datos de clientes y el
+repositorio es público. Se pasa de un PC a otro por fuera de Git (USB, Drive...).
 
-# En el PC destino:
-git pull
+```bash
+# En el PC origen:
+docker exec university-postgres pg_dump -U postgres --clean --if-exists university_store > respaldo.sql
+
+# En el PC destino, con respaldo.sql copiado en la carpeta del proyecto:
 docker compose up -d
 Get-Content respaldo.sql | docker exec -i university-postgres psql -U postgres university_store
 ```
@@ -123,6 +122,5 @@ ecomerce/
 ├── scripts/mvnw.js               # Lanza Maven Wrapper en Windows/Linux/macOS
 ├── package.json                  # Scripts para arrancar todo junto
 ├── compose.yaml                  # Docker Compose
-├── respaldo.sql                  # Dump de la base de datos
 └── pom.xml                       # Configuración Maven
 ```

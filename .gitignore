@@ -27,3 +27,6 @@ frontend/dist/
 
 # Notas locales de Claude Code (no se suben)
 CLAUDE.local.md
+
+# Volcados de la base de datos: tienen datos de clientes y el repositorio es publico
+respaldo.sql
